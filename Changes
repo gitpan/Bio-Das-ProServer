@@ -1,0 +1,4 @@
+Revision history for Perl extension Bio::Das::ProServer.
+
+2.0	New eg/proserver implementation based on POE rather than HTTP::Daemon with custom process handling.
+

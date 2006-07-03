@@ -1,0 +1,51 @@
+Bio-Das-ProServer
+=================
+
+Bio::Das::ProServer is an implementation of the BioDAS protocol, http://biodas.org/
+for the serving of biological data using XML over HTTP.
+
+Bio::Das::ProServer is designed as a lightweight alternative to some other
+DAS servers. Version 2.0 is a drop-in replacement for previous versions but
+has a core based on the POE system which is much better tested and debugged
+than the ProServer v1 core. ProServer can be seen as the server-side complement
+to the Bio-DasLite client.
+
+More information can be found at the ProServer homepage:
+
+    http://www.sanger.ac.uk/proserver/
+
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+Getopt::Long
+POSIX
+Sys::Hostname
+CGI
+POE
+HTTP::Request
+HTTP::Response
+Config::IniFiles
+Compress::Zlib
+
+KNOWN PROBLEMS
+
+Does not correctly serve error segments. Usually error responses serve 
+empty result sets.
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2005 by Roger M Pettett, Genome Research Ltd.
+http://www.sanger.ac.uk/
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.7 or,
+at your option, any later version of Perl 5 you may have available.
