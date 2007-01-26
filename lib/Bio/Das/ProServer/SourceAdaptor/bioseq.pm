@@ -1,6 +1,6 @@
 package Bio::Das::ProServer::SourceAdaptor::bioseq;
 
-# $Id: bioseq.pm,v 2.01 2006/07/03 10:05:07 rmp Exp $
+# $Id: bioseq.pm,v 2.50 2007/01/26 23:10:41 rmp Exp $
 #
 # bioseq.pm
 #

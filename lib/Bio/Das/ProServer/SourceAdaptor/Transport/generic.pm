@@ -21,6 +21,9 @@ disclaimers of warranty.
 =cut
 
 use strict;
+use warnings;
+
+our $VERSION  = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head2 new : base-class object constructor
 
@@ -33,14 +36,25 @@ use strict;
 sub new {
   my ($class, $defs) = @_;
   my $self = {
-	      'dsn'    => $defs->{'dsn'}    || "unknown",
-              'config' => $defs->{'config'} || {},
+	      'dsn'       => $defs->{'dsn'}    || 'unknown',
+              'config'    => $defs->{'config'} || {},
+	      'init_time' => time,
              };
   bless $self, $class;
 
   $self->init();
 
   return $self;
+}
+
+=head2 init_time : return the time() this transport was initialised
+
+  my $iInitTime = $oTransport->init_time();
+
+=cut
+sub init_time {
+  my $self = shift;
+  return $self->{'init_time'};
 }
 
 =head2 init : Post-constructor initialisation hook

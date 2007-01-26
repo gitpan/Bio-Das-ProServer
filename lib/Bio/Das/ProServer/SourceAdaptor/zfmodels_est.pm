@@ -59,20 +59,26 @@ sub build_features {
 
     foreach my $row (@{$ref}) {
 
-        my $hit_name = $row->{'hit_name'};
-        $hit_name =~ s/EST:\d+:(.+):\d+:\d+:-?1/$1/; #convert from slice to sequence name
+	my $hit_name = $row->{'hit_name'};
+	$hit_name =~ s/EST:\d+:(.+):\d+:\d+:-?1/$1/; #convert from slice to sequence name
+	
+	my $note;
+	if ($row->{'score'}) {
+	    $note = 'Coverage: '.$row->{'score'}.' Identity: '.$row->{'perc_ident'};
+	}
+	else {
+	    $note = 'Identity: '.$row->{'perc_ident'};
+	}
 
-        my $note = 'Coverage: '.$row->{'score'}.' Identity: '.$row->{'perc_ident'};
-
-        push @features, {
-            'id'          => $hit_name,
-            'method'      => $method,
-            'start'       => $row->{'seq_region_start'},
-            'end'         => $row->{'seq_region_end'},
-            'ori'         => $row->{'seq_region_strand'},
-            'note'        => $note,
-        };            
-        
+	push @features, {
+	    'id'          => $hit_name,
+	    'method'      => $method,
+	    'start'       => $row->{'seq_region_start'},
+	    'end'         => $row->{'seq_region_end'},
+	    'ori'         => $row->{'seq_region_strand'},
+	    'note'        => $note,
+	};	    
+	
     }
     return @features;
 }

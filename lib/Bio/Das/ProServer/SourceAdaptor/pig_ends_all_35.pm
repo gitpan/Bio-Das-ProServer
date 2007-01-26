@@ -1,7 +1,7 @@
 #########
-# Author: 
-# Maintainer: 
-# Last Modified: 
+# Author: ?
+# Maintainer: dj3 (but only because this field was empty)
+# Last Modified: 24-10-2006
 # 
 
 package Bio::Das::ProServer::SourceAdaptor::pig_ends_all_35;
@@ -33,8 +33,8 @@ sub init {
 			     'stylesheet' => '1.0',
 			 };
 
-  $self->{'link'}    = "http://www.sanger.ac.uk/cgi-bin/Projects/S_scrofa/WebFPCreport.cgi?mode=wfcreport&name=";
-  $self->{'linktxt'} = "Clone_report";
+  $self->{'link'}    = ["http://www.sanger.ac.uk/cgi-bin/Projects/S_scrofa/WebFPCreport.cgi?mode=wfcreport&name=","http://pre.ensembl.org/Sus_scrofa/cytoview?mapfrag="];
+  $self->{'linktxt'} = ["Clone_report","Pig Pre"];
 
 
 }
@@ -140,8 +140,8 @@ sub build_features{
                      'start'   => $start,
                      'end'     => $end,
 		     'ori'     => '-1',
-		     'link'    => $self->{'link'} . $row->{'clone'},
-		     'linktxt' => $self->{'linktxt'},
+		     'link'    => [map{$_.$row->{'clone'}}map{ref($_)eq"ARRAY"?@{$_}:$_}($self->{'link'})], 
+		     'linktxt' => [map{ref($_)eq"ARRAY"?@{$_}:$_}($self->{'linktxt'})],
 		     'typecategory' => "pig_bes_seq",
 		     
 		 };

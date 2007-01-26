@@ -1,0 +1,299 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="pseudo">
+     <TYPE id="genetarget:5P_LOXP_O_INTRA">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_LOXP_O_INTRA">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_RETRIEVAL_O_INTRA">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>red</FGCOLOR>
+	      <STYLE>solid</STYLE>
+           </LINE>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_RETRIEVAL_O_INTRA">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>red</FGCOLOR>
+	      <STYLE>solid</STYLE>
+           </LINE>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:HIDDEN">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>red</FGCOLOR>
+	      <STYLE>solid</STYLE>
+           </LINE>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="knockout">
+     <TYPE id="genetarget:5P_LOXP_O_A">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_LOXP_O_B">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_LOXP_O_C">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_LOXP_O_D">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_LOXP_O_A">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_LOXP_O_B">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_LOXP_O_C">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_LOXP_O_D">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_RETRIEVAL_O_FWD">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_RETRIEVAL_O_REV">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_RETRIEVAL_O_FWD">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_RETRIEVAL_O_REV">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_LOXP_LO_A">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_LOXP_LO_B">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_LOXP_LO_A">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_LOXP_LO_B">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:5P_RETRIEVAL_LO">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetarget:3P_RETRIEVAL_LO">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="group">
+     <TYPE id="cko">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>red</FGCOLOR>
+	      <STYLE>dashed</STYLE>
+           </LINE>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="5P_LOXP">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="3P_LOXP">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>grey</BGCOLOR>
+              <FGCOLOR>grey</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

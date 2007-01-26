@@ -198,7 +198,7 @@ sub build_features_by_segment  {
 		 AND    ms.misc_set_id     > 1
                  AND    mf.misc_feature_id = ma.misc_feature_id
                  AND    ma.attrib_type_id  = at.attrib_type_id
-                 AND    at.code            IN('clone_name','name','non_ref','synonym'));
+                 AND    at.code            IN('clone_name','name','non_ref','synonym','well_name'));
 
   my $ref = $self->transport->query($query);
 

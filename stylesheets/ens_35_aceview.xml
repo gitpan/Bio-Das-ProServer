@@ -1,0 +1,133 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="similarity">
+    <TYPE id="main:exon">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>6</HEIGHT>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+    <TYPE id="main:utr">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>6</HEIGHT>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+    <TYPE id="main:hidden">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>red</FGCOLOR>
+              <FONT>sanserif</FONT>
+           </LINE>
+        </GLYPH>
+    </TYPE>
+    <TYPE id="putative:exon">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>6</HEIGHT>
+              <BGCOLOR>salmon</BGCOLOR>
+              <FGCOLOR>salmon</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+    <TYPE id="putative:utr">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>6</HEIGHT>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>salmon</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+    <TYPE id="putative:hidden">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>salmon</FGCOLOR>
+              <FONT>sanserif</FONT>
+           </LINE>
+        </GLYPH>
+    </TYPE>
+    <TYPE id="cloud:exon">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>6</HEIGHT>
+              <BGCOLOR>pink</BGCOLOR>
+              <FGCOLOR>pink</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+    <TYPE id="cloud:utr">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>6</HEIGHT>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>pink</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+    <TYPE id="cloud:hidden">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>pink</FGCOLOR>
+              <FONT>sanserif</FONT>
+           </LINE>
+        </GLYPH>
+    </TYPE>
+  </CATEGORY>
+  <CATEGORY id="group">
+     <TYPE id="Main Transcript">
+        <GLYPH>
+           <line>
+	      <HEIGHT>6</HEIGHT>
+	      <STYLE>intron</STYLE>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+	      <POINT>1</POINT>
+           </line>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="Putative Transcript">
+        <GLYPH>
+           <line>
+	      <HEIGHT>6</HEIGHT>
+	      <STYLE>intron</STYLE>
+              <BGCOLOR>salmon</BGCOLOR>
+              <FGCOLOR>salmon</FGCOLOR>
+	      <POINT>1</POINT>
+           </line>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="Cloud Transcript">
+        <GLYPH>
+           <line>
+	      <HEIGHT>6</HEIGHT>
+	      <STYLE>intron</STYLE>
+              <BGCOLOR>pink</BGCOLOR>
+              <FGCOLOR>pink</FGCOLOR>
+	      <POINT>1</POINT>
+           </line>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

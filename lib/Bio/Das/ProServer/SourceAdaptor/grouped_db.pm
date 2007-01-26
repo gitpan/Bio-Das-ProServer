@@ -1,8 +1,8 @@
 #########
 # Author: jws
-# Maintainer: jws
+# Maintainer: jws, dj3
 # Created: 2005-04-19
-# Last Modified: 2005-10-03 (by dj3)
+# Last Modified: 2006-10-06 (by dj3)
 # Builds DAS features from ProServer mysql database
 # schema at eof
 
@@ -35,10 +35,16 @@ sub build_features {
 
   return if($shortsegnamehack and (CORE::length("$seg") > 4)); #(speedup?) only handle chromosomes or haplotypes
  
-  my $qbounds = ($start && $end)?qq(AND start <= $end AND end >= $start):"";
-  
+  $seg=$self->transport->dbh->quote($seg);
+  my $qbounds="";
+  if(defined $start && defined $end){
+    $start=$self->transport->dbh->quote($start);
+    $end=$self->transport->dbh->quote($end);
+    $qbounds = qq(AND start <= $end AND end >= $start);
+  }
+
   my $query   = qq(SELECT * FROM feature, fgroup
-                   WHERE  segment = '$seg' $qbounds
+                   WHERE  segment = $seg $qbounds
 		   AND feature.group_id = fgroup.group_id
                    ORDER BY start); 
   my @results;

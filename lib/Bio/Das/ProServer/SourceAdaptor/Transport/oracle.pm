@@ -21,7 +21,10 @@ disclaimers of warranty.
 =cut
 
 use strict;
-use base "Bio::Das::ProServer::SourceAdaptor::Transport::dbi";
+use warnings;
+use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::dbi);
+
+our $VERSION = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head2 dbh : Oracle database handle
 
@@ -31,14 +34,18 @@ use base "Bio::Das::ProServer::SourceAdaptor::Transport::dbi";
 
 =cut
 sub dbh {
-  my $self     = shift;
-  my $dbname   = $self->config->{'dbname'};
-  my $username = $self->config->{'username'};
-  my $password = $self->config->{'password'};
-  my $driver   = $self->config->{'driver'}   || "Oracle";
-  my $dsn      = qq(DBI:$driver:);
-  my $userstring = $username . "\@" . $dbname;
-  $self->{'dbh'} ||= DBI->connect($dsn, $userstring, $password, {RaiseError => 1});
+  my $self       = shift;
+  my $dbname     = $self->config->{'dbname'};
+  my $username   = $self->config->{'dbuser'} || $self->config->{'username'};
+  my $password   = $self->config->{'dbpass'} || $self->config->{'password'};
+  my $driver     = $self->config->{'driver'} || 'Oracle';
+  my $dsn        = "DBI:$driver:";
+  my $userstring = "$username\@$dbname";
+
+  if(!$self->{'dbh'} ||
+     !$self->{'dbh'}->ping()) {
+    $self->{'dbh'} = DBI->connect_cached($dsn, $userstring, $password, {RaiseError => 1});
+  }
   return $self->{'dbh'};
 }
 

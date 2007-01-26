@@ -1,0 +1,33 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="group">
+     <TYPE id="segdup">
+        <GLYPH>
+           <line>
+	      <HEIGHT>10</HEIGHT>
+	      <STYLE>dashed</STYLE>
+              <BGCOLOR>black</BGCOLOR>
+              <FGCOLOR>black</FGCOLOR>
+	      <POINT>1</POINT>
+           </line>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <ANCHORED_ARROW>
+	      <HEIGHT>10</HEIGHT>
+              <BGCOLOR>lightblue</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+	      <NO_ANCHOR>1</NO_ANCHOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

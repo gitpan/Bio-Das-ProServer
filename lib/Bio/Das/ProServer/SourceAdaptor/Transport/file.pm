@@ -21,7 +21,10 @@ disclaimers of warranty.
 =cut
 
 use strict;
-use base "Bio::Das::ProServer::SourceAdaptor::Transport::generic";
+use warnings;
+use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
+
+our $VERSION  = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub _fh {
   my $self = shift;
@@ -66,13 +69,13 @@ sub query {
     my @parts = split("\t", $line);
 
     my $flag = 0;
-    if($cmp eq "=") {
+    if($cmp eq '=') {
       $flag = 1 if($parts[$field] eq $value);
 
-    } elsif($cmp eq "lceq") {
+    } elsif($cmp eq 'lceq') {
       $flag = 1 if(lc($parts[$field]) eq lc($value));
 
-    } elsif($cmp eq "like") {
+    } elsif($cmp eq 'like') {
       $flag = 1 if($parts[$field] =~ /^$value$/i);
     }
 

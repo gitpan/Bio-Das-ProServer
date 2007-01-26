@@ -2,7 +2,7 @@
 # Author: jc3
 # Maintainer: $Author: rmp $
 # Created: 2003-06-20
-# Last Modified: $Date: 2006/07/03 10:05:07 $
+# Last Modified: $Date: 2007/01/26 23:10:41 $
 # Provides DAS features for COSMIC genes.
 
 package Bio::Das::ProServer::SourceAdaptor::cosmic_genomic;

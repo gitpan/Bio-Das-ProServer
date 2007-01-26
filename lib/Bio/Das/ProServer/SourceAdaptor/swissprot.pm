@@ -1,8 +1,9 @@
 #########
-# Author: rmp
-# Maintainer: rmp
-# Created: 2003-05-20
-# Last Modified: 2003-05-27
+# Author:        rmp
+# Maintainer:    $Author: rmp $
+# Created:       2003-05-20
+# Last Modified: $Date: 2007/01/26 23:10:41 $
+#
 # Builds das from parser swissprot featuretables served from SRS
 #
 package Bio::Das::ProServer::SourceAdaptor::swissprot;
@@ -20,15 +21,17 @@ disclaimers of warranty.
 =cut
 
 use strict;
-use vars qw(@ISA);
-use Bio::Das::ProServer::SourceAdaptor;
-@ISA = qw(Bio::Das::ProServer::SourceAdaptor);
+use warnings;
+use base qw(Bio::Das::ProServer::SourceAdaptor);
+
+our $VERSION = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self = shift;
   $self->{'capabilities'} = {
 			     'features' => '1.0',
 			     'dna'      => '1.0',
+			     'sequence' => '1.0',
 			     'types'    => '1.0',
 			    };
   $self->{'_features'} ||= {};
@@ -49,7 +52,7 @@ sub sequence {
     $self->{'_data'}->{$seg} =~ s/^     (.*)\n/&_add_sequence($self, $seg, $1)/meg;
   }
 
-  my $seq = $self->{'_sequence'}->{$opts->{'segment'}} || "";
+  my $seq = $self->{'_sequence'}->{$opts->{'segment'}} || '';
   if(defined $opts->{'start'} && defined $opts->{'end'}) {
     $seq = substr($seq, $opts->{'start'}-1, $opts->{'end'}+1-$opts->{'start'});
   }
@@ -64,7 +67,7 @@ sub _add_sequence {
   my ($self, $seg, $seq) = @_;
   $seq =~ s/\s+//g;
   $self->{'_sequence'}->{$seg} .= $seq;
-  return "";
+  return '';
 }
 
 sub length {
@@ -95,9 +98,9 @@ sub build_types {
 sub build_features {
   my ($self, $opts) = @_;
   my $seg = $opts->{'segment'};
-  
+
   $self->{'_features'}->{$seg} ||= [];
-  
+
   if(scalar @{$self->{'_features'}->{$seg}} == 0) {
     $self->{'_data'}->{$seg} ||= $self->transport->query('-e', "[SWISSPROT-acc:$seg]|[SWISSPROT-id:$seg]");
     return unless($self->{'_data'}->{$seg});
@@ -106,7 +109,7 @@ sub build_features {
     $self->{'_data'}->{$seg}   =~ s/^(R.)\s+(.*?)\n/&_add_swissprot_reference($self, $opts, $1, $2)/meg;
     $self->{'_data'}->{$seg}   =~ s/^FT\s+(.*?)\n/&_add_swissprot_feature($self, $opts, $1)/meg;
   }
-  
+
   return @{$self->{'_features'}->{$seg}};
 }
 
@@ -114,24 +117,23 @@ sub _add_swissprot_reference {
   my ($self, $opts, $tag, $line) = @_;
   my $seg = $opts->{'segment'};
 
-  if($tag eq "RN") {
+  if($tag eq 'RN') {
     $self->{'_current_reference'} = {
-				     'type'   => "reference",
-				     'method' => "reference",
+				     'type'   => 'reference',
+				     'method' => 'reference',
 				     'start'  => $self->start(),
 				     'end'    => $self->length($seg),
 				     'id'     => $seg,
-				     'note'   => "",
+				     'note'   => '',
 				    };
     push @{$self->{'_features'}->{$seg}}, $self->{'_current_reference'};
 
-  } elsif($tag eq "RX") {
+  } elsif($tag eq 'RX') {
     my ($pubmed) = $line =~ /pubmed=([0-9]+)/i;
     return unless($pubmed);
     $self->{'_current_reference'}->{'note'}   .= qq( pubmed:http://www.ncbi.nlm.nih.gov/entrez/utils/qmap.cgi?uid=$pubmed&form=6&db=m&Dopt=r );
-#    $self->{'_current_reference'}->{'linktxt'} = $pubmed;
 
-  } elsif($tag eq "RA" || $tag eq "RT" || $tag eq "RL") {
+  } elsif($tag eq 'RA' || $tag eq 'RT' || $tag eq 'RL') {
     $self->{'_current_reference'}->{'note'} .= "$line ";
   }
 }
@@ -143,14 +145,14 @@ sub _add_swissprot_description {
 
   if($self->{'_desc_feats'}->{$seg}) {
     $self->{'_desc_feats'}->{$seg}->{'note'} .= $line;
-    
+
   } else {
     $self->{'_desc_feats'}->{$seg} = {
-				      'type'   => "description",
-				      'method' => "description",
+				      'type'   => 'description',
+				      'method' => 'description',
 				      'start'  => $self->start(),
 				      'end'    => $self->length($seg),
-				      'note'   => $line || "",
+				      'note'   => $line || '',
 				      'id'     => $seg,
 				      'link'   => qq(http://srs.sanger.ac.uk/srsbin/cgi-bin/wgetz?-e+[SWISSPROT-acc:$seg]|[SWISSPROT-id:$seg]),
 				     };
@@ -161,48 +163,47 @@ sub _add_swissprot_description {
 sub _add_swissprot_feature {
   my ($self, $opts, $line) = @_;
   my ($type, $start, $end, $note) = $line =~ /(\S+)\s+([0-9]+)\s+([0-9]+)(.*)/;
-  
+
   if(!defined $type && !defined $start && !defined $end) {
-    return "" unless(defined $self->{'_lastfeature'});
+    return '' unless(defined $self->{'_lastfeature'});
     #########
     # this line is a continuation of a previous feature
     #
     $note   = $line;
-    $note ||= "";
+    $note ||= '';
     $note   =~ s/^\s+//;
-    
+
     #########
     # pull feature id if it's available
     #
     $note   =~ s/\/FTId=(.*?)\.//;
-    $self->{'_lastfeature'}->{'id'}    = $1 if($1 && $1 ne "");
-    
-    $self->{'_lastfeature'}->{'note'} .= qq( $note) if($note && $note ne "");
-    
+    $self->{'_lastfeature'}->{'id'}    = $1 if($1 && $1 ne '');
+    $self->{'_lastfeature'}->{'note'} .= qq( $note) if($note && $note ne '');
+
   } else {
     #########
     # this is a new feature
     #
-    $note ||= "";
+    $note ||= '';
     $note   =~ s/^\s+//;
     my $id  = $note;
-    
+
     if($id =~ /^(\S+)\s+[0-9]+\./) {
       $id   = $1;
       $note = $1;
-      
+
     } else {
       $id = undef;
     }
-    
+
     if(defined $opts->{'start'} &&
        defined $opts->{'end'}   &&
        ($start > $opts->{'end'} ||
 	$end   < $opts->{'start'})) {
       undef($self->{'_lastfeature'});
-      return "";
+      return '';
     }
-    
+
     $self->{'_lastfeature'} = {
 			       'type'   => $type,
 			       'method' => $type,
@@ -213,7 +214,7 @@ sub _add_swissprot_feature {
 			      };
     push @{$self->{'_features'}->{$opts->{'segment'}}}, $self->{'_lastfeature'};
   }
-  return "";
+  return '';
 }
 
 1;

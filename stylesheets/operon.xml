@@ -1,0 +1,59 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="very_high">
+     <TYPE id="oligo">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>red</BGCOLOR>
+              <HEIGHT>8</HEIGHT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="high">
+     <TYPE id="oligo">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>orange</BGCOLOR>
+              <HEIGHT>8</HEIGHT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="moderate">
+     <TYPE id="oligo">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>yellow</BGCOLOR>
+              <HEIGHT>8</HEIGHT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="no_gene">
+     <TYPE id="oligo">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>grey</BGCOLOR>
+              <HEIGHT>8</HEIGHT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>grey</BGCOLOR>
+              <FGCOLOR>grey</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

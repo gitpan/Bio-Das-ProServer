@@ -1,0 +1,118 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="clones">
+     <TYPE id="rread">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>gray</BGCOLOR>
+              <FGCOLOR>gray</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="fclone">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>mediumpurple</BGCOLOR>
+              <FGCOLOR>mediumpurple</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="fread">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>gray</BGCOLOR>
+              <FGCOLOR>gray</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="rclone">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>plum</BGCOLOR>
+              <FGCOLOR>plum</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="snp">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>hotpink</BGCOLOR>
+              <FGCOLOR>hotpink</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="process_clone_ends:rread">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>gray</BGCOLOR>
+              <FGCOLOR>gray</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="process_clone_ends:fclone">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>mediumpurple</BGCOLOR>
+              <FGCOLOR>mediumpurple</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="process_clone_ends:fread">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>gray</BGCOLOR>
+              <FGCOLOR>gray</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="process_clone_ends:rclone">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>plum</BGCOLOR>
+              <FGCOLOR>plum</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="process_clone_ends:snp">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>hotpink</BGCOLOR>
+              <FGCOLOR>hotpink</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

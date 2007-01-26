@@ -1,0 +1,109 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="clones">
+     <TYPE id="process_clone_ends:pnfclone">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="ssaha2:pnfread">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="ssaha2:pnrread">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>black</BGCOLOR>
+              <FGCOLOR>black</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="process_clone_ends:pnrclone">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>black</BGCOLOR>
+              <FGCOLOR>black</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="process_clone_ends:ppfclone">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>blue</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="ssaha2:ppfread">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>blue</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="ssaha2:pprread">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>forestgreen</BGCOLOR>
+              <FGCOLOR>forestgreen</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="process_clone_ends:pprclone">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>forestgreen</BGCOLOR>
+              <FGCOLOR>forestgreen</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>grey</BGCOLOR>
+              <FGCOLOR>grey</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

@@ -1,14 +1,15 @@
 Bio-Das-ProServer
 =================
 
-Bio::Das::ProServer is an implementation of the BioDAS protocol, http://biodas.org/
-for the serving of biological data using XML over HTTP.
+Bio::Das::ProServer is an implementation of the BioDAS protocol,
+http://biodas.org/ for the serving of biological data using XML over
+HTTP.
 
-Bio::Das::ProServer is designed as a lightweight alternative to some other
-DAS servers. Version 2.0 is a drop-in replacement for previous versions but
-has a core based on the POE system which is much better tested and debugged
-than the ProServer v1 core. ProServer can be seen as the server-side complement
-to the Bio-DasLite client.
+Bio::Das::ProServer is designed as a lightweight alternative to some
+other DAS servers. Version 2.0 is a drop-in replacement for previous
+versions but has a core based on the POE system which is much better
+tested and debugged than the ProServer v1 core. ProServer can be seen
+as the server-side complement to the Bio-DasLite client.
 
 More information can be found at the ProServer homepage:
 
@@ -26,24 +27,69 @@ To install this module type the following:
 
 DEPENDENCIES
 
-Getopt::Long
-POSIX
-Sys::Hostname
 CGI
-POE
+Compress::Zlib
+Config::IniFiles
+Getopt::Long
 HTTP::Request
 HTTP::Response
-Config::IniFiles
-Compress::Zlib
+POE
+POSIX
+Socket
+Sys::Hostname
+
+SECURITY
+
+Whilst every attempt is made to keep ProServer free from security
+holes we cannot guarantee its safety. As with all daemon services like
+this, it is strongly advised to take certain measures to mitigate any
+faults which may be present and minimised their consequences.
+
+       1. Run ProServer as a non-privileged user. Usually there is a
+          'nobody' user or equivalent. Running daemon services as this
+          user means that if compromised the service has minimal
+          access to the rest of the host.
+
+       2. Where possible run in a chroot'ed environment. This is more
+          complicated than simply using a non-privileged user but is
+          safer all-round. Using chroot puts the ProServer processes
+          in a jail from which they cannot easily access the rest of
+          the filesystem. This may be complex to set up, depending on
+          the variety of your source adaptors and they access they
+          require to resources outside of your ProServer
+          installation. This method also requires a dedicated copy of
+          all dependencies such as a perl interpreter and system
+          libraries.
+
+       3. Another useful mechanism is to run ProServer behind a
+          reverse-proxy. This means ProServer is never in direct
+          communication with the client and the reverse-proxy will
+          sanitise requests, removing some of the opportunities for
+          attack. It also allows services to be moved behind the
+          scenes using for example a combination of Apache and
+          mod_rewrite on the proxy. One other possibility is to use a
+          reverse-proxy to unify services provided by other
+          technologies such as LDAS or Dazzle into one consolidated
+          namespace.
+
+SCALABILITY
+
+At the Sanger Institute we run ProServer, behind an Apache
+reverse-proxy, on 14 2.4GHz blades serving just under 300,000 DAS
+requests a week for 220 sources mostly with MySQL databases. ProServer
+should scale comfortably being only IO-bound as it's not
+computationally intensive. Efficiency of data retrieval is most
+important. Ensure database connections and statement handles are
+cached and reused wherever possible.
 
 KNOWN PROBLEMS
 
-Does not correctly serve error segments. Usually error responses serve 
-empty result sets.
+ProServer does not correctly serve error segments. Usually error
+responses serve empty result sets.
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2005 by Roger M Pettett, Genome Research Ltd.
+Copyright (C) 2006 by Roger M Pettett, Genome Research Ltd.
 http://www.sanger.ac.uk/
 
 This library is free software; you can redistribute it and/or modify

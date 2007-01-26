@@ -86,7 +86,8 @@ sub build_features_by_segment  {
 			 orientation as ori,
 			 type
 			 FROM  $table_name
-			 WHERE start <= $end 
+			 WHERE chr= "$seg" 
+			 AND start <= $end 
 			 AND end >= $start);
   } else {
     $query = qq(SELECT DISTINCT

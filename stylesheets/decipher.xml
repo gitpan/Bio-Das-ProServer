@@ -1,0 +1,302 @@
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+  <STYLESHEET version="1.0">
+    <CATEGORY id="decipher">
+      <TYPE id="decipher:poly:ins:hard">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>lightgreen</BGCOLOR>
+            <FGCOLOR>black</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    <PATTERN>hatch_vert</PATTERN>
+          </BOX>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:poly:ins:soft">
+        <GLYPH>
+          <LINE>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>lightgreen</BGCOLOR>
+            <FGCOLOR>lightgreen</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </LINE>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:poly:del:hard">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>darksalmon</BGCOLOR>
+            <FGCOLOR>black</FGCOLOR>
+	    <PATTERN>hatch_vert</PATTERN>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </BOX>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:poly:del:soft">
+        <GLYPH>
+          <LINE>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>darksalmon</BGCOLOR>
+            <FGCOLOR>darksalmon</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </LINE>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:novel:ins:hard">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>lightgreen</BGCOLOR>
+            <FGCOLOR>black</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </BOX>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:novel:ins:soft">
+        <GLYPH>
+          <LINE>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>lightgreen</BGCOLOR>
+            <FGCOLOR>lightgreen</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </LINE>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:novel:del:hard">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>darksalmon</BGCOLOR>
+            <FGCOLOR>black</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </BOX>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:novel:del:soft">
+        <GLYPH>
+          <LINE>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>darksalmon</BGCOLOR>
+            <FGCOLOR>darksalmon</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </LINE>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:known:ins">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>darkgreen</BGCOLOR>
+            <FGCOLOR>darkgreen</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </BOX>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:known:del">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>firebrick1</BGCOLOR>
+            <FGCOLOR>firebrick1</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </BOX>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:translocation:de novo balanced:breakpoint">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>blue</BGCOLOR>
+            <FGCOLOR>blue</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	  </BOX>
+        </GLYPH>
+      	</TYPE>
+	<TYPE id="decipher:translocation:de novo balanced:clone">
+        <GLYPH>
+          <ARROW>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>cyan</BGCOLOR>
+            <FGCOLOR>cyan</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	   </ARROW>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:translocation:de novo unbalanced:breakpoint">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>blue</BGCOLOR>
+            <FGCOLOR>blue</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	  </BOX>
+        </GLYPH>
+      	</TYPE>
+	<TYPE id="decipher:translocation:de novo unbalanced:clone">
+        <GLYPH>
+          <ARROW>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>green</BGCOLOR>
+            <FGCOLOR>green</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	   </ARROW>
+        </GLYPH>
+      </TYPE>
+	<TYPE id="decipher:translocation:familial balanced:breakpoint">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>blue</BGCOLOR>
+            <FGCOLOR>blue</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    <PATTERN>hatch_vert</PATTERN>
+          </BOX>
+          </GLYPH>
+         </TYPE>
+	 <TYPE id="decipher:translocation:familial balanced:clone">
+         <GLYPH>
+          <ARROW>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>cyan</BGCOLOR>
+            <FGCOLOR>cyan</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    <PATTERN>hatch_vert</PATTERN>
+          </ARROW>
+        </GLYPH>
+      	</TYPE>
+	<TYPE id="decipher:translocation:familial unbalanced:breakpoint">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>cornflower blue</BGCOLOR>
+            <FGCOLOR>cornflower blue</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    <PATTERN>hatch_vert</PATTERN>
+          </BOX>
+          </GLYPH>
+         </TYPE>
+	 <TYPE id="decipher:translocation:familial unbalanced:clone">
+         <GLYPH>
+          <ARROW>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>purple</BGCOLOR>
+            <FGCOLOR>purple</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    <PATTERN>hatch_vert</PATTERN>
+          </ARROW>
+        </GLYPH>
+      	</TYPE>
+	<TYPE id="decipher:translocation:deletion">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>red</BGCOLOR>
+            <FGCOLOR>black</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    <PATTERN>hatch_vert</PATTERN>
+          </BOX>
+        </GLYPH>
+       </TYPE>
+	<TYPE id="decipher:translocation:duplication">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>maroon</BGCOLOR>
+            <FGCOLOR>black</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    <PATTERN>hatch_vert</PATTERN>
+          </BOX>
+        </GLYPH>
+      </TYPE>
+	<TYPE id="decipher:translocation:insertion">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>light green</BGCOLOR>
+            <FGCOLOR>black</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    <PATTERN>hatch_vert</PATTERN>
+          </BOX>
+        </GLYPH>
+        </TYPE>
+        <TYPE id="decipher:translocation:unknown:breakpoint">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>red</BGCOLOR>
+            <FGCOLOR>red</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    </BOX>
+        </GLYPH>
+       </TYPE>
+        <TYPE id="decipher:translocation:unknown:clone">
+        <GLYPH>
+          <ARROW>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>black</BGCOLOR>
+            <FGCOLOR>black</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+	    </ARROW>
+        </GLYPH>
+      </TYPE>
+         <TYPE id="decipher:translocation:inversion:clone">
+        <GLYPH>
+          <ARROW>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>plum3</BGCOLOR>
+            <FGCOLOR>plum3</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </ARROW>
+        </GLYPH>
+      </TYPE>
+      <TYPE id="decipher:translocation:inversion:breakpoint">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>purple4</BGCOLOR>
+            <FGCOLOR>purple4</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </BOX>
+        </GLYPH>
+      </TYPE>
+  	 <TYPE id="decipher:translocation:inversion:breakpoint2">
+        <GLYPH>
+          <BOX>
+            <HEIGHT>10</HEIGHT>
+            <BGCOLOR>purple4</BGCOLOR>
+            <FGCOLOR>purple4</FGCOLOR>
+            <BUMP>0</BUMP>
+            <FONT>sanserif</FONT>
+          </BOX>
+        </GLYPH>     
+      </TYPE>
+    </CATEGORY>
+  </STYLESHEET>
+</DASSTYLE>

@@ -21,8 +21,11 @@ disclaimers of warranty.
 =cut
 
 use strict;
-use base "Bio::Das::ProServer::SourceAdaptor::Transport::generic";
+use warnings;
+use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use DBI;
+
+our $VERSION = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head2 dbh : Database handle (mysqlish by default)
 
@@ -31,22 +34,26 @@ use DBI;
 =cut
 sub dbh {
   my $self     = shift;
-  my $host     = $self->config->{'host'}     || "localhost";
-  my $port     = $self->config->{'port'}     || "3306";
-  my $dbname   = $self->config->{'dbname'};
-  my $username = $self->config->{'username'} || "test";
-  my $password = $self->config->{'password'} || "";
-  my $driver   = $self->config->{'driver'}   || "mysql";
+  my $config   = $self->config();
+  my $host     = $config->{'dbhost'}   || $config->{'host'}     || 'localhost';
+  my $port     = $config->{'dbport'}   || $config->{'port'}     || '3306';
+  my $dbname   = $config->{'dbname'};
+  my $username = $config->{'dbuser'}   || $config->{'username'} || 'test';
+  my $password = $config->{'dbpass'}   || $config->{'password'} || '';
+  my $driver   = $config->{'driver'}   || 'mysql';
   my $dsn      = qq(DBI:$driver:database=$dbname;host=$host;port=$port);
 
   #########
   # DBI connect_cached is slightly smarter than us just caching here
   #
   eval {
-    $self->{'dbh'} = DBI->connect_cached($dsn, $username, $password, {RaiseError => 1});
+    if(!$self->{'dbh'} ||
+       !$self->{'dbh'}->ping()) {
+      $self->{'dbh'} = DBI->connect_cached($dsn, $username, $password, {RaiseError => 1});
+    }
   };
   if($@) {
-    print STDERR "dsn = ", $self->{'dsn'},"\n";
+    print STDERR 'dsn = ', $self->{'dsn'},"\n";
     die $@;
   }
   return $self->{'dbh'};
@@ -57,6 +64,7 @@ sub dbh {
   my $arrayref = $dbitransport->query(qq(SELECT ... WHERE x = ? AND y = ?),
 				      $x,
 				      $y);
+
 =cut
 sub query {
   my ($self, $query, @args) = @_;
@@ -65,11 +73,16 @@ sub query {
   my $debug                 = $self->{'debug'};
 
   while($retries > 0) {
-    $SIG{ALRM} = sub { die "timeout"; };
+    $SIG{ALRM} = sub { die 'timeout'; };
     alarm(30);
     eval {
       $debug and print STDERR "Preparing query...\n";
-      my $sth = $self->dbh->prepare_cached($query);
+      my $sth;
+      if($query =~ /\?/) {
+	$sth = $self->dbh->prepare_cached($query);
+      } else {
+	$sth = $self->dbh->prepare($query);
+      }
       $debug and print STDERR "Executing query...\n";
       $sth->execute(@args);
       $debug and print STDERR "Fetching results...\n";
@@ -109,6 +122,12 @@ sub disconnect {
   return unless (exists $self->{'dbh'});
   $self->{'dbh'}->disconnect();
   delete $self->{'dbh'};
+  $self->{'debug'} and print STDERR "$self performed dbh disconnect\n";
+}
+
+sub DESTROY {
+  my $self = shift;
+  $self->disconnect();
 }
 
 1;

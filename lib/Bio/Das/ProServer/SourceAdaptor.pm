@@ -8,9 +8,10 @@
 #
 package Bio::Das::ProServer::SourceAdaptor;
 use strict;
+use warnings;
 use HTML::Entities;
 
-our $VERSION  = do { my @r = (q$Revision: 2.01 $ =~ /\d+/g); sprintf "%d."."%03d" x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head1 AUTHOR
 
@@ -49,7 +50,7 @@ sub new {
 	      '_sequence'    => {},
 	      '_features'    => {},
 	      'capabilities' => {
-				 'dsn' => "1.0",
+				 'dsn' => '1.0',
 				},
 	     };
 
@@ -59,7 +60,7 @@ sub new {
   if(!exists($self->{'capabilities'}->{'stylesheet'}) &&
      ($self->{'config'}->{'stylesheet'} ||
       $self->{'config'}->{'stylesheetfile'})) {
-    $self->{'capabilities'}->{'stylesheet'} = "1.0";
+    $self->{'capabilities'}->{'stylesheet'} = '1.0';
   }
   return $self;
 }
@@ -73,7 +74,7 @@ sub init {};
 
 =head2 length : Returns the segment-length given a segment
 
-  my $sSegmentLength = $oSourceAdaptor->length("1:1,100000");
+  my $sSegmentLength = $oSourceAdaptor->length('1:1,100000');
 
 =cut
 sub length { 0; }
@@ -123,7 +124,7 @@ sub segment_version {}
 =cut
 sub dsn {
   my $self = shift;
-  return $self->{'dsn'} || "unknown";
+  return $self->{'dsn'} || 'unknown';
 };
 
 =head2 dsnversion : get accessor for this sourceadaptor's dsn version
@@ -133,12 +134,12 @@ sub dsn {
 =cut
 sub dsnversion {
   my $self = shift;
-  return $self->{'dsnversion'} || "1.0";
+  return $self->{'dsnversion'} || '1.0';
 };
 
 =head2 start : get accessor for segment start given a segment
 
-  my $sStart = $oSourceAdaptor->start("DYNA_CHICK:35,127");
+  my $sStart = $oSourceAdaptor->start('DYNA_CHICK:35,127');
 
   Returns 1 by default
 
@@ -147,7 +148,7 @@ sub start { 1; }
 
 =head2 end : get accessor for segment end given a segment
 
-  my $sEnd = $oSourceAdaptor->end("DYNA_CHICK:35,127");
+  my $sEnd = $oSourceAdaptor->end('DYNA_CHICK:35,127');
 
 =cut
 sub end {
@@ -164,8 +165,18 @@ sub transport {
   my $self = shift;
 
   if(!exists $self->{'_transport'}) {
-    my $transport = "Bio::Das::ProServer::SourceAdaptor::Transport::".$self->config->{'transport'};
-    eval "require $transport";
+    my $transport = 'Bio::Das::ProServer::SourceAdaptor::Transport::'.$self->config->{'transport'};
+
+    no strict 'refs';
+    my ($parent_namespace, $module) = $transport =~ /^(.*::)([^:]+)$/?($1,$2):('::',$transport);
+    if(!$parent_namespace->{$module.'::'}) {
+#      print STDERR qq(Loading $transport into $module in $parent_namespace\n);
+      eval "require $transport";
+#    } else {
+#      print STDERR qq(Transport loaded at $module in $parent_namespace\n);
+    }
+    use strict;
+
     if($@) {
       warn $@;
 
@@ -223,8 +234,8 @@ sub das_capabilities {
 =cut
 sub das_dsn {
   my $self    = shift;
-  my $port    = $self->{'port'}?":$self->{'port'}":"";
-  my $host    = $self->{'hostname'}||"";
+  my $port    = $self->{'port'}?":$self->{'port'}":'';
+  my $host    = $self->{'hostname'}||'';
   my $content = $self->open_dasdsn();
 
   for my $adaptor ($self->config->adaptors()) {
@@ -272,7 +283,7 @@ sub close_dasdsn {
 sub open_dasgff {
   my ($self) = @_;
   my $host   = $self->{'hostname'};
-  my $port   = $self->{'port'}?":$self->{'port'}":"";
+  my $port   = $self->{'port'}?":$self->{'port'}":'';
   my $dsn    = $self->dsn();
 
   return qq(<?xml version="1.0" standalone="yes"?>
@@ -306,26 +317,27 @@ sub unknown_segment {
 #
 sub _gen_link_das_response {
   my ($self, $link, $linktxt, $spacing) = @_;
-  my $response = "";
+  my $response = '';
 
   #########
   # if $link is a reference to and array or hash use their contents as multiple links
   #
-  if(ref($link) eq "ARRAY") {
+  if(ref($link) eq 'ARRAY') {
     while(my $k = shift @{$link}) {
       my $v;
-      $v         = shift @{$linktxt} if(ref($linktxt) eq "ARRAY");
+      $v         = shift @{$linktxt} if(ref($linktxt) eq 'ARRAY');
       $v       ||= $linktxt;
       $response .= qq($spacing<LINK href="$k">$v</LINK>\n);
     }
 
-  } elsif(ref($link) eq "HASH") {
-    while(my ($k, $v) = each %$link) {
+  } elsif(ref($link) eq 'HASH') {
+    for my $k (sort { $link->{$a} cmp $link->{$b} } keys %$link) {
+      my $v      = $link->{$k};
       $response .= qq($spacing<LINK href="$k">$v</LINK>\n);
     }
 
   } elsif($link) {
-    $response .= qq($spacing<LINK href="$link">$linktxt</LINK>\n)    if($link  ne "");
+    $response .= qq($spacing<LINK href="$link">$linktxt</LINK>\n)    if($link  ne '');
   }
   return $response;
 }
@@ -337,7 +349,7 @@ sub _encode {
   my ($self, $datum) = @_;
   return if(!ref($datum));
 
-  if(ref($datum) eq "HASH") {
+  if(ref($datum) eq 'HASH') {
     while(my ($k, $v) = each %$datum) {
       if(ref($v)) {
 	$self->_encode($v);
@@ -346,10 +358,10 @@ sub _encode {
       }
     }
 
-  } elsif(ref($datum) eq "ARRAY") {
+  } elsif(ref($datum) eq 'ARRAY') {
     @{$datum} = map { &encode_entities($_); } @{$datum};
 
-  } elsif(ref($datum) eq "SCALAR") {
+  } elsif(ref($datum) eq 'SCALAR') {
     $$datum = &encode_entities($$datum);
   }
 }
@@ -361,40 +373,40 @@ sub _gen_feature_das_response {
   my ($self, $feature, $spacing) = @_;
   $self->_encode($feature);
 
-  my $response  = "";
-  my $start     = $feature->{'start'}        || "0";
-  my $end       = $feature->{'end'}          || "0";
-  my $note      = $feature->{'note'}         || "";
-  my $id        = $feature->{'id'}           || $feature->{'feature_id'}    || "";
+  my $response  = '';
+  my $start     = $feature->{'start'}        || '0';
+  my $end       = $feature->{'end'}          || '0';
+  my $note      = $feature->{'note'}         || '';
+  my $id        = $feature->{'id'}           || $feature->{'feature_id'}    || '';
   my $label     = $feature->{'label'}        || $feature->{'feature_label'} || $id;
-  my $type      = $feature->{'type'}         || "";
+  my $type      = $feature->{'type'}         || '';
   my $typetxt   = $feature->{'typetxt'}      || $type;
-  my $method    = $feature->{'method'}       || "";
+  my $method    = $feature->{'method'}       || '';
   my $method_l  = $feature->{'method_label'} || $method;
-  my $group     = $feature->{'group'}        || "";
-  my $glabel    = $feature->{'grouplabel'}   || "";
-  my $gtype     = $feature->{'grouptype'}    || "";
-  my $gnote     = $feature->{'groupnote'}    || "";
-  my $glink     = $feature->{'grouplink'}    || "";
-  my $glinktxt  = $feature->{'grouplinktxt'} || "";
-  my $score     = $feature->{'score'}        || "";
+  my $group     = $feature->{'group'}        || '';
+  my $glabel    = $feature->{'grouplabel'}   || '';
+  my $gtype     = $feature->{'grouptype'}    || '';
+  my $gnote     = $feature->{'groupnote'}    || '';
+  my $glink     = $feature->{'grouplink'}    || '';
+  my $glinktxt  = $feature->{'grouplinktxt'} || '';
+  my $score     = $feature->{'score'}        || '';
   my $ori       = $feature->{'ori'}          || "0";
-  my $phase     = $feature->{'phase'}        || "";
-  my $link      = $feature->{'link'}         || "";
+  my $phase     = $feature->{'phase'}        || '';
+  my $link      = $feature->{'link'}         || '';
   my $linktxt   = $feature->{'linktxt'}      || $link;
-  my $target    = $feature->{'target'}       || "";
-  my $cat       = defined($feature->{'typecategory'})?qq(category="$feature->{'typecategory'}"):defined($feature->{'type_category'})?qq(category="$feature->{'type_category'}"):"";
+  my $target    = $feature->{'target'}       || '';
+  my $cat       = defined($feature->{'typecategory'})?qq(category="$feature->{'typecategory'}"):defined($feature->{'type_category'})?qq(category="$feature->{'type_category'}"):'';
   my $subparts  = $feature->{'typesubparts'}    || "no";
   my $supparts  = $feature->{'typessuperparts'} || "no";
   my $ref       = $feature->{'typesreference'}  || "no";
   $response    .= qq($spacing<FEATURE id="$id" label="$label">\n);
   $response    .= qq($spacing  <TYPE id="$type" $cat reference="$ref" subparts="$subparts" superparts="$supparts">$typetxt</TYPE>\n);
-  $response    .= qq($spacing  <METHOD id="$method">$method_l</METHOD>\n) if($method ne "");
+  $response    .= qq($spacing  <METHOD id="$method">$method_l</METHOD>\n) if($method ne '');
   $response    .= qq($spacing  <START>$start</START>\n);
   $response    .= qq($spacing  <END>$end</END>\n);
-  $response    .= qq($spacing  <SCORE>$score</SCORE>\n)                 if($score ne "");
-  $response    .= qq($spacing  <ORIENTATION>$ori</ORIENTATION>\n)       if($ori   ne "");
-  $response    .= qq($spacing  <PHASE>$phase</PHASE>\n)                 if($phase ne "");
+  $response    .= qq($spacing  <SCORE>$score</SCORE>\n)                 if($score ne '');
+  $response    .= qq($spacing  <ORIENTATION>$ori</ORIENTATION>\n)       if($ori   ne '');
+  $response    .= qq($spacing  <PHASE>$phase</PHASE>\n)                 if($phase ne '');
 
   # Allow the 'note' tag to point to an array of notes.
   if ( ref $note eq 'ARRAY' ) {
@@ -405,7 +417,7 @@ sub _gen_feature_das_response {
 
   } else {
     $response .= qq($spacing  <NOTE>$note</NOTE>\n)
-      if ($note ne "");
+      if ($note ne '');
   }
 
   # Allow the 'target' tag to be an array of hashes:
@@ -418,17 +430,17 @@ sub _gen_feature_das_response {
   if ($target && ref $target eq 'ARRAY') {
     for my $t (@$target) {
       $response .= sprintf(qq($spacing  <TARGET%s%s%s>%s</TARGET>\n),
-			   $t->{'id'}    ?qq( id="$t->{'id'}")       :"",
-			   $t->{'start'} ?qq( start="$t->{'start'}") :"",
-			   $t->{'stop'}  ?qq( stop="$t->{'stop'}")   :"",
+			   $t->{'id'}    ?qq( id="$t->{'id'}")       :'',
+			   $t->{'start'} ?qq( start="$t->{'start'}") :'',
+			   $t->{'stop'}  ?qq( stop="$t->{'stop'}")   :'',
 			   $t->{'targettxt'} || $t->{'target'} || sprintf("%s:%d,%d", $t->{'id'}, $t->{'start'}, $t->{'stop'}));
     }
 
   } elsif($feature->{'target_id'}) {
     $response .= sprintf(qq($spacing  <TARGET%s%s%s>%s</TARGET>\n),
-			 $feature->{'target_id'}    ?qq( id="$feature->{'target_id'}")       :"",
-			 $feature->{'target_start'} ?qq( start="$feature->{'target_start'}") :"",
-			 $feature->{'target_stop'}  ?qq( stop="$feature->{'target_stop'}")   :"",
+			 $feature->{'target_id'}    ?qq( id="$feature->{'target_id'}")       :'',
+			 $feature->{'target_start'} ?qq( start="$feature->{'target_start'}") :'',
+			 $feature->{'target_stop'}  ?qq( stop="$feature->{'target_stop'}")   :'',
 			 $feature->{'targettxt'} || $feature->{'target_id'} || $feature->{'target'} ||
 			 sprintf("%s:%d,%d", $feature->{'target_id'}, $feature->{'target_start'}, $feature->{'target_stop'}));
   }
@@ -458,17 +470,17 @@ sub _gen_feature_das_response {
 							  }));
 
   for my $groupi (grep { substr($_, 0, 1) ne "_" } keys %groups) {
-    if($groupi ne "") {
+    if($groupi ne '') {
       my $groupinfo = $groups{$groupi};
-      my $gnotei    = $groupinfo->{'groupnote'}	  || "";
-      my $glinki    = $groupinfo->{'grouplink'}   || "";
-      my $gtargeti  = $groupinfo->{'grouptarget'} || "";
+      my $gnotei    = $groupinfo->{'groupnote'}	  || '';
+      my $glinki    = $groupinfo->{'grouplink'}   || '';
+      my $gtargeti  = $groupinfo->{'grouptarget'} || '';
       $response    .= sprintf(qq($spacing  <GROUP id="%s"%s%s),
 			      $groupi,
-			      $groupinfo->{'grouplabel'} ?qq( label="$groupinfo->{'grouplabel'}") :"",
-			      $groupinfo->{'grouptype'}  ?qq( type="$groupinfo->{'grouptype'}")   :"");
+			      $groupinfo->{'grouplabel'} ?qq( label="$groupinfo->{'grouplabel'}") :'',
+			      $groupinfo->{'grouptype'}  ?qq( type="$groupinfo->{'grouptype'}")   :'');
 
-      if (($gnotei eq "") && ($glinki eq "")) {
+      if (($gnotei eq '') && ($glinki eq '')) {
         $response .= qq(/>\n);
 
       } else {
@@ -478,21 +490,21 @@ sub _gen_feature_das_response {
 	# Allow the 'note' tag to point to an array of notes.
 	if ( ref $gnotei eq 'ARRAY' ) {
 	  for my $n (@$gnotei) {
-	    next if ( $n eq "" );
+	    next if ( $n eq '' );
 	    $response .= qq($spacing  <NOTE>$n</NOTE>\n);
 	  }
 
 	} else {
-	  $response .= qq($spacing  <NOTE>$gnotei</NOTE>\n) if ($gnotei ne "");
+	  $response .= qq($spacing  <NOTE>$gnotei</NOTE>\n) if ($gnotei ne '');
 	}
         $response .= $self->_gen_link_das_response($glinki, $glinktxti, "$spacing  ");
 
 	if (ref $gtargeti eq 'ARRAY') {
 	  for my $t (@$gtargeti) {
 	    $response .= sprintf(qq($spacing  <TARGET%s%s%s>%s</TARGET>\n),
-				 $t->{'id'}    ?qq( id="$t->{'id'}")       :"",
-				 $t->{'start'} ?qq( start="$t->{'start'}") :"",
-				 $t->{'stop'}  ?qq( stop="$t->{'stop'}")   :"",
+				 $t->{'id'}    ?qq( id="$t->{'id'}")       :'',
+				 $t->{'start'} ?qq( start="$t->{'start'}") :'',
+				 $t->{'stop'}  ?qq( stop="$t->{'stop'}")   :'',
 				 $t->{'targettxt'} || $t->{'target'} || sprintf("%s:%d,%d", $t->{'id'}, $t->{'start'}, $t->{'stop'}));
 	  }
 	}
@@ -513,7 +525,7 @@ sub _gen_feature_das_response {
 =cut
 sub das_features {
   my ($self, $opts) = @_;
-  my $response      = "";
+  my $response      = '';
 
   $self->init_segments($opts->{'segments'});
 
@@ -522,9 +534,9 @@ sub das_features {
   #
   for my $seg (@{$opts->{'segments'}}) {
     my ($seg, $coords) = split(':', $seg);
-    my ($start, $end)  = split(',', $coords||"");
-    my $segstart       = $start || $self->start($seg) || "";
-    my $segend         = $end   || $self->end($seg)   || "";
+    my ($start, $end)  = split(',', $coords||'');
+    my $segstart       = $start || $self->start($seg) || '';
+    my $segend         = $end   || $self->end($seg)   || '';
 
     if ( $self->known_segments() ) {
       unless (grep { /$seg/ } $self->known_segments()) {
@@ -562,9 +574,9 @@ sub das_features {
     }
 
     for my $feature (@f) {
-      my $seg      = $feature->{'segment'}         || "";
-      my $segstart = $feature->{'segment_start'}   || $feature->{'start'} || "";
-      my $segend   = $feature->{'segment_end'}     || $feature->{'end'}	  || "";
+      my $seg      = $feature->{'segment'}         || '';
+      my $segstart = $feature->{'segment_start'}   || $feature->{'start'} || '';
+      my $segend   = $feature->{'segment_end'}     || $feature->{'end'}	  || '';
       my $segver   = $feature->{'segment_version'} || "1.0";
       $response   .= qq(    <SEGMENT id="$seg" version="$segver" start="$segstart" stop="$segend">\n);
       $response   .= $self->_gen_feature_das_response($feature, "    ");
@@ -577,7 +589,7 @@ sub das_features {
   # Responses across multiple group_ids need to be collated to segments
   # So there's a big, untidy, inefficient sort by segment_id here
   #
-  my $lastsegid = "";
+  my $lastsegid = '';
   for my $feature (sort {
     $a->{'segment'} cmp $b->{'segment'}
 
@@ -587,9 +599,9 @@ sub das_features {
   } @{$opts->{'groups'}}) {
 
     if($feature->{'segment'} ne $lastsegid) {
-      my $seg      = $feature->{'segment'}         || "";
-      my $segstart = $feature->{'segment_start'}   || $feature->{'start'} || "";
-      my $segend   = $feature->{'segment_end'}     || $feature->{'end'}	  || "";
+      my $seg      = $feature->{'segment'}         || '';
+      my $segstart = $feature->{'segment_start'}   || $feature->{'start'} || '';
+      my $segend   = $feature->{'segment_end'}     || $feature->{'end'}	  || '';
       my $segver   = $feature->{'segment_version'} || "1.0";
       $response   .= qq(    </SEGMENT>\n) if($lastsegid);
       $response   .= qq(    <SEGMENT id="$seg" version="$segver" start="$segstart" stop="$segend">\n);
@@ -610,7 +622,7 @@ sub das_features {
 =cut
 sub error_feature {
   my ($self, $f) = @_;
-  qq(    <SEGMENT id="">
+  qq(    <SEGMENT id=''>
       <UNKNOWNFEATURE id="$f" />
     </SEGMENT>\n);
 }
@@ -645,12 +657,12 @@ sub open_dassequence {
 sub das_dna {
   my ($self, $segref) = @_;
 
-  my $response = "";
+  my $response = '';
   for my $seg (@{$segref->{'segments'}}) {
     my ($seg, $coords) = split(':', $seg);
-    my ($start, $end)  = split(',', $coords||"");
-    my $segstart       = $start || $self->start($seg) || "";
-    my $segend         = $end   || $self->end($seg)   || "";
+    my ($start, $end)  = split(',', $coords||'');
+    my $segstart       = $start || $self->start($seg) || '';
+    my $segend         = $end   || $self->end($seg)   || '';
     my $sequence       = $self->sequence({
 					  'segment' => $seg,
 					  'start'   => $start,
@@ -674,12 +686,12 @@ sub das_dna {
 sub das_sequence {
   my ($self, $segref) = @_;
 
-  my $response = "";
+  my $response = '';
   for my $seg (@{$segref->{'segments'}}) {
     my ($seg, $coords) = split(':', $seg);
-    my ($start, $end)  = split(',', $coords||"");
-    my $segstart       = $start || $self->start($seg) || "";
-    my $segend         = $end   || $self->end($seg)   || "";
+    my ($start, $end)  = split(',', $coords||'');
+    my $segstart       = $start || $self->start($seg) || '';
+    my $segend         = $end   || $self->end($seg)   || '';
     my $sequence       = $self->sequence({
 					  'segment' => $seg,
 					  'start'   => $start,
@@ -720,8 +732,8 @@ sub close_dassequence {
 sub open_dastypes {
   my $self = shift;
   my $dsn  = $self->dsn();
-  my $host = $self->{'hostname'}||"";
-  my $port = $self->{'port'}?":$self->{'port'}":"";
+  my $host = $self->{'hostname'}||'';
+  my $port = $self->{'port'}?":$self->{'port'}":'';
 
   qq(<?xml version="1.0" standalone="no"?>
 <!DOCTYPE DASTYPES SYSTEM "http://www.biodas.org/dtd/dastypes.dtd">
@@ -746,7 +758,7 @@ sub close_dastypes {
 =cut
 sub das_types {
   my ($self, $opts) = @_;
-  my $response      = "";
+  my $response      = '';
   my @types         = ();
   my $data          = {};
 
@@ -757,9 +769,9 @@ sub das_types {
   } else {
     for my $seg (@{$opts->{'segments'}}) {
       my ($seg, $coords) = split(':', $seg);
-      my ($start, $end)  = split(',', $coords||"");
-      my $segstart       = $start || $self->start($seg) || "";
-      my $segend         = $end   || $self->end($seg)   || "";
+      my ($start, $end)  = split(',', $coords||'');
+      my $segstart       = $start || $self->start($seg) || '';
+      my $segend         = $end   || $self->end($seg)   || '';
 
       $data->{$seg} = [];
       @types = $self->build_types({
@@ -774,11 +786,11 @@ sub das_types {
 
   for my $seg (keys %{$data}) {
     my ($seg, $coords) = split(':', $seg);
-    my ($start, $end)  = split(',', $coords || "");
-    my $segstart       = $start || $self->start($seg) || "";
-    my $segend         = $end   || $self->end($seg)   || "";
+    my ($start, $end)  = split(',', $coords || '');
+    my $segstart       = $start || $self->start($seg) || '';
+    my $segend         = $end   || $self->end($seg)   || '';
 
-    if ($seg ne "anon") {
+    if ($seg ne 'anon') {
       $response .= qq(  <SEGMENT id="$seg" start="$segstart" stop="$segend" version="1.0">\n);
 
     } else {
@@ -787,14 +799,14 @@ sub das_types {
 
     for my $type (@{$data->{$seg}}) {
       $response .= sprintf(qq(    <TYPE id="%s"%s%s%s%s%s%s>%s</TYPE>\n),
-			   $type->{'type'}       || "",
-			   $type->{'method'}      ?qq( method="$type->{'method'}")           : "",
-			   $type->{'category'}    ?qq( category="$type->{'category'}")       : "",
-			   $type->{'c_ontology'}  ?qq( c_ontology="$type->{'c_ontology'}")   : "",
-			   $type->{'evidence'}    ?qq( evidence="$type->{'evidence'}")       : "",
-			   $type->{'e_ontology'}  ?qq( e_ontology="$type->{'e_ontology'}")   : "",
-			   $type->{'description'} ?qq( description="$type->{'description'}") : "",
-			   $type->{'count'}      || "");
+			   $type->{'type'}       || '',
+			   $type->{'method'}      ?qq( method="$type->{'method'}")           : '',
+			   $type->{'category'}    ?qq( category="$type->{'category'}")       : '',
+			   $type->{'c_ontology'}  ?qq( c_ontology="$type->{'c_ontology'}")   : '',
+			   $type->{'evidence'}    ?qq( evidence="$type->{'evidence'}")       : '',
+			   $type->{'e_ontology'}  ?qq( e_ontology="$type->{'e_ontology'}")   : '',
+			   $type->{'description'} ?qq( description="$type->{'description'}") : '',
+			   $type->{'count'}      || '');
     }
     $response .= qq(  </SEGMENT>\n);
   }
@@ -809,8 +821,8 @@ sub das_types {
 sub open_dasep {
   my $self    = shift;
   my $dsn     = $self->dsn();
-  my $host    = $self->{'hostname'}||"";
-  my $port    = $self->{'port'}?":$self->{'port'}":"";
+  my $host    = $self->{'hostname'}||'';
+  my $port    = $self->{'port'}?":$self->{'port'}":'';
 
   return qq(<?xml version="1.0" standalone="no"?>
 <!DOCTYPE DASEP SYSTEM "http://www.biodas.org/dtd/dasep.dtd">
@@ -835,10 +847,10 @@ sub close_dasep {
 =cut
 sub das_entry_points {
   my $self    = shift;
-  my $content = "";
+  my $content = '';
 
   for my $ep ($self->build_entry_points()) {
-    my $subparts = $ep->{'subparts'} || "yes"; # default to yes here as we're giving entrypoints
+    my $subparts = $ep->{'subparts'} || 'yes'; # default to yes here as we're giving entrypoints
     $content    .= qq(    <SEGMENT id="$ep->{'segment'}" size="$ep->{'length'}" subparts="$subparts" />\n);
   }
 
@@ -875,7 +887,7 @@ sub das_stylesheet {
       warn $@ if($@);
     }
 
-    if(($self->config->{'cachestylesheetfile'} || "yes") eq "yes") {
+    if(($self->config->{'cachestylesheetfile'} || 'yes') eq 'yes') {
       $self->{'stylesheetfile'} ||= $ssf;
     }
 
@@ -932,7 +944,7 @@ sub das_homepage {
       warn $@ if($@);
     }
 
-    if(($self->config->{'cachehomepagefile'}||"yes") eq "yes") {
+    if(($self->config->{'cachehomepagefile'}||'yes') eq 'yes') {
       $self->{'homepagefile'} ||= $hpf;
     }
 
@@ -951,9 +963,9 @@ sub das_homepage {
       <dt>DSN</dt>
       <dd>$dsn</dd>
       <dt>Description</dt>
-      <dd>@{[$self->description() || $self->config->{'description'} || "none configured"]}</dd>
+      <dd>@{[$self->description() || $self->config->{'description'} || 'none configured']}</dd>
       <dt>Mapmaster</dt>
-      <dd>@{[$self->mapmaster() || $self->config->{'mapmaster'} || "none configured"]}</dd>
+      <dd>@{[$self->mapmaster() || $self->config->{'mapmaster'} || 'none configured']}</dd>
       <dt>Capabilities</dt>
       <dd>@{[$self->das_capabilities()]}
   </body>
@@ -971,11 +983,11 @@ sub das_homepage {
 
 sub das_alignment {
   my ($self, $opts) = @_;
-  my $response      = "";
+  my $response      = '';
   my $query         = $opts->{'query'};
   my $subjectsRefs  = $opts->{'subjects'};
-  my $subCoos       = $opts->{'subcoos'} || "";
-  my $rows          = $opts->{'rows'}    || "";
+  my $subCoos       = $opts->{'subcoos'} || '';
+  my $rows          = $opts->{'rows'}    || '';
   
   #Overview of the alignment structure
   #<alignment>
@@ -1008,24 +1020,24 @@ sub das_alignment {
   for my $ali ($self->buildAlignment($query, $rows, $subjectsRefs, $subCoos)) {
     $response .= sprintf(qq(  <alignment name="%s" alignType="%s"%s%s>\n),
 			 $ali->{'name'},
-			 $ali->{'type'} || "unknown",
-			 $ali->{'max'}      ?qq( max="$ali->{'max'}"):"",
-			 $ali->{'position'} ?qq( position="$ali->{'position'}"):"");
+			 $ali->{'type'} || 'unknown',
+			 $ali->{'max'}      ?qq( max="$ali->{'max'}"):'',
+			 $ali->{'position'} ?qq( position="$ali->{'position'}"):'');
     
     for my $aliObj (grep { $_ } @{$ali->{'alignObj'}}) {
-      $response .= &genAlignObjectDasResponse($aliObj, "   ");
+      $response .= &genAlignObjectDasResponse($aliObj, '   ');
     }
 
     for my $score (@{$ali->{'scores'}}) {
-      $response .= &genAlignScoreDasResponse($score, "   ");
+      $response .= &genAlignScoreDasResponse($score, '   ');
     }
 
     for my $block (@{$ali->{'blocks'}}) {
-      $response .= &genAlignBlockDasResponse($block, "   ");
+      $response .= &genAlignBlockDasResponse($block, '   ');
     }
 
     for my $geo3D (@{$ali->{'geo3D'}}) {
-      $response .= &genAlignGeo3dDasResponse($geo3D, "   ");
+      $response .= &genAlignGeo3dDasResponse($geo3D, '   ');
     }
     $response .= qq (  </alignment>\n);
   }
@@ -1046,18 +1058,18 @@ sub das_alignment {
 
 sub genAlignObjectDasResponse {
   my ($aliObject, $spacing) = @_;
-  my $response              = "";
+  my $response              = '';
   my $childElement          = 0;
   #Now get the attributes
   #print "|".Dumper($aliObject)."|\n";
   
-  my $objVersion    = $aliObject->{'version'}   || "1.0";
-  my $intObjectId   = $aliObject->{'intID'}     || "unknown";
+  my $objVersion    = $aliObject->{'version'}   || '1.0';
+  my $intObjectId   = $aliObject->{'intID'}     || 'unknown';
   my $type          = $aliObject->{'type'};
-  my $dbSource      = $aliObject->{'dbSource'}  || "unknown";
-  my $dbVersion     = $aliObject->{'dbVersion'} || "unknown";
+  my $dbSource      = $aliObject->{'dbSource'}  || 'unknown';
+  my $dbVersion     = $aliObject->{'dbVersion'} || 'unknown';
   my $dbCoordSys    = $aliObject->{'coos'};
-  my $dbAccessionId = $aliObject->{'accession'} || "unknown";
+  my $dbAccessionId = $aliObject->{'accession'} || 'unknown';
   
   $response .= qq($spacing  <alignobject objVersion="$objVersion" intObjectId="$intObjectId" );
   $response .= qq(type="$type" ) if($type);
@@ -1067,12 +1079,12 @@ sub genAlignObjectDasResponse {
 
   for my $aliObjDetail (@{$aliObject->{'aliObjectDetail'}}) {
     $childElement++;
-    my $detailDbSource = $aliObjDetail->{'source'}   || "unknown";
-    my $property       = $aliObjDetail->{'property'} || "unknown";
-    my $detail         = $aliObjDetail->{'detail'}   || "";
+    my $detailDbSource = $aliObjDetail->{'source'}   || 'unknown';
+    my $property       = $aliObjDetail->{'property'} || 'unknown';
+    my $detail         = $aliObjDetail->{'detail'}   || '';
     $response         .= qq($spacing    <alignobjectdetail dbSource="$detailDbSource" property="$property");
 
-    if($detail ne "") {
+    if($detail ne '') {
       $response .= qq(>$detail</alignobjectdetail>\n);
 
     } else {
@@ -1111,8 +1123,8 @@ sub genAlignObjectDasResponse {
 
 sub genAlignScoreDasResponse {
   my($score, $spacing) = @_;
-  my $methodName  = $score->{'method'} || "unknown";
-  my $methodScore = $score->{'score'} || "0";
+  my $methodName  = $score->{'method'} || 'unknown';
+  my $methodScore = $score->{'score'} || '0';
   return qq($spacing <score methodName="$methodName" value="$methodScore" />\n);
 }
 
@@ -1131,8 +1143,8 @@ sub genAlignScoreDasResponse {
 
 sub genAlignBlockDasResponse {
   my($block, $spacing) = @_;
-  my $response   = "";
-  my $blockScore = $block->{'blockScore'} || "";# This is not required
+  my $response   = '';
+  my $blockScore = $block->{'blockScore'} || '';# This is not required
   my $blockOrder = $block->{'blockOrder'} || 1; # This is required
   
   #The code assumes that if a block is passed in, it has an alignment
@@ -1141,23 +1153,23 @@ sub genAlignBlockDasResponse {
 
   #Block tag with required and optional attributes
   $response .= qq($spacing <block blockOrder="$blockOrder" );
-  $response .= qq(blockScore="$blockScore") if($blockScore ne "");
+  $response .= qq(blockScore="$blockScore") if($blockScore ne '');
   $response .= qq(>\n);
   
   #get segment data structures and convert these into das response xml
   for my $segment (@{$block->{'segments'}}) {
-    my $objectId = $segment->{'objectId'}    || "unknown"; # required
-    my $start    = $segment->{'start'}       || ""; # optional
-    my $end      = $segment->{'end'}         || ""; # optional
-    my $ori      = $segment->{'orientation'} || ""; #optional
-    my $cigar    = $segment->{'cigar'}       || ""; #optional
+    my $objectId = $segment->{'objectId'}    || 'unknown'; # required
+    my $start    = $segment->{'start'}       || ''; # optional
+    my $end      = $segment->{'end'}         || ''; # optional
+    my $ori      = $segment->{'orientation'} || ''; #optional
+    my $cigar    = $segment->{'cigar'}       || ''; #optional
 
     #Segment taq with required and then optional attributes added
     $response .= qq($spacing  <segment intObjectId="$objectId" );
-    $response .= qq(start="$start" end="$end" ) if(($start ne "") and ($end ne "")); #Makes no sense to me to set one of these and not the other.
-    $response .= qq(orientation="$ori") if($ori ne ""); # Genomic stuff
+    $response .= qq(start="$start" end="$end" ) if(($start ne '') and ($end ne '')); #Makes no sense to me to set one of these and not the other.
+    $response .= qq(orientation="$ori") if($ori ne ''); # Genomic stuff
 
-    if($cigar eq "") {
+    if($cigar eq '') {
       $response .= qq(/>\n); #close the tag directly
 
     } else {
@@ -1184,23 +1196,23 @@ sub genAlignBlockDasResponse {
 sub genAlignGeo3dDasResponse {
   my($geo3d, $spacing) = @_;
   #The geo3d is a reference to a 2D array.
-  my $response    = "";
-  my $intObjectId = $geo3d->{'intObjectId'} || "unknown";
+  my $response    = '';
+  my $intObjectId = $geo3d->{'intObjectId'} || 'unknown';
   my $vector      = $geo3d->{'vector'};
   my $matrix      = $geo3d->{'matrix'};
   
   $response .= qq($spacing <geo3d intObjectId="$intObjectId">\n);
 
   if($vector && $matrix){ #These are bot required
-    my $x      = $vector->{'x'} || "0.0";
-    my $y      = $vector->{'y'} || "0.0";
-    my $z      = $vector->{'z'} || "0.0";
+    my $x      = $vector->{'x'} || '0.0';
+    my $y      = $vector->{'y'} || '0.0';
+    my $z      = $vector->{'z'} || '0.0';
     $response .= qq($spacing  <vector x="$x" y="$y" z="$z" />\n);
     $response .= qq($spacing  <matrix>\n);
 
     for my $m1 (0,1,2) {
       for my $m2 (0,1,2) {
-	my $coordinate = $matrix->[$m1]->[$m2] || "0.0";
+	my $coordinate = $matrix->[$m1]->[$m2] || '0.0';
 	my $n1         = $m1 + 1;#Bit of a hack, but ensures data integrity between the array and xml with next to no effort.
 	my $n2         = $m2 + 1;#ditto
 	$response     .= qq($spacing    <max$n1$n2 coord="$coordinate" />\n);
@@ -1228,7 +1240,7 @@ sub genAlignGeo3dDasResponse {
 
 sub das_structure {
   my($self, $opts) = @_;
-  my $response     = "";
+  my $response     = '';
     
   #This is the sort of response that we should be producing.
 
@@ -1268,16 +1280,16 @@ sub das_structure {
   my $dasStructure = $self->buildStructure($query, $chainsRef, $modelNo);
     
   for my $obj (@{$dasStructure->{'objects'}}) {
-    $response .= &genObjectDasResponse($obj, " ");
+    $response .= &genObjectDasResponse($obj, ' ');
   }
     
     
   for my $chain (@{$dasStructure->{'chains'}}) {
-    $response .= &genChainDasResponse($chain, " ");
+    $response .= &genChainDasResponse($chain, ' ');
   }
     
   for my $connect (@{$dasStructure->{'connects'}}) {
-    $response .= &genConnectDasResponse($connect, " ");
+    $response .= &genConnectDasResponse($connect, ' ');
   }
 
   return $response;    
@@ -1290,7 +1302,7 @@ sub das_structure {
           : arbitrary spacing for pretty printing and converts the
           : data structure into dasstructure xml
  Args     : object data structure, spacing string
- Returns  : Das Response string encapuslating "object"
+ Returns  : Das Response string encapuslating 'object'
  Comment  : The object response allows the details of the coordinates to be descriped. For example
           : the fact that the coos are part of a pdb file.
 
@@ -1298,15 +1310,15 @@ sub das_structure {
 
 sub genObjectDasResponse {
   my ($object, $spacing) = @_;
-  my $response      = "";
+  my $response      = '';
   my $childElement  = 0;
 
-  my $objVersion    = $object->{'dbVersion'} || "1.0";
+  my $objVersion    = $object->{'dbVersion'} || '1.0';
   my $type          = $object->{'type'};
-  my $dbSource      = $object->{'dbSource'} || "unknown";
-  my $dbVersion     = $object->{'dbVersion'} || "unknown";
-  my $dbCoordSys    = $object->{'dbCoordSys'} || "pdb";
-  my $dbAccessionId = $object->{'dbAccessionId'} || "unknown";
+  my $dbSource      = $object->{'dbSource'} || 'unknown';
+  my $dbVersion     = $object->{'dbVersion'} || 'unknown';
+  my $dbCoordSys    = $object->{'dbCoordSys'} || 'pdb';
+  my $dbAccessionId = $object->{'dbAccessionId'} || 'unknown';
   $response .= qq($spacing <object objectVersion="$objVersion");
   $response .= qq( type="$type" ) if($type);
   $response .= qq( dbSource="$dbSource" dbVersion="$dbVersion" dbAccessionId="$dbAccessionId");
@@ -1315,12 +1327,12 @@ sub genObjectDasResponse {
     
   for my $objDetail (@{$object->{'objectDetails'}}){
     $childElement++;
-    my $detailDbSource = $objDetail->{'source'} || "unknown";
-    my $property       = $objDetail->{'property'} || "unknown";
-    my $detail         = $objDetail->{'detail'} || "";
+    my $detailDbSource = $objDetail->{'source'} || 'unknown';
+    my $property       = $objDetail->{'property'} || 'unknown';
+    my $detail         = $objDetail->{'detail'} || '';
     $response         .= qq($spacing   <objectdetail dbSource="$detailDbSource" property="$property");
 
-    if($detail ne "") {
+    if($detail ne '') {
       $response .= qq(>$detail</objectdetail>\n);
  
     } else {
@@ -1347,7 +1359,7 @@ sub genObjectDasResponse {
           : arbitrary spacing for pretty printing and converts the
           : data structure into dasstructure xml
  Args     : chain data structure, spacing string
- Returns  : Das Response string encapuslating "chain"
+ Returns  : Das Response string encapuslating 'chain'
  Comment  : Chain objects contain all of the atom positions (including hetatoms).
           : The groups are typically residues or ligands.
 
@@ -1355,17 +1367,17 @@ sub genObjectDasResponse {
 
 sub genChainDasResponse {
   my ($chain, $spacing) = @_;
-  my $response = "";
+  my $response = '';
     
 
   #Set up the chain properties, chain id, swisprot mapping and model number.
-  my $id      = $chain->{'id'} || "";
-  $id         = "" if($id =~ /null/);
-  my $modelNo = $chain->{'modelNumber'} || "";
+  my $id      = $chain->{'id'} || '';
+  $id         = '' if($id =~ /null/);
+  my $modelNo = $chain->{'modelNumber'} || '';
   my $swissId = $chain->{'SwissprotId'} || undef;
     
   $response .= qq($spacing <chain id="$id");
-  $response .= qq( model="$modelNo") unless($modelNo eq "");
+  $response .= qq( model="$modelNo") unless($modelNo eq '');
   $response .= qq( SwissprotId="$swissId") unless (!$swissId);
   $response .= qq(\n>);
     
@@ -1424,9 +1436,9 @@ sub genChainDasResponse {
 
 sub genConnectDasResponse {
   my ($connect, $spacing) = @_;
-  my $response    = "";
+  my $response    = '';
   my $atomSerial  = $connect->{'atomSerial'} || undef;
-  my $connectType = $connect->{'type'}       || "unknown";
+  my $connectType = $connect->{'type'}       || 'unknown';
 
   if($atomSerial) {
     $response .= qq($spacing <connect atomSerial="$atomSerial" type="$connectType">\n);
@@ -1437,5 +1449,40 @@ sub genConnectDasResponse {
     $response .= qq($spacing </connect>);
   }
   return $response;
-} 
+}
+
+=head2 cleanup : Post-request garbage collection
+
+=cut
+sub cleanup {
+  my $self  = shift;
+  my $debug = $self->{'debug'};
+
+  if(!$self->config->{'autodisconnect'}) {
+    $debug and print STDERR "${self}::cleanup retaining transport\n";
+    return;
+
+  } else {
+    if(!$self->{'_transport'}) {
+      $debug and print STDERR "${self}::cleanup no transport loaded\n";
+      return;
+    }
+
+    my $transport = $self->transport();
+    if($self->config->{'autodisconnect'} eq 'yes') {
+      eval {
+	$self->transport->disconnect();
+	$debug and print STDERR qq(${self}::cleanup performed forced transport disconnect\n);
+      };
+    } elsif($self->config->{'autodisconnect'} =~ /(\d+)/) {
+      if(time - $self->transport->init_time() > $1) {
+	eval {
+	  $self->transport->disconnect();
+	  $debug and print STDERR qq(${self}::cleanup performed timed transport disconnect\n);
+	};
+      }
+    }
+  }
+}
+
 1;

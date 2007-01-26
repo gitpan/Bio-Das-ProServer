@@ -8,9 +8,10 @@
 #
 package Bio::Das::ProServer::SourceHydra;
 use strict;
+use warnings;
 use Bio::Das::ProServer::SourceAdaptor;
 
-our $VERSION  = do { my @r = (q$Revision: 2.01 $ =~ /\d+/g); sprintf "%d."."%03d" x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head1 AUTHOR
 
@@ -51,7 +52,7 @@ databases but have the same structure in each.
 sub new {
   my ($class, $defs) = @_;
   my $self = {
-	      'dsn'    => $defs->{'dsn'}    || "",
+	      'dsn'    => $defs->{'dsn'}    || '',
               'config' => $defs->{'config'},
 	      'debug'  => $defs->{'debug'}  || undef,
              };
@@ -78,7 +79,7 @@ sub transport {
 
   if(!exists $self->{'_transport'} && $self->config->{'transport'}) {
 
-    my $transport = "Bio::Das::ProServer::SourceAdaptor::Transport::".$self->config->{'transport'};
+    my $transport = 'Bio::Das::ProServer::SourceAdaptor::Transport::'.$self->config->{'transport'};
     eval "require $transport";
     if($@) {
       warn $@;

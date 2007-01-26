@@ -1,0 +1,106 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="similarity">
+     <TYPE id="genetrap:CMHD">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>gold4</BGCOLOR>
+              <FGCOLOR>gold4</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetrap:ESDB">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>black</BGCOLOR>
+              <FGCOLOR>black</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetrap:SIGTR">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>blue</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetrap:BG">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>coral1</BGCOLOR>
+              <FGCOLOR>coral1</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="MapTag:pGT0Lxf:BG">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>coral1</BGCOLOR>
+              <FGCOLOR>coral1</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetrap:FHCRC">
+        <GLYPH>
+           <FARROW>
+              <BGCOLOR>orange3</BGCOLOR>
+              <FGCOLOR>orange3</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </FARROW>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="genetrap:GGTC">
+        <GLYPH>
+           <RARROW>
+              <BGCOLOR>navy</BGCOLOR>
+              <FGCOLOR>navy</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </RARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="structural">
+     <TYPE id="Component:chromosome">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>purple</BGCOLOR>
+              <FGCOLOR>yellow</FGCOLOR>
+           </BOX>
+        </GLYPH>
+        <GLYPH zoom="low">
+           <BOX>
+              <BGCOLOR>yellow</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

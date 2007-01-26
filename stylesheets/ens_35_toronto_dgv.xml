@@ -1,0 +1,51 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="variation">
+     <TYPE id="dgv:CopyNumber">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>orange</BGCOLOR>
+              <FGCOLOR>orange</FGCOLOR>
+              <HEIGHT>8</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="dgv:InversionBreakpoint">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>grey</BGCOLOR>
+              <FGCOLOR>orange</FGCOLOR>
+              <HEIGHT>8</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="dgv:Inversion">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>orange</FGCOLOR>
+              <HEIGHT>8</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>black</BGCOLOR>
+              <FGCOLOR>black</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

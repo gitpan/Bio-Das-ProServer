@@ -8,12 +8,13 @@
 #
 package Bio::Das::ProServer::Config;
 use strict;
+use warnings;
 use Bio::Das::ProServer::SourceAdaptor;
 use Bio::Das::ProServer::SourceHydra;
 use Sys::Hostname;
 use Config::IniFiles;
 
-our $VERSION  = do { my @r = (q$Revision: 2.01 $ =~ /\d+/g); sprintf "%d."."%03d" x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf "%d."."%03d" x $#r, @r };
 
 =head1 AUTHOR
 
@@ -38,7 +39,7 @@ sub new {
   $self->{'hostname'}   ||= &hostname();
 
   my $inifile = $self->{'inifile'};
-  ($inifile)  = ($inifile||"") =~ m|([a-zA-Z0-9_/\.\-]+)|;
+  ($inifile)  = ($inifile||'') =~ m|([a-zA-Z0-9_/\.\-]+)|;
 
   if($inifile && -f $inifile) {
     my $conf = Config::IniFiles->new(
@@ -48,19 +49,24 @@ sub new {
     # load general parameters
     #
     for my $f (qw(hostname
+		  port
+		  response_hostname
+		  response_port
+		  response_protocol
+		  response_baseuri
 		  interface
 		  prefork
 		  maxclients
 		  pidfile
 		  logfile
-		  port
 		  ensemblhome
 		  oraclehome
 		  bioperlhome
 		  http_proxy
-		  serverroot)) {
-      $self->{$f} = $conf->val("general", $f) if($conf->val("general", $f));
-      printf STDERR qq(**** %s => %s ****\n), $f, ($self->{$f}||"");
+		  serverroot
+		  logformat)) {
+      $self->{$f} ||= $conf->val('general', $f) if($conf->val('general', $f));
+      printf STDERR qq(**** %s => %s ****\n), $f, ($self->{$f}||'');
     }
 
     #########
@@ -92,7 +98,7 @@ sub new {
 sub port {
   my $self = shift;
   ($self->{'port'}) = $self->{'port'} =~ /([0-9]+)/;
-  return $self->{'port'}||"";
+  return $self->{'port'}||'';
 }
 
 =head2 maxclients : get/set accessor for configured maxclients
@@ -114,7 +120,7 @@ sub maxclients {
 =cut
 sub pidfile {
   my $self = shift;
-  ($self->{'pidfile'}) = ($self->{'pidfile'}||"") =~ /([a-zA-Z0-9\/\-_\.]+)/;
+  ($self->{'pidfile'}) = ($self->{'pidfile'}||'') =~ /([a-zA-Z0-9\/\-_\.]+)/;
   return $self->{'pidfile'};
 }
 
@@ -125,8 +131,25 @@ sub pidfile {
 =cut
 sub logfile {
   my $self = shift;
-  ($self->{'logfile'}) = ($self->{'logfile'}||"") =~ /([a-zA-Z0-9\/\-_\.]+)/;
+  ($self->{'logfile'}) = ($self->{'logfile'}||'') =~ /([a-zA-Z0-9\/\-_\.]+)/;
   return $self->{'logfile'};
+}
+
+=head2 logformat : get accessor for configured logformat
+
+  my $sLogformat = $oConfig->logformat();
+
+  Special variables:
+  %i      Remote IP
+  %h      Remote hostname
+  %t      Local time (YYYY-MM-DDTHH:MM:SS)
+  %r      Request URI
+  %s      HTTP status code
+
+=cut
+sub logformat {
+  my $self = shift;
+  return $self->{'logformat'} || '%i %t %r %s';
 }
 
 =head2 host : get accessor for configured host
@@ -138,10 +161,62 @@ sub logfile {
 =cut
 sub host {
   my $self = shift;
-  my $h    = $self->{'interface'} || "";
-  $h       = $self->{'hostname'} if(!$h || $h eq "*"); # if interface=*, always override with hostname
+  my $h    = $self->{'interface'} || '';
+  $h       = $self->{'hostname'} if(!$h || $h eq '*'); # if interface=*, always override with hostname
   ($self->{'hostname'}) = $h =~ /([a-zA-Z0-9\/\-_\.]+)/;
-  return $self->{'hostname'}||"";
+  return $self->{'hostname'}||'';
+}
+
+=head2 response_hostname : get accessor for configured response_hostname
+
+  Useful for setting the hostname in XML/HTML responses when behind a reverse-proxy.
+
+  my $sResponse_Hostname = $cfg->response_hostname();
+
+  Examines 'response_hostname', 'interface' and 'hostname' settings in that order
+
+=cut
+sub response_hostname {
+  my $self = shift;
+  return $self->{'response_hostname'} || $self->host();
+}
+
+=head2 response_port : get accessor for configured response_port
+
+  Useful for setting the port in XML/HTML responses when behind a reverse-proxy.
+
+  my $sResponse_Port = $cfg->response_port();
+
+  Examines 'response_port' and 'port' settings in that order
+
+=cut
+sub response_port {
+  my $self = shift;
+  return $self->{'response_port'} || $self->port();
+}
+
+=head2 response_protocol : get accessor for configured response_protocol
+
+  Useful for setting the protocol in XML/HTML responses when behind a reverse-proxy.
+
+  my $sResponse_Protocol = $cfg->response_protocol();
+
+=cut
+sub response_protocol {
+  my $self = shift;
+  return $self->{'response_protocol'} || 'http';
+}
+
+=head2 response_baseuri : get accessor for configured response_baseuri
+
+  Useful for setting the baseuri (i.e. preceeding /das) in XML/HTML responses when behind a reverse-proxy.
+
+  my $sResponse_Baseuri = $cfg->response_baseuri();
+
+=cut
+sub response_baseuri {
+  my $self = shift;
+  return $self->{'response_baseuri'} || '';
 }
 
 =head2 interface : get accessor configured interface
@@ -151,7 +226,9 @@ sub host {
 =cut
 sub interface {
   my $self = shift;
-  return $self->{'interface'} || $self->{'hostname'} || undef;
+  $self->{'interface'} ||= '';
+  return undef if($self->{'interface'} eq '*');
+  return $self->{'interface'};
 }
 
 =head2 adaptors : Build all known Bio::Das::ProServer::SourceAdaptors (including those Hydra-based)
@@ -251,13 +328,15 @@ sub knows {
   #########
   # test plain sources
   #
-  return 1 if(exists $self->{'adaptors'}->{$dsn} && $self->{'adaptors'}->{$dsn}->{'state'} && $self->{'adaptors'}->{$dsn}->{'state'} eq "on");
+  return 1 if(exists $self->{'adaptors'}->{$dsn}     &&
+	      $self->{'adaptors'}->{$dsn}->{'state'} &&
+	      $self->{'adaptors'}->{$dsn}->{'state'} eq 'on');
 
   #########
   # test hydra sources (slower)
   #
-  for my $hydraname (grep { $self->{'adaptors'}->{$_}->{'hydra'} || substr($_, 0, 5) eq "hydra" } keys %{$self->{'adaptors'}}) {
-    next unless($self->{'adaptors'}->{$hydraname}->{'state'} && $self->{'adaptors'}->{$hydraname}->{'state'} eq "on");
+  for my $hydraname (grep { $self->{'adaptors'}->{$_}->{'hydra'} || substr($_, 0, 5) eq 'hydra' } keys %{$self->{'adaptors'}}) {
+    next unless($self->{'adaptors'}->{$hydraname}->{'state'} && $self->{'adaptors'}->{$hydraname}->{'state'} eq 'on');
     my $hydra = $self->hydra($hydraname);
     next unless($hydra);
     return 1 if(grep { $_ eq $dsn } $hydra->sources());
@@ -296,7 +375,7 @@ sub hydra_adaptor {
   #########
   # sourceadaptor search
   #
-  for my $hydraname (grep { $self->{'adaptors'}->{$_}->{'hydra'} || substr($_, 0, 5) eq "hydra" } keys %{$self->{'adaptors'}}) {
+  for my $hydraname (grep { $self->{'adaptors'}->{$_}->{'hydra'} || substr($_, 0, 5) eq 'hydra' } keys %{$self->{'adaptors'}}) {
     my $adaptor = $self->_hydra_adaptor($hydraname, $dsn);
     $adaptor or next;
     return $adaptor;
@@ -310,7 +389,7 @@ sub hydra_adaptor {
 sub _hydra_adaptor {
   my ($self, $hydraname, $dsn) = @_;
 
-  return unless($self->{'adaptors'}->{$hydraname}->{'state'} && $self->{'adaptors'}->{$hydraname}->{'state'} eq "on");
+  return unless($self->{'adaptors'}->{$hydraname}->{'state'} && $self->{'adaptors'}->{$hydraname}->{'state'} eq 'on');
   my $config = $self->{'adaptors'}->{$hydraname};
   my $hydra  = $self->hydra($hydraname);
 
@@ -344,10 +423,10 @@ sub _hydra_adaptor {
 =cut
 sub hydra {
   my ($self, $hydraname) = @_;
-  $hydraname ||= "";
+  $hydraname ||= '';
 
   if($hydraname && !$self->{'adaptors'}->{$hydraname}->{'_hydra'}) {
-    my $hydraimpl = "Bio::Das::ProServer::SourceHydra::".$self->{'adaptors'}->{$hydraname}->{'hydra'};
+    my $hydraimpl = 'Bio::Das::ProServer::SourceHydra::'.$self->{'adaptors'}->{$hydraname}->{'hydra'};
     eval "require $hydraimpl";
     if($@) {
       warn "Error requiring $hydraimpl: $@";

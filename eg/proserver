@@ -4,7 +4,7 @@
 # Author:        rmp
 # Maintainer:    $Author: rmp $
 # Created:       2003-05-22
-# Last Modified: $Date: 2006/07/03 10:05:07 $
+# Last Modified: $Date: 2007/01/26 23:10:41 $
 #
 =head1 AUTHOR
 
@@ -22,7 +22,7 @@ disclaimers of warranty.
 =cut
 
 use lib qw(./blib/lib ../blib/lib . ..);
-package poeserver;
+package Bio::Das::ProServer;
 use warnings;
 use strict;
 use Bio::Das::ProServer::Config;
@@ -33,21 +33,22 @@ use POE;                         # Base features.
 use POE::Filter::HTTPD;          # For serving HTTP content.
 use POE::Wheel::ReadWrite;       # For socket I/O.
 use POE::Wheel::SocketFactory;   # For serving socket connections.
-use POSIX;
+use POSIX qw(setsid strftime);
 use Sys::Hostname;
 use Bio::Das::ProServer::SourceAdaptor;
 use Bio::Das::ProServer::SourceHydra;
+use Socket;
 
-our $VERSION        = do { my @r = (q$Revision: 2.01 $ =~ /\d+/g); sprintf "%d."."%03d" x $#r, @r };
+our $VERSION        = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 our $GZIP_THRESHOLD = 10000;
-$ENV{'PATH'}        = "/bin:/usr/bin:/usr/local/bin";
+$ENV{'PATH'}        = '/bin:/usr/bin:/usr/local/bin';
 our $WRAPPERS       = {
 		       'dsn'          => {
 					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<!DOCTYPE DASDSN SYSTEM 'http://www.biodas.org/dtd/dasdsn.dtd' >\n<DASDSN>\n),
 					  'close' => qq(</DASDSN>\n),
 					 },
 		       'features'     => {
-					  'open'  =>  qq(<?xml version="1.0" standalone="yes"?>\n<!DOCTYPE DASGFF SYSTEM "http://www.biodas.org/dtd/dasgff.dtd">\n<DASGFF>\n  <GFF version="1.01" href="http://%host:%port/das/%dsn/features">\n),
+					  'open'  =>  qq(<?xml version="1.0" standalone="yes"?>\n<!DOCTYPE DASGFF SYSTEM "http://www.biodas.org/dtd/dasgff.dtd">\n<DASGFF>\n  <GFF version="1.01" href="%protocol://%host:%port%baseuri/das/%dsn/features">\n),
 					  'close' => qq(  </GFF>\n</DASGFF>\n),
 					 },
 		       'dna'          => {
@@ -59,25 +60,19 @@ our $WRAPPERS       = {
 					  'close' => qq(</DASSEQUENCE>\n),
 					 },
 		       'types'        => {
-					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<!DOCTYPE DASTYPES SYSTEM "http://www.biodas.org/dtd/dastypes.dtd">\n<DASTYPES>\n  <GFF version="1.0" href="http://%host:%port/das/%dsn/types">\n),
+					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<!DOCTYPE DASTYPES SYSTEM "http://www.biodas.org/dtd/dastypes.dtd">\n<DASTYPES>\n  <GFF version="1.0" href="%protocol://%host:%port%baseuri/das/%dsn/types">\n),
 					  'close' => qq(  </GFF>\n</DASTYPES>\n),
 					 },
 		       'entry_points' => {
-					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<!DOCTYPE DASEP SYSTEM "http://www.biodas.org/dtd/dasep.dtd">\n<DASEP>\n  <ENTRY_POINTS href="http://%host:%port/das/%dsn/entry_points" version="1.0">\n),
+					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<!DOCTYPE DASEP SYSTEM "http://www.biodas.org/dtd/dasep.dtd">\n<DASEP>\n  <ENTRY_POINTS href="%protocol://%host:%port%baseuri/das/%dsn/entry_points" version="1.0">\n),
 					  'close' => qq(  </ENTRY_POINTS>\n</DASEP>\n),
 					 },
                       'alignment'    => {
-                                          'open'  => qq(<?xml version="1.0" standalone="no"?>\n<dasalignment 
-xmlns="http://www.efamily.org.uk/xml/das/2004/06/17/dasalignment.xsd" 
-xmlns:align="http://www.efamily.org.uk/xml/das/2004/06/17/alignment.xsd" 
-xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance" 
-xsd:schemaLocation="http://www.efamily.org.uk/xml/das/2004/06/17/dasalignment.xsd 
-http://www.efamily.org.uk/xml/das/2004/06/17/dasalignment.xsd">\n),
+                                          'open'  => qq(<?xml version="1.0" standalone="no"?>\n<dasalignment xmlns="http://www.efamily.org.uk/xml/das/2004/06/17/dasalignment.xsd" xmlns:align="http://www.efamily.org.uk/xml/das/2004/06/17/alignment.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance" xsd:schemaLocation="http://www.efamily.org.uk/xml/das/2004/06/17/dasalignment.xsd http://www.efamily.org.uk/xml/das/2004/06/17/dasalignment.xsd">\n),
                                           'close' => qq(</dasalignment>\n),
 					},
                        'structure'    => {
-					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<dasstructure xmlns="http://www.efamily.org.uk/xml/das/2004/06/17/dasstructure.xsd" xmlns:xsd="http://www.w
-3.org/2001/XMLSchema-instance" xsd:schemaLocation="http://www.efamily.org.uk/xml/das/2004/06/17/dasstructure.xsd http://www.efamily.org.uk/xml/das/2004/06/17/dasstructure.xsd">\n),
+					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<dasstructure xmlns="http://www.efamily.org.uk/xml/das/2004/06/17/dasstructure.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance" xsd:schemaLocation="http://www.efamily.org.uk/xml/das/2004/06/17/dasstructure.xsd http://www.efamily.org.uk/xml/das/2004/06/17/dasstructure.xsd">\n),
                                           'close' => qq(</dasstructure>\n),
 					 },
 		      };
@@ -96,12 +91,12 @@ my $result   = GetOptions(
 
 my $vstr = "ProServer DAS Server v$VERSION (c) GRL 2004...";
 
-print "#"x(length($vstr)+6), "\n";
+print '#'x(length($vstr)+6), "\n";
 printf("#  %-@{[length($vstr)]}s  #\n", $vstr);
-printf("#  %-@{[length($vstr)]}s  #\n", "http://www.sanger.ac.uk/proserver/");
-print "#"x(length($vstr)+6), "\n";
+printf("#  %-@{[length($vstr)]}s  #\n", 'http://www.sanger.ac.uk/proserver/');
+print '#'x(length($vstr)+6), "\n";
 
-@ARGV      = @saveargv;
+@ARGV = @saveargv;
 
 
 if($opts->{'usage'}) {
@@ -116,7 +111,7 @@ if($opts->{'usage'}) {
 }
 
 if(!$opts->{'inifile'}) {
-  $opts->{'inifile'} = "eg/proserver.ini";
+  $opts->{'inifile'} = 'eg/proserver.ini';
   print STDERR qq(Using default '$opts->{'inifile'}' file.\n);
 }
 
@@ -124,6 +119,10 @@ if(!-e $opts->{'inifile'}) {
   print STDERR qq(Invalid configuration file: $opts->{'inifile'}. Stopping.\n);
   exit;
 }
+
+# backwards-compatibility switch
+$opts->{'interface'} = $opts->{'hostname'};
+delete $opts->{'hostname'};
 
 my $config = Bio::Das::ProServer::Config->new($opts);
 
@@ -135,27 +134,24 @@ if(!$opts->{'X'} && fork()) {
   $config->maxclients(0);
 }
 
-POSIX::setsid() or die "Can't setsid";
+setsid() or die 'Cannot setsid';
 
 my $logfile = $config->logfile();
 if (!defined $logfile) {
-  my ($pidpath)  = ($config->pidfile()   ||"") =~ /^(.*)\//;
-  my ($confpath) = ($config->{'inifile'} ||"") =~ /^(.*)\//;
+  my ($pidpath)  = ($config->pidfile()   ||'') =~ /^(.*)\//;
+  my ($confpath) = ($config->{'inifile'} ||'') =~ /^(.*)\//;
   $pidpath     ||= $confpath;
-  $pidpath      .= $pidpath?"/":"";
-  $logfile       = sprintf("%sproserver.%s.log", $pidpath, &hostname());
+  $pidpath      .= $pidpath?'/':'';
+  $logfile       = sprintf('%sproserver.%s.log', $pidpath, &hostname());
 }
-
 
 open STDIN,  '</dev/null' or die "Can't open STDIN from /dev/null: [$!]\n";
 if(!$opts->{'X'}) {
-  print STDERR qq(Logging to $logfile\n);
-  open STDOUT, ">$logfile"  or die "Can't open STDOUT to /dev/null: [$!]\n";
-  open STDERR, '>&STDOUT'   or die "Can't open STDERR to STDOUT: [$!]\n";
-}
-
-for my $f (qw(port hostname debug)) {
-  $config->{$f} = $opts->{$f} if(defined $opts->{$f});
+  my $errlog = $logfile;
+  $errlog    =~ s/\.log$/.err/;
+  print STDERR qq(Logging STDOUT to $logfile and STDERR to $errlog\n);
+  open(STDOUT, '>', $logfile)  or die "Can't open STDOUT to $logfile: [$!]\n";
+  open(STDERR, '>', $errlog)   or die "Can't open STDERR to STDOUT: [$!]\n";
 }
 
 if(exists $config->{'ensemblhome'}) {
@@ -173,8 +169,10 @@ if(exists $config->{'bioperlhome'}) {
   print STDERR qq(Set BIOPERL_HOME to $ENV{'BIOPERL_HOME'}\n);
 }
 
-my $pidfile  = $config->pidfile() || sprintf("%s.%s.pid", $0||"proserver", &hostname() || "localhost");
+my $pidfile  = $config->pidfile() || sprintf('%s.%s.pid', $0||'proserver', &hostname() || 'localhost');
 &make_pidfile();
+
+my $logformat = $config->logformat();
 
 # Spawn up to max server processes, and then run them.  Exit
 # when they are done.
@@ -217,26 +215,31 @@ sub server_start {
     my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
 
     $heap->{server} = POE::Wheel::SocketFactory->new
-      ( BindAddress  => $config->interface()||undef,
-	BindPort     => $config->port(),
-        SuccessEvent => "got_connection",
-        FailureEvent => "got_error",
-        Reuse        => "yes",
+      ( BindAddress    => $config->interface()||undef,
+	BindPort       => $config->port(),
+        SuccessEvent   => 'got_connection',
+        FailureEvent   => 'got_error',
+        Reuse          => 'on',
+	SocketDomain   => AF_INET,
+	SocketType     => SOCK_STREAM,
+	SocketProtocol => 'tcp',
+	ListenQueue    => SOMAXCONN,
       );
 
-    $kernel->sig( CHLD  => "got_sig_chld" );
-    $kernel->sig( INT   => "got_sig_int" );
-    $kernel->sig( TERM  => "got_sig_int" );
-    $kernel->sig( KILL  => "got_sig_int" );
-    $kernel->sig( HUP   => "got_sig_hup" );
-    $kernel->sig( USR1  => "got_sig_hup" );
+    $kernel->sig( CHLD  => 'got_sig_chld' );
+    $kernel->sig( INT   => 'got_sig_int' );
+    $kernel->sig( TERM  => 'got_sig_int' );
+    $kernel->sig( KILL  => 'got_sig_int' );
+    $kernel->sig( HUP   => 'got_sig_hup' );
+    $kernel->sig( USR1  => 'got_sig_hup' );
 
     $heap->{children}   = {};
     $heap->{is_a_child} = 0;
 
-    warn "Server $$ has begun listening on ", $config->host(), ":", $config->port(), "\n";
+    warn "Server $$ has begun listening on ", $config->interface(), ':', $config->port(), "\n";
 
-    $kernel->yield("do_fork");
+    $kernel->yield('do_fork');
+    warn 'Exited fork';
 }
 
 ### The server session has shut down.  If this process has any
@@ -337,7 +340,7 @@ sub server_got_sig_chld {
 
     if ( delete $heap->{children}->{$child_pid} ) {
         DEBUG and warn "Server $$ received SIGCHLD.\n";
-        $kernel->yield("do_fork");
+        $kernel->yield('do_fork');
     }
     return 0;
 }
@@ -379,9 +382,9 @@ sub client_start {
     $heap->{client} = POE::Wheel::ReadWrite->new
       ( Handle       => $heap->{socket},
         Filter       => POE::Filter::HTTPD->new(),
-        InputEvent   => "got_request",
-        ErrorEvent   => "got_error",
-        FlushedEvent => "got_flush",
+        InputEvent   => 'got_request',
+        ErrorEvent   => 'got_error',
+        FlushedEvent => 'got_flush',
       );
 
     DEBUG and warn "Client handler $$/", $_[SESSION]->ID, " started.\n";
@@ -400,12 +403,12 @@ sub client_stop {
 ### HTTP::Response object in response.
 
 sub client_got_request {
-  my ( $heap, $request ) = @_[ HEAP, ARG0 ];
+  my ( $heap, $request) = @_[ HEAP, ARG0 ];
 
   DEBUG and
     warn "Client handler $$/", $_[SESSION]->ID, " is handling a request.\n";
 
-  if ( $request->isa("HTTP::Response") ) {
+  if ( $request->isa('HTTP::Response') ) {
     $heap->{client}->put($request);
     return;
   }
@@ -416,11 +419,11 @@ sub client_got_request {
   my $response     = HTTP::Response->new(200);
   my $uri          = $request->uri();
   my ($dsn, $call) = $uri =~ m|/das/([^/\?\#]+)(?:/([^/\?\#]+))?|;
-  $call            = "homepage" if($dsn && !$call);
-  $dsn           ||= "";
+  $call            = 'homepage' if($dsn && !$call);
+  $dsn           ||= '';
 
   if($dsn && $config->knows($dsn)) {
-    my $mimetype     = ($call eq "homepage")?"text/html":"text/xml";
+    my $mimetype = ($call eq 'homepage')?'text/html':'text/xml';
     $response->content_type($mimetype);
     my $cgi;
 
@@ -448,32 +451,40 @@ sub client_got_request {
     my $subCoos  = $cgi->param('subjectcoordsys');
     my $adaptor  = $config->adaptor($dsn);
 
-    if($adaptor->implements($call) || $call eq "homepage") {
+    if($adaptor->implements($call) || $call eq 'homepage') {
 
       my $use_gzip = 0;
-      if ($call ne "homepage" && $request->header('Accept-Encoding') && ($request->header('Accept-Encoding') =~ /gzip/) ) {
+      if ($call ne 'homepage' &&
+	  $request->header('Accept-Encoding') &&
+	  ($request->header('Accept-Encoding') =~ /gzip/) ) {
 	DEBUG and warn qq(Turning on compression);
 	$use_gzip = 1;
       }
 
       eval {
-	my $open    = $WRAPPERS->{$call}->{'open'}  || "";
-	my $close   = $WRAPPERS->{$call}->{'close'} || "";
-	$open       =~ s/\%host/@{[$config->host()]}/smg;
-	$open       =~ s/\%port/@{[$config->port()]}/smg;
-	$open       =~ s/\%dsn/$dsn/smg;
-	my $content = $open.$adaptor->$method({
-					       'segments' => $segments,
-					       'features' => $features,
-					       'groups'   => $groups,
-					       'query'    => $query,
-                                               'subjects' => $subjects,
-                                               'chains'   => $chains,
-                                               'ranges'   => $ranges,
-                                               'model'    => $model,
-                                               'rows'     => $rows,
-                                               'subcoos'  => $subCoos
-					      }).$close;
+	my $open     = $WRAPPERS->{$call}->{'open'}  || '';
+	my $close    = $WRAPPERS->{$call}->{'close'} || '';
+	my $host     = $config->response_hostname();
+	my $port     = $config->response_port()      || '';
+	my $protocol = $config->response_protocol()  || 'http';
+	my $baseuri  = $config->response_baseuri()   || '';
+	$open        =~ s/\%protocol/$protocol/smg;
+	$open        =~ s/\%baseuri/$baseuri/smg;
+	$open        =~ s/\%host/$host/smg;
+	$open        =~ s/\%port/$port/smg;
+	$open        =~ s/\%dsn/$dsn/smg;
+	my $content  = $open.$adaptor->$method({
+						'segments' => $segments,
+						'features' => $features,
+						'groups'   => $groups,
+						'query'    => $query,
+						'subjects' => $subjects,
+						'chains'   => $chains,
+						'ranges'   => $ranges,
+						'model'    => $model,
+						'rows'     => $rows,
+						'subcoos'  => $subCoos
+					       }).$close;
 
 	if( ($use_gzip && length($content) > $GZIP_THRESHOLD) ) {
 	  DEBUG and warn qq(Compressing content);
@@ -493,99 +504,138 @@ sub client_got_request {
       };
       if($@) {
 	warn $@;
-	$response->content_type("text/plain");
+	$response->content_type('text/plain');
 	$response->code(501); #?
-	$response->content("source error");
+	$response->content('source error');
       }
 
     } else {
-      $response->content_type("text/plain");
+      $response->content_type('text/plain');
       $response->code(501);
-      $response->content(qq(call @{[$call||""]} unimplemented));
+      $response->content(qq(call @{[$call||'']} unimplemented));
     }
 
-  } elsif($dsn eq "dsn") {
-    $response->content_type("text/xml");
+    $adaptor->cleanup();
+
+  } elsif($dsn eq 'dsn') {
+    $response->content_type('text/xml');
 
     #########
     # Building this response here isn't particularly nice
     # but it saves the penalty of initialising another new sourceadaptor
     #
-    $response->content_type("text/xml");
-
+    $response->content_type('text/xml');
     my $dsnxml = qq(@{[map {
-	sprintf(qq(  <DSN>\n    <SOURCE id="%s" version="%s">%s</SOURCE>\n    <MAPMASTER>%s</MAPMASTER>\n    <DESCRIPTION>%s</DESCRIPTION>\n  </DSN>\n),
+        my $mapmaster = $_->mapmaster() || $_->config->{'mapmaster'};
+        $mapmaster    = $mapmaster?"    <MAPMASTER>$mapmaster</MAPMASTER>\n":'';
+	sprintf(qq(  <DSN>\n    <SOURCE id="%s" version="%s">%s</SOURCE>\n%s    <DESCRIPTION>%s</DESCRIPTION>\n  </DSN>\n),
 		$_->dsn(),
-		$_->dsnversion()  || "",
+		$_->dsnversion()  || '',
 		$_->dsn(),
-		$_->mapmaster()   || $_->config->{'mapmaster'}   || sprintf("http://%s:%s/das/%s", $config->host(), $config->port(), $_->dsn()) || "",
-		$_->description() || $_->config->{'description'} || $_->dsn() || "",
+		$mapmaster,
+		$_->description() || $_->config->{'description'} || $_->dsn() || '',
 		);
     } sort { $a->dsn() cmp $b->dsn() } $config->adaptors()]});
     $response->content($WRAPPERS->{'dsn'}->{'open'}.$dsnxml.$WRAPPERS->{'dsn'}->{'close'});
 
-  } elsif($uri eq "/") {
-    $response->content_type("text/html");
+  } elsif($uri eq '/') {
+    $response->content_type('text/html');
     $response->code(200);
     my $content = qq(<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 4.01 Strict//EN">
 <html>
   <head>
     <title>Welcome to ProServer v$VERSION</title>
+    <style type="text/css">
+body{font-family: helvetica,arial,sans-serif;background-color:#ffc;}
+thead {background-color:#700;color:#fff;}
+thead th{margin:0;padding:2px;}
+a{color:#a00;}a:hover{color:#aaa;}
+.cite ul{list-style:none;padding:0;margin:0;}.cite li{display:inline;font-style:oblique;padding-right:0.5em;}
+.cite {margin-bottom:1em;}
+    </style>
   </head>
   <body><h1>Welcome to ProServer v$VERSION</h1>
-Perform a <a href="/das/dsn">DSN</a> request.\n);
+<i>Core by Roger Pettett &copy; Genome Research Ltd.</i><br /><br />
+<div class="cite">
+<b>ProServer: A simple, extensible Perl DAS server.</b><br />
+<ul><li>Finn RD,</li><li>Stalker JW,</li><li>Jackson DK,</li><li>Kulesha E,</li><li>Clements J,</li><li>Pettett R.</li></ul>
+Bioinformatics 2007; <a href="http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btl650v1">doi: 10.1093/bioinformatics/btl650</a>; PMID: 17237073</div>
+Perform a <a href="das/dsn">DSN</a> request.\n);
 
     if(scalar $config->adaptors()) {
-      $content .= qq(<table><tr><th>Source</th><th>Mapmaster</th><th>Description</th><th>Capabilities</th></tr>
+      $content .= qq(<table><thead><tr><th>Source</th><th>Mapmaster</th><th>Description</th><th>Capabilities</th></tr></thead><tbody>
 @{[map {
-  sprintf(qq(<tr><td><a href="/das/%s">%s</a></td><td>%s</td><td>%s</td><td>%s</td></tr>\n),
+  sprintf(qq(<tr><td><a href="das/%s">%s</a></td><td>%s</td><td>%s</td><td>%s</td></tr>\n),
   $_->dsn(), $_->dsn(),
-  $_->mapmaster()        || "",
-  $_->description()      || "",
-  $_->das_capabilities() || "",
+  $_->mapmaster()        || $_->config->{'mapmaster'}   || '-',
+  $_->description()      || $_->config->{'description'} || '-',
+  $_->das_capabilities() || '',
 )} $config->adaptors()]}
-</table>\n);
+</tbody></table>\n);
     } else {
       $content .= qq(<br /><b>No adaptors configured.</b>\n);
     }
 
+    no strict 'refs';
+    $content .= '<ul>';
+    for my $pkg (sort qw(Bio::Das::ProServer:: Bio::Das::ProServer::SourceAdaptor::)) {
+      my $str  = $pkg.'VERSION';
+      my $vers = $$str?"v$$str":'unknown version';
+      $content .= qq(<li>$pkg $vers</li>\n);
+      for my $module (sort keys %$pkg) {
+	next if($module !~ /::$/);
+	my $str  = $pkg.$module.'VERSION';
+	my $vers = $$str?"v$$str":'unknown version';
+	$content .= qq(<li>$pkg$module $vers</li>\n);
+      }
+    }
+    use strict;
+
     $content .= qq(
-<ul>
-  <li>Bio::Das::ProServer::Config v$Bio::Das::ProServer::Config::VERSION</li>
-  <li>Bio::Das::ProServer::SourceAdaptor v$Bio::Das::ProServer::SourceAdaptor::VERSION</li>
-  <li>Bio::Das::ProServer::SourceHydra v$Bio::Das::ProServer::SourceHydra::VERSION</li>
 </ul>
 
 <br /><br /><br />
-<center><small><a href="http://www.sanger.ac.uk/proserver/">ProServer homepage</a> | <a href="http://das.sanger.ac.uk/registry/">DAS registry</a> | <a href="http://biodas.org/">BioDAS.org</a></small></center>
+<center><small><a href="http://www.sanger.ac.uk/proserver/">ProServer homepage</a> | <a href="http://www.dasregistry.org/">DAS registry</a> | <a href="http://biodas.org/">BioDAS.org</a></small></center>
 </body>
 </html>\n);
 
     $response->content($content);
 
-  } elsif(substr($uri, 0, 5) ne "/das/") {
-    $response->content_type("text/plain");
+  } elsif(substr($uri, 0, 5) ne '/das/') {
+    $response->content_type('text/plain');
     $response->code(403);
-    $response->content("forbidden");
+    $response->content('forbidden');
 
   } else {
-    $response->content_type("text/plain");
-    $response->content(qq(unimplemented. uri=@{[$uri||""]}, dsn=@{[$dsn||""]}, call=@{[$call||""]}));
+    $response->content_type('text/plain');
+    $response->content(qq(unimplemented. uri=@{[$uri||'']}, dsn=@{[$dsn||'']}, call=@{[$call||'']}));
   }
 
   #########
   # Add custom X-DAS headers
   #
-  $response->header("X-DAS-Version"      => "1.0");
-  $response->header("X-DAS-Status"       => $response->code()||"");
-  $response->header("X-DAS-Capabilities" => $config->adaptor($dsn)->das_capabilities()||"") if($dsn and $config->knows($dsn));
+  $response->header('X-DAS-Version'      => '1.0');
+  $response->header('X-DAS-Status'       => $response->code()||'');
+  $response->header('X-DAS-Capabilities' => $config->adaptor($dsn)->das_capabilities()||'') if($dsn and $config->knows($dsn));
 
   #
   # Finished handling das responses
   #########
 
+  #########
+  # Generate access log
+  #
+  my $logline   = $logformat;
+  $logline      =~ s/%i/inet_ntoa($heap->{peer_addr})/e;               # remote ip
+  $logline      =~ s/%h/gethostbyaddr($heap->{peer_addr}, AF_INET);/e; # remote hostname
+  $logline      =~ s/%t/strftime '%Y-%m-%dT%H:%M:%S', localtime/e;     # datetime yyyy-mm-ddThh:mm:ss
+  $logline      =~ s/%r/$uri/;                                         # request uri
+  $logline      =~ s/%>?s/@{[$response->code()]}/;                     # status
+  print $logline, "\n";
+
   $heap->{hitcount}++;
   $heap->{client}->put($response);
+  return;
 }
 
 ### The client handler received an error.  Stop the ReadWrite wheel,
@@ -620,7 +670,7 @@ sub make_pidfile {
   my ($spidfile) = $pidfile =~ /([a-zA-Z0-9\.\/_\-]+)/;
   my $fh;
   print STDERR qq(Writing pidfile $spidfile\n);
-  open ($fh, ">$spidfile") or die "Cannot create pid file: $!\n";
+  open ($fh, '>', $spidfile) or die "Cannot create pid file: $!\n";
   print $fh "$$\n";
   close($fh);
   return($$);

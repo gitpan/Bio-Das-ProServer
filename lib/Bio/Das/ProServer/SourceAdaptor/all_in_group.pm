@@ -1,8 +1,8 @@
 #########
 # Author: jws
-# Maintainer: jws
+# Maintainer: jws, dj3
 # Created: 2005-04-19
-# Last Modified: 2005-10-03 (by dj3)
+# Last Modified: 2006-10-06 (by dj3)
 #
 # Returns all features in groups represented in the range.
 # First fetches all groups represented in the range, then retrieves all
@@ -44,10 +44,14 @@ sub build_features {
   # pull back the groups that are within the range, and then retrieve all the
   # features in those groups.
   
-  my $qbounds = ($start && $end)?qq(AND start <= $end AND end >= $start):"";
+  $seg=$self->transport->dbh->quote($seg);
+  my $qbounds="";
+  if(defined $start && defined $end){
+    $qbounds = qq(AND start <= ).$self->transport->dbh->quote($end).qq( AND end >= ).$self->transport->dbh->quote($start);
+  }
 
   my $query   = qq(SELECT group_id FROM feature
-                   WHERE  segment = '$seg' $qbounds); 
+                   WHERE  segment = $seg $qbounds); 
 
   my @groups = @{$self->transport->query($query)};
 
@@ -59,7 +63,7 @@ sub build_features {
   $groupstring .= ") ";
 
   $query   = qq(SELECT * FROM feature, fgroup
-                   WHERE  segment = '$seg' $groupstring
+                   WHERE  segment = $seg $groupstring
 		   AND feature.group_id = fgroup.group_id
                    ORDER BY start); 
   my @results;

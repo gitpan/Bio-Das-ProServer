@@ -1,0 +1,50 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="transcription">
+     <TYPE id="UCSC:exon">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>mediumorchid</BGCOLOR>
+              <FGCOLOR>mediumorchid</FGCOLOR>
+              <HEIGHT>8</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="UCSC:hidden">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>mediumorchid</FGCOLOR>
+              <FONT>sanserif</FONT>
+           </LINE>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="group">
+     <TYPE id="gene">
+        <GLYPH>
+           <LINE>
+              <FGCOLOR>mediumorchid</FGCOLOR>
+              <STYLE>hat</STYLE>
+              <FONT>sanserif</FONT>
+           </LINE>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>grey</BGCOLOR>
+              <FGCOLOR>grey</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

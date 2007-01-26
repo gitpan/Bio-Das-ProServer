@@ -1,0 +1,65 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="cloneset">
+     <TYPE id="map2gp:clone">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>gold</BGCOLOR>
+              <FGCOLOR>gold</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>09</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="ssaha2:clone">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>gold</BGCOLOR>
+              <FGCOLOR>black</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>09</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="ssaha2:clone_end">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>black</BGCOLOR>
+              <FGCOLOR>black</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>09</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="default:clone">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>gold</BGCOLOR>
+              <FGCOLOR>gold</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>09</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>grey</BGCOLOR>
+              <FGCOLOR>grey</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>4</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>
