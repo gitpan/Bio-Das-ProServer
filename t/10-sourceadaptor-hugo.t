@@ -15,9 +15,9 @@ isa_ok($sa->transport, 'Bio::Das::ProServer::SourceAdaptor::Transport::dummy');
 is($sa->das_features({'segments'=>[qw(45)]}), qq(    <SEGMENT id="45" version="1.0" start="1" stop="">
     <FEATURE id="test407" label="test407">
       <TYPE id="hugo:4" category="hugo" reference="no" subparts="no" superparts="no">hugo:4</TYPE>
-      <METHOD id="hugo">hugo</METHOD>
       <START>10004346</START>
       <END>23025902</END>
+      <METHOD id="hugo">hugo</METHOD>
       <ORIENTATION>0</ORIENTATION>
       <NOTE>XyZ</NOTE>
       <LINK href="http://test.com/search?XyZ1">Testsource1:XyZ1</LINK>
@@ -25,9 +25,9 @@ is($sa->das_features({'segments'=>[qw(45)]}), qq(    <SEGMENT id="45" version="1
     </FEATURE>
     <FEATURE id="test408" label="test408">
       <TYPE id="hugo:4" category="hugo" reference="no" subparts="no" superparts="no">hugo:4</TYPE>
-      <METHOD id="hugo">hugo</METHOD>
       <START>30349575</START>
       <END>40987093</END>
+      <METHOD id="hugo">hugo</METHOD>
       <ORIENTATION>0</ORIENTATION>
       <NOTE>XyZ</NOTE>
       <LINK href="http://test.com/search?XyZ1">Testsource1:XyZ1</LINK>

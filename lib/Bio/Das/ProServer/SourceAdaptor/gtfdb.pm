@@ -47,7 +47,9 @@ sub build_features {
   } elsif ($opts->{'segment'}) {
     return($self->build_features_by_segment($opts));
 
-  } else {
+  }elsif($opts->{'note'}) {#sr5 ...needs changing
+    return($self->build_diff_features($opts));
+  }else {
     print STDERR "unsupported feature fetch request!\n";
     return();
   }
@@ -200,4 +202,56 @@ sub build_types {
 	  },
 	 );
 }
+
+##################################################
+sub build_nongrpd_features{ #sr5...
+  my ($self, $opts) = @_;
+  my $table_name = $self->config->{'tablename'};
+  my $seg = $opts->{'segment'};
+  my ($end,$start, $query);
+  if ($opts->{'start'} && $opts->{'end'}){
+    $start = $opts->{'start'};
+    $end = $opts->{'end'};
+    ($start, $end) = ($end, $start) if($start > $end);
+    $query = qq(SELECT * FROM  $table_name
+			 WHERE chr= "$seg" 
+			 AND start <= $end 
+			 AND end >= $start
+                         ORDER BY $start);
+    
+  }
+  my $ref = $self->transport->query($query);
+  my @features = ();
+  
+  for my $row (@{$ref}) {
+    my $start = $row->{'start'};
+    my $end   = $row->{'end'};
+    ($start, $end) = ($end, $start) if($start > $end);
+    
+    push @features, {
+		     
+		     'id'		=> $_->{'id'},
+		     'label'		=> $_->{'label'},
+		     'start'		=> $_->{'start'},
+		     'end'		=> $_->{'end'},
+		     'score'		=> $_->{'score'},
+		     'ori'		=> $_->{'orient'},
+		     'phase'		=> $_->{'phase'},
+		     'type'		=> $_->{'type_id'},
+		     'typecategory'	=> $_->{'type_category'},
+		     'method'	        => $_->{'method'},
+		     'group'		=> $_->{'group_id'},
+		     'target_start'	=> $_->{'target_start'},
+		     'target_stop'	=> $_->{'target_end'},
+		     'target_id'	=> $_->{'target_id'},
+		     'link'		=> $_->{'link_url'},
+		     'linktxt'         	=> $_->{'link_text'},
+		     'note'		=> $_->{'note'},
+		    };
+  }
+  return @features;
+}
+
+
+
 1;

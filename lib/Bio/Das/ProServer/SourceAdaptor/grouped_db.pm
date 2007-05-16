@@ -2,7 +2,10 @@
 # Author: jws
 # Maintainer: jws, dj3
 # Created: 2005-04-19
-# Last Modified: 2006-10-06 (by dj3)
+# Last Modified: $Date: 2007/02/27 16:51:07 $ $Author: dj3 $
+# Id:            $Id: grouped_db.pm,v 2.51 2007/02/27 16:51:07 dj3 Exp $
+# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm,v $
+# $HeadURL$
 # Builds DAS features from ProServer mysql database
 # schema at eof
 
@@ -13,6 +16,7 @@ use vars qw(@ISA);
 use Data::Dumper;
 use Bio::Das::ProServer::SourceAdaptor;
 @ISA = qw(Bio::Das::ProServer::SourceAdaptor);
+our $VERSION  = do { my @r = (q$Revision: 2.51 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 #######################################################################################################
 sub init {
@@ -20,6 +24,8 @@ sub init {
   $self->{'capabilities'} = {
 			     'features'   => '1.0',
 			     'stylesheet' => '1.0',
+                             'entry_points'  => '1.0',
+			     'types' =>'1.0',
 			    };
 }
 
@@ -37,7 +43,8 @@ sub build_features {
  
   $seg=$self->transport->dbh->quote($seg);
   my $qbounds="";
-  if(defined $start && defined $end){
+  if(defined $start && $start ne"" && defined $end && $end ne""){
+#  if(defined $start  && defined $end){
     $start=$self->transport->dbh->quote($start);
     $end=$self->transport->dbh->quote($end);
     $qbounds = qq(AND start <= $end AND end >= $start);
@@ -81,6 +88,38 @@ sub build_features {
 
 }
 
+sub build_types {
+	my $self = shift;
+	if(@_){
+		my @r=();
+		foreach(@_){
+			my ($seg,$start,$end)=@{$_}{qw(segment start end)};
+			$seg=$self->transport->dbh->quote($seg);
+			my $qbounds="";
+			if(defined $start && $start ne"" && defined $end && $end ne""){
+				$start=$self->transport->dbh->quote($start);
+				$end=$self->transport->dbh->quote($end);
+				$qbounds = qq(AND start <= $end AND end >= $start);
+			}
+			my $query   = qq(SELECT DISTINCT type_id type, method FROM feature
+					WHERE  segment = $seg $qbounds);
+			push @r,map{$_->{segment}=$seg; @{$_}{qw(start end)}=($start,$end)if $qbounds; $_}@{$self->transport->query($query)};
+		}
+		return @r;
+	}else{
+		my $query   = qq(SELECT DISTINCT type_id type, method FROM feature);
+		return @{$self->transport->query($query)};	
+	}
+}
+sub build_entry_points {
+  my ($self) = @_;
+  my $query   = qq(SELECT DISTINCT segment FROM feature);
+  return map{$_->{subparts}="no"; $_->{version}=$self->{config}{assembly}if exists $self->{config}{assembly} ;$_}@{$self->transport->query($query)};
+}
+sub segment_version{
+	my $self=shift; 
+	return exists($self->{config}{assembly})?$self->{config}{assembly}:undef;
+}
 1;
 
 # SCHEMA

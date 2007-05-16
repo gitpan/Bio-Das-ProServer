@@ -23,8 +23,9 @@ disclaimers of warranty.
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
+use File::stat;
 
-our $VERSION  = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 2.51 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub _fh {
   my $self = shift;
@@ -85,6 +86,16 @@ sub query {
     }
   }
   return $ref;
+}
+
+=head2 last_modified : machine time of last data change
+
+  $dbitransport->last_modified();
+
+=cut
+sub last_modified {
+  my $self = shift;
+  return stat($self->_fh())->mtime;
 }
 
 =head2 DESTROY : object destructor - disconnect filehandle

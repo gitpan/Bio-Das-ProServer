@@ -33,26 +33,34 @@ sub build_features {
     my $qbounds = "";
     $qbounds    = qq(AND seq_region_start <= '$end' AND seq_region_end >= '$start') if($start && $end);
     my $query = qq(
-        SELECT   mu.experiment_id, t.trace_id, mu.amino_from, mu.amino_to, mu.amino,
-                 mu.type, e.curator, ma.seq_region_start, ma.seq_region_end, ma.seq_region_strand
-        FROM     experiment e, mutation mu, trace t, mapping ma
-        WHERE    e.experiment_id    = mu.experiment_id
-        AND      mu.experiment_id   = ma.experiment_id
-        AND      mu.trace_id        = t.trace_id
-		AND      ma.assembly        = $assembly
-        AND      ma.seq_region_name = '$seg'
+        SELECT   lp.project_id, lmu.mutation_id, lmu.amino_from,
+                 lmu.amino_to, lmu.amino, lmu.`type`,
+                 lp.description, lp.email, lma.seq_region_start,
+                 lma.seq_region_end, lma.seq_region_strand
+        FROM     limstill_projects lp,
+                 limstill_mutations lmu,
+                 limstill_mapping lma
+        WHERE    lp.project_id       = lmu.project_id
+        AND      lp.project_id       = lma.project_id
+        AND      lmu.amplicon        = lma.amplicon
+        AND      lma.assembly        = $assembly
+        AND      lma.seq_region_name = '$seg'
         $qbounds
     );
     
     my @results;
     
     foreach ( @{$self->transport->query($query)} ) {
-        my $url = 'http://www.sanger.ac.uk/cgi-bin/Projects/D_rerio/zfmodels/tilling/tilling.pl'
-                  . '?exp='   . $_->{'experiment_id'}
-                  . '&trace=' . $_->{'trace_id'}
+        my $url = 'http://www.sanger.ac.uk/cgi-bin/Projects/D_rerio/tilling/mutation.pl'
+                  . '?project_id='  . $_->{'project_id'}
+                  . '&mutation_id=' . $_->{'mutation_id'}
                   ;
-        
-#        my $type = $_->{'type'} . ' ' . $_->{'amino_from'} . '-' . $_->{'amino_to'};
+        my $note = ucfirst($_->{'type'})
+                   . ' mutation (' . $_->{'amino'} . '). '
+                   . 'Contact: ' . $_->{'description'} . ' ' . $_->{'email'}
+                   . '<br />'
+                   . '<img src="http://www.sanger.ac.uk/cgi-bin/Projects/D_rerio/tilling/png.pl?mutation_id=' . $_->{'mutation_id'} . '" />'
+                   ;
         my $type = $_->{'type'} . ' (' . $_->{'amino'} . ')';
         
         push @results, {
@@ -65,7 +73,7 @@ sub build_features {
             'method'    => '',
             'link'      => $url,
             'linktxt'   => 'Further information...',
-            'note'      => ucfirst($_->{'type'}) . ' mutation (' . $_->{'amino'} . '). ' .'Contact: ' . $_->{'curator'},
+            'note'      => $note,
         };
     }
     

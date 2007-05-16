@@ -23,7 +23,18 @@ To install this module type the following:
    perl Makefile.PL
    make
    make test
-   make install
+
+RUNNING
+
+  To start the server, type:
+  eg/proserver
+
+  To stop:
+  kill -TERM `cat eg/proserver.myhostname.pid`
+
+  To restart:
+  kill -USR1 `cat eg/proserver.myhostname.pid`
+
 
 DEPENDENCIES
 

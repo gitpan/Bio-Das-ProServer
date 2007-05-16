@@ -2,7 +2,7 @@
 # Author:        rmp
 # Maintainer:    $Author: rmp $
 # Created:       2006-07-03
-# Last Modified: $Date: 2007/01/26 23:10:42 $
+# Last Modified: $Date: 2007/02/02 10:29:15 $
 # Pfetch socket-based transport layer
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::pfetch;
@@ -20,10 +20,20 @@ disclaimers of warranty.
 =cut
 
 use strict;
+use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use IO::Socket;
 
-our $VERSION = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf "%d."."%03d" x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+
+=head2 query : Run a query against pfetch
+
+  my $sPfetchResponseData = $pfetchTransport->query(....);
+
+  Pfetch service is configured using the 'host' and 'port' parameters
+  in proserver.ini for adaptors using this transport
+
+=cut
 
 sub query {
   my $self  = shift;
@@ -35,18 +45,20 @@ sub query {
 				   ) or die "Socket could not be opened: $!\n";
   $sockh->autoflush(1);
 
-  print $sockh qq(--client "ProServer-pfetch$VERSION"), @_, "\n";
+  local $" = ' ';
+  my $str  = qq(--client "ProServer-pfetch$VERSION" @_\n);
+  print $sockh $str;
 
   local $/ = undef;
 
   my $result;
-  $SIG{ALRM} = sub { die "timeout" };
+  $SIG{ALRM} = sub { die 'timeout' };
   alarm(10);
   eval {
     $result = <$sockh>;
   };
   alarm(0);
-  return $result || "";
+  return $result || '';
 }
 
 1;

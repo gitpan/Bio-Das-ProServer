@@ -33,7 +33,7 @@ sub init {
 			     'stylesheet' => '1.0',
 			 };
 
-  $self->{'link'}    = ["http://www.sanger.ac.uk/cgi-bin/Projects/S_scrofa/WebFPCreport.cgi?mode=wfcreport&name=","http://pre.ensembl.org/Sus_scrofa/cytoview?mapfrag="];
+  $self->{'link'}    = ["http://www.sanger.ac.uk/cgi-bin/Projects/S_scrofa/WebFPCreport.cgi?mode=wfcreport&name=","http://pre.ensembl.org/Sus_scrofa_map/cytoview?mapfrag="];
   $self->{'linktxt'} = ["Clone_report","Pig Pre"];
 
 

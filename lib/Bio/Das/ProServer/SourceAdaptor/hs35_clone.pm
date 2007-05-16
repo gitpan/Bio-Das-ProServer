@@ -197,8 +197,11 @@ sub build_features_by_segment  {
 		 AND    mfms.misc_set_id   = ms.misc_set_id
 		 AND    ms.misc_set_id     > 1
                  AND    mf.misc_feature_id = ma.misc_feature_id
-                 AND    ma.attrib_type_id  = at.attrib_type_id
-                 AND    at.code            IN('clone_name','name','non_ref','synonym','well_name'));
+                 AND    ma.attrib_type_id  = at.attrib_type_id 
+                 AND    at.code            )
+		 ."IN("
+		 .join(",",map{"'$_'"}defined($self->{config}{types})?split(/\s+/,$self->{config}{types}):qw(clone_name name non_ref synonym well_name))
+        	 .")";      
 
   my $ref = $self->transport->query($query);
 

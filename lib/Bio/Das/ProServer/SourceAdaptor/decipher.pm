@@ -1,8 +1,8 @@
 #########
 # Author:        rmp
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: sr5 $
 # Created:       2004-02-16
-# Last Modified: $Date: 2007/01/26 23:10:41 $
+# Last Modified: $Date: 2007/05/10 13:47:53 $
 #
 # Builds DAS features from Phenotypic Abnormalities Database
 #
@@ -24,7 +24,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self                = shift;
@@ -47,7 +47,7 @@ sub build_features {
   # pretty duff valid chromosome check, but catches most clone ids quickly
   #
   return if(CORE::length($seg) > 2);
-
+  
   #########
   # retrieve patient data
   #
@@ -58,7 +58,7 @@ sub build_features {
     $qbounds  = 'AND sc.chr_start <= ? AND ec.chr_end >= ?';
     push @args, ($end, $start);
   }
-
+  
   my $patientquery = qq(SELECT STRAIGHT_JOIN a.patient_id          AS id,
 			       p.submitter_groupname AS curator,
 			       p.project_id          AS project_id,
@@ -76,6 +76,7 @@ sub build_features {
                                clone           hsc,
                                clone           hec
 			WHERE  p.consent        = 'Y'
+                        AND    p.parent        != 'Y'
 			AND    f.array_id       = a.id
 			AND    a.patient_id     = p.id
 			AND    sc.name          = f.soft_start_clone_name
@@ -92,35 +93,36 @@ sub build_features {
 			AND    hec.arraytype_id = a.arraytype_id $qbounds
                        	GROUP BY a.patient_id,sc.name,ec.name
 			ORDER BY a.patient_id);
-
+  
   my $plinktmpl = $self->config->{'patientlink'}       || '%s:%s';
   my $slinktmpl = $self->config->{'syndromelink'}      || '%s:%s';
   my $tlinktmpl = $self->config->{'translocationlink'} || '%s:%s:%s';
   my @features  = ();
   my $fid       = 1;
   my $gid       = 1;
-
+  
   for my $patient (@{$self->transport->query($patientquery, @args)}) {
     my $id             = $patient->{'id'};
+    my $curator        = $patient->{'curator'};
     my $phenotypequery = qq(SELECT description
 			    FROM   phenotype c, patient_class pc, patient p
 			    WHERE  pc.patient_id = ?
 			    AND    pc.class_id   = c.id
 			    AND    p.id          = pc.patient_id
 			    @{[($consentcheck eq 'yes')?q(AND p.consent = 'Y'):'']});
-
-    my $lbl          = sprintf('%08d',  $id); #sr5: need to remove the center codes:
+    
+    my $lbl          = sprintf('%08d',  $id); #If DECIPHER member then display id with submitter group name
     my $classes      = $self->transport->query($phenotypequery, $id);
-
+    
     my $classtxt     = join(', ', map { $_->{'description'} } @{$classes});
     my $chr_interval = $patient->{'soft_end'} - $patient->{'soft_start'};
-
+    
     #########
     # feature
     #
     my ($hardstart, $hardend) = ($patient->{'hard_start'}, $patient->{'hard_end'});
     ($hardend, $hardstart)    = ($hardstart, $hardend) if($hardend < $hardstart);
-
+    
     my $mr = $patient->{'type'};
     my $cc = '';
     if($mr < -1) {
@@ -136,7 +138,7 @@ sub build_features {
     } elsif($mr >= 1) {
       $cc = 5;
     }
-
+    
     push @features, {
 		     'id'           => $fid++,
 		     'label'        => $lbl,
@@ -156,13 +158,13 @@ sub build_features {
 		     'note'         => $classtxt || '',
 		     'groupnote'    => $classtxt || '',
 		    };
-
+    
     #########
     # fuzzy, surrounding feature
     #
     my ($softstart, $softend) = ($patient->{'soft_start'}, $patient->{'soft_end'}); #need to fix these error bars - also need to deal with overlaps i.e. upstream + downstream clones.
     ($softend, $softstart)    = ($softstart, $softend) if($softend < $softstart);
-
+    
     push @features, {
 		     'id'           => $fid++,
 		     'type'         => sprintf('decipher:%s:%s:soft',
@@ -183,9 +185,9 @@ sub build_features {
 		    };
     $gid++;
   }
-
-  #########
-  # retrieve
+  
+  #########################
+  # retrieve Syndromes ...
   #
   
   my $syndromequery = qq(SELECT ks.id                AS id,
@@ -212,7 +214,7 @@ sub build_features {
                                  syndrome_class ksc
 			  WHERE  ksc.syndrome_id = ?
 			  AND    ksc.class_id    = c.id);
-
+  
   @args = ();
   push @args, ($end, $start) if($qbounds);
   for my $syndrome (@{$self->transport->query($syndromequery, $seg, $seg, @args)}) {
@@ -221,9 +223,9 @@ sub build_features {
     my $classes      = $self->transport->query($phenotypequery, $id);
     my $classtxt     = join(', ', map { $_->{'description'} } @{$classes});
     my $chr_interval = $syndrome->{'hard_end'} - $syndrome->{'hard_start'};
-
+    
     #########
-    # feature
+    # build feature
     #
     my ($hardstart, $hardend) = ($syndrome->{'hard_start'}, $syndrome->{'hard_end'});
     ($hardend, $hardstart)    = ($hardstart, $hardend) if($hardend < $hardstart);
@@ -433,7 +435,6 @@ sub build_features {
     my $clone_start  = $sc_tstart; 
     my $clone_end    =($type_id == 6 && $start_clone ne $end_clone)?$ec_tend:$sc_tend;
     if($type_id == 6){
-      print STDERR "BPSTART_one:$bpstart and BPEND_one: $bpend\n";
       print STDERR "BPSTART:$bpstart_two and CLONE START: $clone_start\n";
       print STDERR "BPEND: $bpend_two and CLONE END: $clone_end\n";
       print STDERR "CLONES: $start_clone ($sc_tstart, $sc_tend) AND $end_clone ($ec_tstart, $ec_tend)";

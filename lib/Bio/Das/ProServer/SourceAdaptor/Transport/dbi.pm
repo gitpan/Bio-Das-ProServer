@@ -24,8 +24,9 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use DBI;
+use HTTP::Date;
 
-our $VERSION = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.53 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head2 dbh : Database handle (mysqlish by default)
 
@@ -41,7 +42,7 @@ sub dbh {
   my $username = $config->{'dbuser'}   || $config->{'username'} || 'test';
   my $password = $config->{'dbpass'}   || $config->{'password'} || '';
   my $driver   = $config->{'driver'}   || 'mysql';
-  my $dsn      = qq(DBI:$driver:database=$dbname;host=$host;port=$port);
+  my $dsn      = "DBI:$driver:database=$dbname;host=$host;port=$port";
 
   #########
   # DBI connect_cached is slightly smarter than us just caching here
@@ -68,9 +69,12 @@ sub dbh {
 =cut
 sub query {
   my ($self, $query, @args) = @_;
+  print STDERR "@args \n";
   my $ref                   = [];
   my $retries               = 3;
   my $debug                 = $self->{'debug'};
+  my $fetchall_arg          = {};
+  (@args and ref $args[0]) and $fetchall_arg = shift @args;
 
   while($retries > 0) {
     $SIG{ALRM} = sub { die 'timeout'; };
@@ -86,7 +90,7 @@ sub query {
       $debug and print STDERR "Executing query...\n";
       $sth->execute(@args);
       $debug and print STDERR "Fetching results...\n";
-      $ref    = $sth->fetchall_arrayref({});
+      $ref    = $sth->fetchall_arrayref($fetchall_arg);
       $debug and print STDERR "Finishing...\n";
       $sth->finish();
     };
@@ -123,6 +127,17 @@ sub disconnect {
   $self->{'dbh'}->disconnect();
   delete $self->{'dbh'};
   $self->{'debug'} and print STDERR "$self performed dbh disconnect\n";
+}
+
+=head2 last_modified : machine time of last data change
+
+  $dbitransport->last_modified();
+
+=cut
+sub last_modified {
+  my $self = shift;
+  $self->dbh->{Driver}->{Name} eq 'mysql' or return undef ; #Only know MySQL way at the moment....
+  return [sort{$b<=>$a}map{str2time $_->{Update_time}}@{$self->query("SHOW TABLE STATUS",{Update_time=>1})}]->[0];
 }
 
 sub DESTROY {

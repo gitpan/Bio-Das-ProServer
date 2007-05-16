@@ -35,9 +35,9 @@ sub init {
 }
 
 
-=head2 buildAlignment
+=head2 build_alignment
 
- Title    : buildAlignment
+ Title    : build_alignment
  Function : This is method connects to the data source via the transport layer. Form here,
           : it builds the alignment data structure.  This is specific to the data source
           : as different alignments have very different requirements in terms of which blocks
@@ -49,7 +49,7 @@ sub init {
 =cut
 
 
-sub buildAlignment {
+sub build_alignment {
     my ($self, $query, $rows, $subjectsRefs, $subCoos)   = @_;
     
     if($query =~ /(PF\d+)/i){

@@ -1,0 +1,54 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="Nanog">
+    <TYPE id="swat:binding site">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>10</HEIGHT>
+              <BGCOLOR>blue</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+    <TYPE id="binding site">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>10</HEIGHT>
+              <BGCOLOR>blue</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="Oct4">
+    <TYPE id="swat:binding site">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>10</HEIGHT>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+    <TYPE id="binding site">
+        <GLYPH>
+           <BOX>
+	      <HEIGHT>10</HEIGHT>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

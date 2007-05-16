@@ -5,7 +5,7 @@ use_ok('Bio::Das::ProServer::SourceAdaptor');
 
 my $sa = Bio::Das::ProServer::SourceAdaptor->new();
 isa_ok($sa, 'Bio::Das::ProServer::SourceAdaptor');
-can_ok($sa, qw(new init length mapmaster description init_segments known_segments segment_version dsn dsnversion start end transport config implements das_capabilities das_dsn open_dasdsn close_dasdsn open_dasgff close_dasgff unknown_segment _gen_link_das_response _encode _gen_feature_das_response das_features error_feature open_dasdna open_dassequence das_dna das_sequence close_dasdna close_dassequence open_dastypes close_dastypes das_types open_dasep close_dasep das_entry_points das_stylesheet das_homepage das_alignment genAlignObjectDasResponse genAlignScoreDasResponse genAlignBlockDasResponse genAlignGeo3dDasResponse das_structure genObjectDasResponse genChainDasResponse genConnectDasResponse cleanup));
+can_ok($sa, qw(new init length mapmaster description init_segments known_segments segment_version dsn dsnversion start end transport config implements das_capabilities das_dsn open_dasdsn close_dasdsn unknown_segment _gen_link_das_response _encode _gen_feature_das_response das_features error_feature das_dna das_sequence das_types das_entry_points das_stylesheet das_homepage das_alignment cleanup));
 is($sa->init(),             undef,         'init is undef');
 is($sa->length(),           0,             'length is 0 by default');
 is($sa->mapmaster(),        undef,         'mapmaster is undef');
