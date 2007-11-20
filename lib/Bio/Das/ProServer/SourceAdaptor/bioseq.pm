@@ -1,90 +1,108 @@
+#########
+# Author:        Andreas Kahari, andreas.kahari@ebi.ac.uk
+# Maintainer:    $Author: rmp $
+# Created:       ?
+# Last Modified: $Date: 2007/11/20 20:12:21 $
+# Id:            $Id: bioseq.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
+# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm,v $
+# $HeadURL$
+# 
 package Bio::Das::ProServer::SourceAdaptor::bioseq;
-
-# $Id: bioseq.pm,v 2.50 2007/01/26 23:10:41 rmp Exp $
-#
-# bioseq.pm
-#
-# Andreas Kahari, andreas.kahari@ebi.ac.uk
-#
-#
-# A ProServer source adaptor for converting Bio::Seq objects
-# into DAS features.  See also "Transport/bioseqio.pm".
-#
-
 use strict;
 use warnings;
 
-use Bio::Das::ProServer::SourceAdaptor;
+use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-use vars qw(@ISA);
-@ISA = qw(Bio::Das::ProServer::SourceAdaptor);
-
-sub init
-{
-    my $self = shift;
-    $self->{capabilities} = {
-	'features'  => '1.0',
-	'dna'	    => '1.0'
-    };
+sub init {
+  my $self = shift;
+  $self->{capabilities} = {
+			   'features'  => '1.0',
+			   'dna'       => '1.0'
+			  };
 }
 
-sub length
-{
-    my $self = shift;
-    my $id = shift;
+sub length {
+  my ($self, $id) = @_;
+  my $seq = $self->transport->query($id);
 
-    my $seq = $self->transport->query($id);
-
-    if (defined $seq) {
-	return $seq->length;
-    }
-    return 0;
+  if (defined $seq) {
+    return $seq->length();
+  }
+  return 0;
 }
 
-sub build_features
-{
-    my $self = shift;
-    my $opts = shift;
+sub build_features {
+  my ($self,$opts) = @_;
+  my $seq = $self->transport->query($opts->{segment});
 
-    my $seq = $self->transport->query($opts->{segment});
+  if (!defined $seq) {
+    return ();
+  }
 
-    if (!defined $seq) {
-	return ();
-    }
+  my @features;
+  for my $feature ($seq->get_SeqFeatures()) {
+    push @features, {
+		     type   => $feature->primary_tag(),
+		     start  => $feature->start(),
+		     end    => $feature->end(),
+		     method => $feature->source_tag(),
+		     id	    => $feature->display_name() ||
+		               sprintf q(%s/%s:%d,%d),
+				       $seq->display_name(), $feature->primary_tag(),
+				       $feature->start(), $feature->end(),
+		     ori    => $feature->strand(),
+		    };
+  }
 
-    my @features;
-    foreach my $feature ($seq->get_SeqFeatures) {
-	push @features, {
-	    type    => $feature->primary_tag,
-	    start   => $feature->start,
-	    end	    => $feature->end,
-	    method  => $feature->source_tag,
-	    id	    => $feature->display_name ||
-		sprintf("%s/%s:%d,%d",
-		    $seq->display_name, $feature->primary_tag,
-		    $feature->start, $feature->end),
-	    ori	    => $feature->strand
-	};
-    }
-
-    return @features;
+  return @features;
 }
 
-sub sequence
-{
-    my $self = shift;
-    my $opts = shift;
+sub sequence {
+  my ($self, $opts) = @_;
+  my $seq = $self->transport->query($opts->{segment});
 
-    my $seq = $self->transport->query($opts->{segment});
+  if (!defined $seq) {
+    return { seq => q(), moltype => q() };
+  }
 
-    if (!defined $seq) {
-	return { seq => "", moltype => "" };
-    }
-
-    return {
-	seq	=> $seq->seq || "",
-	moltype	=> $seq->alphabet || ""
-    };
+  return {
+	  seq     => $seq->seq()      || q(),
+	  moltype => $seq->alphabet() || q(),
+	 };
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Bio::Das::ProServer::SourceAdaptor::bioseq - A ProServer source
+adaptor for converting Bio::Seq objects into DAS features.  See also
+"Transport/bioseqio.pm".
+
+=head1 VERSION
+
+$Revision: 2.70 $
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=head1 SUBROUTINES/METHODS
+
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+=head1 DEPENDENCIES
+
+=head1 INCOMPATIBILITIES
+
+=head1 BUGS AND LIMITATIONS
+
+=head1 AUTHOR
+
+Andreas Kahari, andreas.kahari@ebi.ac.uk
+
+=head1 LICENSE AND COPYRIGHT

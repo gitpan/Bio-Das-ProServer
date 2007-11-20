@@ -1,8 +1,11 @@
 #########
-# Author: jws
-# Maintainer: jws, dj3
-# Created: 2005-04-19
-# Last Modified: 2006-10-06 (by dj3)
+# Author:        jws, dj3
+# Maintainer:    $Author: rmp $
+# Created:       2005-04-19
+# Last Modified: $Date: 2007/11/20 20:12:21 $
+# Id:            $Id: all_in_group.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
+# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm,v $
+# $HeadURL$
 #
 # Returns all features in groups represented in the range.
 # First fetches all groups represented in the range, then retrieves all
@@ -14,14 +17,12 @@
 #
 # schema at eof
 
-
 package Bio::Das::ProServer::SourceAdaptor::all_in_group;
-
 use strict;
-use vars qw(@ISA);
-use Data::Dumper;
-use Bio::Das::ProServer::SourceAdaptor;
-@ISA = qw(Bio::Das::ProServer::SourceAdaptor);
+use warnings;
+use base qw(Bio::Das::ProServer::SourceAdaptor);
+
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self                = shift;
@@ -29,6 +30,7 @@ sub init {
 			     'features'   => '1.0',
 			     'stylesheet' => '1.0',
 			    };
+  return;
 }
 
 sub build_features {
@@ -36,86 +38,90 @@ sub build_features {
   my $seg     = $opts->{'segment'};
   my $start   = $opts->{'start'};
   my $end     = $opts->{'end'};
+  my $dbh     = $self->transport->dbh();
   my $shortsegnamehack = defined($self->config->{'shortsegnamehack'})?$self->config->{'shortsegnamehack'}:1; #e.g. 1 (default) or 0
 
-  return if($shortsegnamehack and (CORE::length("$seg") > 4));#(speedup?) only handle chromosomes or haplotypes
+  if($shortsegnamehack and (CORE::length("$seg") > 4)) {#(speedup?) only handle chromosomes or haplotypes
+    return;
+  }
 
   # To include group members that are outside the range of the request, first
   # pull back the groups that are within the range, and then retrieve all the
   # features in those groups.
   
-  $seg=$self->transport->dbh->quote($seg);
-  my $qbounds="";
-  if(defined $start && defined $end){
-    $qbounds = qq(AND start <= ).$self->transport->dbh->quote($end).qq( AND end >= ).$self->transport->dbh->quote($start);
+  $seg        = $dbh->quote($seg);
+  my $qbounds = q();
+
+  if(defined $start && defined $end) {
+    $qbounds = q(AND start <= ) . $dbh->quote($end) .
+               q( AND end >= )  . $dbh->quote($start);
   }
 
   my $query   = qq(SELECT group_id FROM feature
-                   WHERE  segment = $seg $qbounds); 
+                   WHERE  segment = $seg $qbounds);
 
   my @groups = @{$self->transport->query($query)};
 
-  return unless @groups;
+  if(!scalar @groups) {
+    return;
+  }
 
-  my $groupstring = " AND feature.group_id in (";
-  @groups = map ("'".$_->{'group_id'}."'", @groups);
-  $groupstring .= join (",", @groups);
-  $groupstring .= ") ";
-
-  $query   = qq(SELECT * FROM feature, fgroup
-                   WHERE  segment = $seg $groupstring
-		   AND feature.group_id = fgroup.group_id
-                   ORDER BY start); 
+  my $groupstring = qq( AND feature.group_id IN (@{[join q(, ), map { $dbh->quote($_->{'group_id'}) } @groups]}));
+  $query          = qq(SELECT * FROM feature, fgroup
+                       WHERE  segment          = $seg $groupstring
+                       AND    feature.group_id = fgroup.group_id
+                       ORDER BY start);
   my @results;
   
   foreach ( @{$self->transport->query($query)} ) {
-  	my $fstart = $_->{'start'};
-  	my $fend = $_->{'end'};
-	my $type = $_->{'type_id'};
-	my $method = $_->{'method'};
+    my $fstart = $_->{'start'};
+    my $fend   = $_->{'end'};
+    my $type   = $_->{'type_id'};
+    my $method = $_->{'method'};
 
-	#fake features outside the range - das code will filter these otherwise
-	if ($fend < $start){ 
-		$fend = $fstart = $start; 
-		$type = "$method:hidden";
-	}
-	if ($fstart > $end){
-		$fend = $fstart = $end;
-		$type = "$method:hidden";
-	}
-	
-  	push @results, {
-				'id'		=> $_->{'id'},
-				'start'		=> $fstart,
-				'end'		=> $fend,
-				'label'		=> $_->{'label'},
-				'score'		=> $_->{'score'},
-				'ori'		=> $_->{'orient'},
-				'phase'		=> $_->{'phase'},
-				'type'		=> $type,
-				'typecategory'	=> $_->{'type_category'},
-				'method'	=> $method,
-				'group'		=> $_->{'group_id'},
-				'grouptype'	=> $_->{'group_type'},
-				'grouplabel'	=> $_->{'group_label'},
-				'groupnote'	=> $_->{'group_note'},
-				'grouplink'	=> $_->{'group_link_url'},
-				'grouplinktxt'	=> $_->{'group_link_text'},
-				'target_start'	=> $_->{'target_start'},
-				'target_stop'	=> $_->{'target_end'},
-				'target_id'	=> $_->{'target_id'},
-				'link'		=> $_->{'link_url'},
-				'linktxt'	=> $_->{'link_text'},
-				'note'		=> $_->{'note'},
-			};
+    #fake features outside the range - das code will filter these otherwise
+    if ($fend < $start) {
+      $fend = $fstart = $start;
+      $type = "$method:hidden";
+    }
 
+    if ($fstart > $end) {
+      $fend = $fstart = $end;
+      $type = "$method:hidden";
+    }
+
+    push @results, {
+		    'id'           => $_->{'id'},
+		    'start'        => $fstart,
+		    'end'          => $fend,
+		    'label'        => $_->{'label'},
+		    'score'        => $_->{'score'},
+		    'ori'          => $_->{'orient'},
+		    'phase'        => $_->{'phase'},
+		    'type'         => $type,
+		    'typecategory' => $_->{'type_category'},
+		    'method'       => $method,
+		    'group'        => $_->{'group_id'},
+		    'grouptype'    => $_->{'group_type'},
+		    'grouplabel'   => $_->{'group_label'},
+		    'groupnote'    => $_->{'group_note'},
+		    'grouplink'    => $_->{'group_link_url'},
+		    'grouplinktxt' => $_->{'group_link_text'},
+		    'target_start' => $_->{'target_start'},
+		    'target_stop'  => $_->{'target_end'},
+		    'target_id'    => $_->{'target_id'},
+		    'link'         => $_->{'link_url'},
+		    'linktxt'      => $_->{'link_text'},
+		    'note'         => $_->{'note'},
+		   };
   }
-  
-  return (@results);
 
+  return @results;
 }
 
 1;
+
+__END__
 
 # SCHEMA
 # Generic MySQL schema to hold DAS feature data for ProServer
@@ -152,3 +158,12 @@ sub build_features {
 #	but these aren't implemented here.
 #	
 
+=head1 NAME
+
+Bio::Das::ProServer::SourceAdaptor::all_in_group
+
+=head1 VERSION
+
+$Revision: 2.70 $
+
+=cut

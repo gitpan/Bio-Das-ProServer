@@ -11,7 +11,7 @@ use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use LWP::UserAgent;
 use Carp;
 
-our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub _useragent {
   # Caching an LWP::UserAgent instance within the current
@@ -67,7 +67,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::wgetz - A ProServer transport mod
 
 =head1 VERSION
 
-$Revision: 2.51 $
+$Revision: 2.70 $
 
 =head1 SYNOPSIS
 

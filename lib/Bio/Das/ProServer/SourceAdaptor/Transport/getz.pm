@@ -2,7 +2,7 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-06-13
-# Last Modified: $Date: 2007/02/02 10:25:27 $ $Author: rmp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
 #
 # Pulls features over command-line SRS/getz transport
 #
@@ -24,7 +24,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 
-our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head2 query : Run a query against getz
 

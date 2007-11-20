@@ -2,8 +2,8 @@
 # Author:        rdf
 # Maintainer:    rdf
 # Created:       2006-04-01
-# Last Modified: $Date: 2007/02/20 18:02:03 $ $Author: rmp $
-# Id:            $Id: pdbStructure.pm,v 2.52 2007/02/20 18:02:03 rmp Exp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
+# Id:            $Id: pdbStructure.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/pdbStructure.pm,v $ 
 # $HeadURL$
 #
@@ -15,7 +15,7 @@ use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 use Bio::Pfam::Structure::Chainset;
 
-our $VERSION  = do { my @r = (q$Revision: 2.52 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self                = shift;

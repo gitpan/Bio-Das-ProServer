@@ -2,8 +2,8 @@
 # Author:        dj3
 # Maintainer:    $Author: rmp $
 # Created:       2005-10-21
-# Last Modified: $Date: 2007/03/09 14:23:08 $
-# Id:            $Id: proxy.pm,v 2.51 2007/03/09 14:23:08 rmp Exp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $
+# Id:            $Id: proxy.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/proxy.pm,v $
 #
 # Passes through all requests to another das server
@@ -17,7 +17,7 @@ use LWP::UserAgent;
 use Bio::Das::Lite;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self                = shift;

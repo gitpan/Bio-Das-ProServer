@@ -2,8 +2,8 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-05-20
-# Last Modified: $Date: 2007/05/11 23:21:29 $ $Author: rmp $
-# Id:            $Id: SourceAdaptor.pm,v 2.59 2007/05/11 23:21:29 rmp Exp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
+# Id:            $Id: SourceAdaptor.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor.pm,v $
 # $HeadURL$
 #
@@ -13,94 +13,12 @@ package Bio::Das::ProServer::SourceAdaptor;
 use strict;
 use warnings;
 use HTML::Entities;
+use HTTP::Date qw(str2time time2isoz);
 use English qw(-no_match_vars);
 use Carp;
+use File::Spec;
 
-our $VERSION  = do { my @r = (q$Revision: 2.59 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
-our $XSLFLUFF = q(<style type="text/css">html,body{background:#ffc;font-family:helvetica,arial,sans-serif;font-size:0.8em}thead{background:#700;color:#fff}thead th{margin:0;padding:2px}a{color:#a00}a:hover{color:#aaa}.tr1{background:#ffd}.tr2{background:#ffb}tr{vertical-align:top}</style>
-<script type="text/javascript"><![CDATA[
-addEvent(window,"load",zi);
-function zi(){if(!document.getElementsByTagName)return;var ts=document.getElementsByTagName("table");for(var i=0;i!=ts.length;i++){t=ts[i];if(t){if(((' '+t.className+' ').indexOf("z")!=-1))z(t);}}}
-function z(t){var tr=1;for(var i=0;i!=t.rows.length;i++){var r=t.rows[i];var p=r.parentNode.tagName.toLowerCase();if(p!='thead'){if(p!='tfoot'){r.className='tr'+tr;tr=1+!(tr-1);}}}}
-function addEvent(e,t,f,c){/*Scott Andrew*/if(e.addEventListener){e.addEventListener(t,f,c);return true;}else if(e.attachEvent){var r=e.attachEvent("on"+t,f);return r;}}
-function hideColumn(c){var t=document.getElementById('data');var trs=t.getElementsByTagName('tr');for(var i=0;i!=trs.length;i++){var tds=trs[i].getElementsByTagName('td');if(tds.length!=0)tds[c].style.display="none";var ths=trs[i].getElementsByTagName('th');if(ths.length!=0)ths[c].style.display="none";}}
-]]></script>);
-
-our $XSL      = {
-		 'dsn.xsl' => q(<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
-  <xsl:output method="html" indent="yes"/>
-  <xsl:template match="/">
-    <html xmlns="http://www.w3.org/1999/xhtml">
-      <head><title>ProServer: DSN List</title></head>
-      <body>
-        <div id="header"><h4>ProServer: DSN List</h4></div>
-        <div id="mainbody">
-          <table class="z" id="data">
-            <thead><tr><th>Source</th><th>Version</th><th>Mapmaster</th><th>Description</th></tr></thead><tbody>
-            <xsl:for-each select="/DASDSN/DSN">
-              <xsl:sort select="@id"/>
-                <tr>
-                  <td><a><xsl:attribute name="href"><xsl:value-of select="SOURCE"/></xsl:attribute><xsl:value-of select="SOURCE"/></a></td>
-                  <td><xsl:value-of select="SOURCE/@version"/></td>
-                  <td><a><xsl:attribute name="href"><xsl:value-of select="MAPMASTER"/></xsl:attribute><xsl:value-of select="MAPMASTER"/></a></td>
-                  <td><xsl:value-of select="DESCRIPTION"/></td>
-                </tr>
-              </xsl:for-each>
-            </tbody>
-          </table>
-        </div>
-      </body>
-    </html>
-  </xsl:template>
-</xsl:stylesheet>),
-		 'features.xsl' => q(<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
-  <xsl:output method="html" indent="yes"/>
-  <xsl:template match="/">
-    <html xmlns="http://www.w3.org/1999/xhtml">
-      <head><title>ProServer: Features for <xsl:value-of select="/DASGFF/GFF/@href"/></title></head>
-      <body>
-        <div id="header"><h4>ProServer: Features for <xsl:value-of select="/DASGFF/GFF/@href"/></h4></div>
-        <div id="mainbody">
-          <table class="z" id="data">
-            <thead><tr>
-              <th onclick="hideColumn(0);">Label</th>
-              <th onclick="hideColumn(1);">Segment</th>
-              <th onclick="hideColumn(2);">Start</th>
-              <th onclick="hideColumn(3);">End</th>
-              <th onclick="hideColumn(4);">Orientation</th>
-              <th onclick="hideColumn(5);">Notes</th>
-              <th onclick="hideColumn(6);">Type</th>
-              <th onclick="hideColumn(7);">Link</th>
-            </tr></thead><tbody>
-            <xsl:apply-templates select="/DASGFF/GFF/SEGMENT"/>
-            </tbody>
-          </table>
-        </div>
-      </body>
-    </html>
-  </xsl:template>
-  <xsl:template match="SEGMENT">
-    <xsl:for-each select="FEATURE">
-      <xsl:sort select="@id"/>
-      <tr>
-        <td><xsl:value-of select="@id"/></td>
-        <td><xsl:value-of select="../@id"/></td>
-        <td><xsl:value-of select="START"/></td>
-        <td><xsl:value-of select="END"/></td>
-        <td><xsl:value-of select="ORIENTATION"/></td>
-        <td><xsl:value-of select="TYPE"/></td>
-        <td><xsl:value-of select="NOTE"/></td>
-        <td><xsl:if test="LINK"><xsl:apply-templates select="LINK"/></xsl:if></td>
-      </tr>
-    </xsl:for-each>
-  </xsl:template>
-  <xsl:template match="LINK">
-    [<a><xsl:attribute name="href"><xsl:value-of select="@href"/></xsl:attribute><xsl:value-of select="."/></a>]
-  </xsl:template>
-</xsl:stylesheet>),
-		};
+our $VERSION  = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub new {
   my ($class, $defs) = @_;
@@ -112,12 +30,13 @@ sub new {
 	      'protocol'     => $defs->{'protocol'},
 	      'config'       => $defs->{'config'},
 	      'debug'        => $defs->{'debug'}    || undef,
+	      'maintainer'   => $defs->{'maintainer'},
+              'styleshome'   => $defs->{'styleshome'},
 	      '_data'        => {},
 	      '_sequence'    => {},
 	      '_features'    => {},
-	      'capabilities' => {
-				 'dsn' => '1.0',
-				},
+	      'capabilities' => {},
+	      'properties'   => {},
 	     };
 
   bless $self, $class;
@@ -128,6 +47,25 @@ sub new {
       $self->{'config'}->{'stylesheetfile'})) {
     $self->{'capabilities'}->{'stylesheet'} = '1.0';
   }
+  $self->{'capabilities'}->{'dsn'} = '1.0';
+  
+  # If not specified, we can check to see if a DAS source will support unknown segment errors
+  if ( !(exists $self->{'capabilities'}->{'error-segment'} ||
+         exists $self->{'capabilities'}->{'unknown-segment'}) &&
+        ($self->known_segments()) ) {
+    
+    if ($self->implements('dna') || $self->implements('sequence')) {
+      $self->{'capabilities'}->{'error-segment'} = '1.0';
+
+    } else {
+      $self->{'capabilities'}->{'unknown-segment'} = '1.0';
+    }
+  }
+  
+  if (exists $self->config->{'example_segment'}) {
+    carp "Warning: the 'example_segment' INI property is deprecated. Please use 'coordinates' instead.";
+  }
+  
   return $self;
 }
 
@@ -135,9 +73,40 @@ sub init {};
 
 sub length { return 0; } ## no critic (Subroutines::ProhibitBuiltinHomonyms)
 
-sub mapmaster {}
+sub source_uri {
+  my $self = shift;
+  return $self->config->{'source_uri'} || $self->dsn;
+}
 
-sub description {}
+sub version_uri {
+  my $self = shift;
+  return $self->config->{'version_uri'} || $self->source_uri;
+}
+
+sub title {
+  my $self = shift;
+  return $self->config->{'title'} || $self->source_uri;
+}
+
+sub maintainer {
+  my $self = shift;
+  return $self->config->{'maintainer'} || $self->{'maintainer'} || '';
+}
+
+sub mapmaster {
+  my $self = shift;
+  return $self->config->{'mapmaster'};
+}
+
+sub description {
+  my $self = shift;
+  return $self->config->{'description'} || $self->title;
+}
+
+sub doc_href {
+  my $self = shift;
+  return $self->config->{'doc_href'};
+}
 
 sub known_segments {}
 
@@ -152,8 +121,41 @@ sub dsn {
 
 sub dsnversion {
   my $self = shift;
-  return $self->{'dsnversion'} || '1.0';
-};
+  return $self->{'dsnversion'} || $self->config->{'dsnversion'} || '1.0';
+}
+
+sub dsncreated {
+  my $self = shift;
+  my $datetime = $self->{'dsncreated'} || $self->config->{'dsncreated'};
+
+  if (!$datetime && defined $self->transport and $self->transport->can('last_modified')) {
+    $datetime = $self->transport->last_modified;
+  }
+
+  return $datetime || 0; # epoch
+}
+
+sub coordinates {
+  my $self = shift;
+
+  if (!exists $self->{'coordinates'}) {
+    my @coords = split /\s*[;\|]\s*/mx, $self->config->{'coordinates'} || q();
+    my %coords = map { split /\s*[=-]>\s*/mx, $_, 2 } @coords;
+    $self->{'coordinates'} = \%coords;
+  }
+
+  return $self->{'coordinates'};
+}
+
+sub capabilities {
+  my $self = shift;
+  return $self->{'capabilities'};
+}
+
+sub properties {
+  my $self = shift;
+  return $self->{'properties'} || {};
+}
 
 sub start { return 1; }
 
@@ -163,22 +165,41 @@ sub end {
 }
 
 sub transport {
-  my $self = shift;
+  my ($self, $transport_name) = @_;
+  $transport_name ||= q();
+  my $config = $self->config;
+  
+  # Copy the config options, 'overwriting' with named-transport values where appropriate
+  if ($transport_name) {
+    my %config_copy = %$config;
+    while (my ($key, $val) = each %$config) {
+      $key =~ s/^$transport_name\.//mx;
+      if(!$key) {
+	next;
+      }
+      $config_copy{$key} = $val;
+    }
+    $config = \%config_copy;
+  }
 
-  if(!exists $self->{'_transport'}) {
-    my $transport = 'Bio::Das::ProServer::SourceAdaptor::Transport::'.$self->config->{'transport'};
+  if(!exists $self->{'_transport'}{$transport_name} &&
+     defined $config->{'transport'}) {
+    my $transport = 'Bio::Das::ProServer::SourceAdaptor::Transport::'.$config->{'transport'};
 
     eval "require $transport"; ## no critic(TestingAndDebugging::ProhibitNoStrict BuiltinFunctions::ProhibitStringyEval)
-
+    my $require_error = $EVAL_ERROR;
     eval {
-      $self->{'_transport'} = $transport->new({
-					       'dsn'    => $self->{'dsn'}, # for debug purposes
-					       'config' => $self->config(),
-					      });
+      $self->{'_transport'}->{$transport_name} = $transport->new({
+								  'dsn'    => $self->{'dsn'}, # for debug purposes
+								  'config' => $config,
+								  'debug'  => $self->{'debug'},
+								 });
     };
+    # Require doesn't necessarily have to succeed, but if there was a problem loading the transport it should be reported.
+    $require_error and !$self->{'_transport'}->{$transport_name} and carp $require_error;
     $EVAL_ERROR and carp $EVAL_ERROR;
   }
-  return $self->{'_transport'};
+  return $self->{'_transport'}->{$transport_name};
 }
 
 sub config {
@@ -194,6 +215,22 @@ sub implements {
   return $method?(exists $self->{'capabilities'}->{$method}):undef;
 }
 
+# Ensures UNIX (seconds since epoch) format for 'dsncreated'
+sub dsncreated_unix {
+  my $self = shift;
+  my $datetime = $self->dsncreated;
+  $datetime =  str2time($datetime) unless $datetime =~ m/^\d+$/;
+  return $datetime || 0; # if can't be parsed, use epoch
+}
+
+# Ensures ISO 8601 (yyyy-mm-ddThh::mm:ssZ) format for 'dsncreated'
+sub dsncreated_iso {
+  my $self     = shift;
+  my $datetime = time2isoz($self->dsncreated_unix);
+  $datetime    =~ s/\ /T/mx;
+  return $datetime;
+}
+
 sub das_capabilities {
   my $self = shift;
   return join q(; ), map {
@@ -204,48 +241,44 @@ sub das_capabilities {
 }
 
 sub das_dsn {
-  my $self    = shift;
-  my $port    = $self->{'port'}?":$self->{'port'}":q();
-  my $host    = $self->{'hostname'}||q();
-  my $content = $self->open_dasdsn();
-
-  for my $adaptor ($self->config->adaptors()) {
-    my $dsn         = $adaptor->dsn();
-    my $dsnversion  = $adaptor->dsnversion();
-    my $mapmaster   = $adaptor->mapmaster()   || $adaptor->config->{'mapmaster'}   || "http://$host$port/das/$dsn/";
-    my $description = $adaptor->description() || $adaptor->config->{'description'} || $dsn;
-    $content       .= qq(  <DSN>
-    <SOURCE id="$dsn" version="$dsnversion">$dsn</SOURCE>
-    <MAPMASTER>$mapmaster</MAPMASTER>
-    <DESCRIPTION>$description</DESCRIPTION>
-  </DSN>\n);
-  }
-
-  $content .= $self->close_dasdsn();
+  my $self = shift;
+  
+  my $mapmaster = $self->mapmaster();
+  $mapmaster    = $mapmaster ? "<MAPMASTER>$mapmaster</MAPMASTER>" : q();
+  my $content   = sprintf qq(<DSN><SOURCE id="%s" version="%s">%s</SOURCE>%s<DESCRIPTION>%s</DESCRIPTION></DSN>),
+                          $self->dsn(),
+			  $self->dsnversion(),
+			  $self->dsn(),
+			  $mapmaster,
+			  $self->description();
 
   return ($content);
 }
 
-sub open_dasdsn {
-  return qq(<?xml version="1.0" standalone="no"?>
-<!DOCTYPE DASDSN SYSTEM 'http://www.biodas.org/dtd/dasdsn.dtd' >
-<DASDSN>\n);
-}
-
-sub close_dasdsn {
-  return qq(</DASDSN>\n);
-}
-
 sub unknown_segment {
-  my ($self, $seg) = @_;
-  return qq(    <UNKNOWNSEGMENT id="$seg" />\n);
+  my ($self, $seg, $start, $end) = @_;
+
+  if ($self->implements('dna') || $self->implements('sequence')) {
+    return $self->error_segment($seg, $start, $end);
+  }
+
+  $start = $start ? qq( start="$start") : q();
+  $end   = $end   ? qq( stop="$end")    : q();
+  return qq(<UNKNOWNSEGMENT id="$seg"$start$end />);
+}
+
+sub error_segment {
+  my ($self, $seg, $start, $end) = @_;
+  $start = $start ? qq( start="$start") : '';
+  $end   = $end   ? qq( stop="$end")    : '';
+  return qq(<ERRORSEGMENT id="$seg"$start$end />);
 }
 
 #########
 # code refactoring function to generate the link parts of the DAS response
 #
 sub _gen_link_das_response {
-  my ($self, $link, $linktxt, $spacing) = @_;
+  my ($self, $link, $linktxt) = @_;
   my $response = q();
 
   #########
@@ -259,16 +292,16 @@ sub _gen_link_das_response {
       }
 
       $v       ||= $linktxt;
-      $response .= qq($spacing<LINK href="$k">$v</LINK>\n);
+      $response .= qq(<LINK href="$k">$v</LINK>);
     }
 
   } elsif(ref $link eq 'HASH') {
     for my $k (sort { $link->{$a} cmp $link->{$b} } keys %{$link}) {
-      $response .= qq($spacing<LINK href="$k">$link->{$k}</LINK>\n);
+      $response .= qq(<LINK href="$k">$link->{$k}</LINK>);
     }
 
   } elsif($link) {
-    $response .= qq($spacing<LINK href="$link">$linktxt</LINK>\n);
+    $response .= qq(<LINK href="$link">$linktxt</LINK>);
   }
   return $response;
 }
@@ -312,7 +345,7 @@ sub _encode {
 # code refactoring function to generate the feature parts of the DAS response
 #
 sub _gen_feature_das_response {
-  my ($self, $feature, $spacing) = @_;
+  my ($self, $feature) = @_;
   $self->_encode($feature);
 
   my $response  = q();
@@ -331,38 +364,35 @@ sub _gen_feature_das_response {
   my $gnote     = $feature->{'groupnote'}    || q();
   my $glink     = $feature->{'grouplink'}    || q();
   my $glinktxt  = $feature->{'grouplinktxt'} || q();
-  my $score     = $feature->{'score'}        || q();
-  my $ori       = $feature->{'ori'}          || '0';
-  my $phase     = $feature->{'phase'}        || q();
+  my $score     = $feature->{'score'};
+  my $ori       = $feature->{'ori'};
+  my $phase     = $feature->{'phase'};
   my $link      = $feature->{'link'}         || q();
   my $linktxt   = $feature->{'linktxt'}      || $link;
   my $target    = $feature->{'target'};
-  my $cat       = (defined $feature->{'typecategory'})?qq(category="$feature->{'typecategory'}"):(defined $feature->{'type_category'})?qq(category="$feature->{'type_category'}"):q();
-  my $subparts  = $feature->{'typesubparts'}    || 'no';
-  my $supparts  = $feature->{'typessuperparts'} || 'no';
-  my $ref       = $feature->{'typesreference'}  || 'no';
-  $response    .= qq($spacing<FEATURE id="$id" label="$label">\n);
-  $response    .= qq($spacing  <TYPE id="$type" $cat reference="$ref" subparts="$subparts" superparts="$supparts">$typetxt</TYPE>\n);
-  $response    .= qq($spacing  <START>$start</START>\n);
-  $response    .= qq($spacing  <END>$end</END>\n);
-  $method and $response .= qq($spacing  <METHOD id="$method">$method_l</METHOD>\n);
-  $score  and $response .= qq($spacing  <SCORE>$score</SCORE>\n);
-  $phase  and $response .= qq($spacing  <PHASE>$phase</PHASE>\n);
-  (defined $ori) and $response .= qq($spacing  <ORIENTATION>$ori</ORIENTATION>\n);
+  my $cat       = (defined $feature->{'typecategory'})?qq( category="$feature->{'typecategory'}"):(defined $feature->{'type_category'})?qq( category="$feature->{'type_category'}"):q();
+  my $subparts  = defined $feature->{'typesubparts'} ? qq( subparts="$feature->{'typesubparts'}") : q();
+  my $supparts  = defined $feature->{'typessuperparts'} ? qq( superparts="$feature->{'typessuperparts'}") : q();
+  my $ref       = defined $feature->{'typesreference'} ? qq( reference="$feature->{'typesreference'}") : q();
+  $response    .= qq(<FEATURE id="$id" label="$label">);
+  $response    .= qq(<TYPE id="$type"$cat$ref$subparts$supparts>$typetxt</TYPE>);
+  $response    .= qq(<START>$start</START>);
+  $response    .= qq(<END>$end</END>);
+  $method and $response .= qq(<METHOD id="$method">$method_l</METHOD>);
+  (defined $score)  and $response .= qq(<SCORE>$score</SCORE>);
+  (defined $phase)  and $response .= qq(<PHASE>$phase</PHASE>);
+  (defined $ori)    and $response .= qq(<ORIENTATION>$ori</ORIENTATION>);
 
   #########
   # Allow the 'note' tag to point to an array of notes.
   #
   if(ref $note eq 'ARRAY' ) {
-    for my $n (@{$note}) {
-      next if(!$n);
-      $response .= qq($spacing  <NOTE>$n</NOTE>\n);
+    for my $n (grep { $note } @{$note}) {
+      $response .= qq(<NOTE>$n</NOTE>);
     }
 
-  } else {
-    if($note) {
-      $response .= qq($spacing  <NOTE>$note</NOTE>\n)
-    }
+  } elsif($note) {
+    $response .= qq(<NOTE>$note</NOTE>)
   }
 
   #########
@@ -370,7 +400,7 @@ sub _gen_feature_das_response {
   #
   if($target && (ref $target eq 'ARRAY')) {
     for my $t (@{$target}) {
-      $response .= sprintf qq($spacing  <TARGET%s%s%s>%s</TARGET>\n),
+      $response .= sprintf qq(<TARGET%s%s%s>%s</TARGET>),
 			   $t->{'id'}    ?qq( id="$t->{'id'}")       :q(),
 			   $t->{'start'} ?qq( start="$t->{'start'}") :q(),
 			   $t->{'stop'}  ?qq( stop="$t->{'stop'}")   :q(),
@@ -378,15 +408,18 @@ sub _gen_feature_das_response {
     }
 
   } elsif($feature->{'target_id'}) {
-    $response .= sprintf qq($spacing  <TARGET%s%s%s>%s</TARGET>\n),
+    $response .= sprintf qq(<TARGET%s%s%s>%s</TARGET>),
 			 $feature->{'target_id'}    ?qq( id="$feature->{'target_id'}")       :q(),
 			 $feature->{'target_start'} ?qq( start="$feature->{'target_start'}") :q(),
 			 $feature->{'target_stop'}  ?qq( stop="$feature->{'target_stop'}")   :q(),
 			 $feature->{'targettxt'} || $feature->{'target_id'} || $feature->{'target'} ||
-			 sprintf q(%s:%d,%d), $feature->{'target_id'}, $feature->{'target_start'}, $feature->{'target_stop'};
+			 sprintf q(%s:%d,%d),
+                                 $feature->{'target_id'},
+				 $feature->{'target_start'},
+				 $feature->{'target_stop'};
   }
 
-  $response .= $self->_gen_link_das_response($link, $linktxt, "$spacing  ");
+  $response .= $self->_gen_link_das_response($link, $linktxt);
 
   #####
   # if $group is a ref to an array then use group_id of the hashs in that array as the key in a new hash
@@ -416,33 +449,33 @@ sub _gen_feature_das_response {
       my $gnotei    = $groupinfo->{'groupnote'}   || q();
       my $glinki    = $groupinfo->{'grouplink'}   || q();
       my $gtargeti  = $groupinfo->{'grouptarget'} || q();
-      $response    .= sprintf qq($spacing  <GROUP id="%s"%s%s),
+      $response    .= sprintf qq(<GROUP id="%s"%s%s),
 			      $groupi,
 			      $groupinfo->{'grouplabel'} ?qq( label="$groupinfo->{'grouplabel'}") :q(),
 			      $groupinfo->{'grouptype'}  ?qq( type="$groupinfo->{'grouptype'}")   :q();
 
       if (!$gnotei && !$glinki) {
-        $response .= qq(/>\n);
+        $response .= q(/>);
 
       } else {
         my $glinktxti = $groupinfo->{'grouplinktxt'} || $glinki;
-        $response    .= qq(>\n);
+        $response    .= q(>);
 
 	# Allow the 'note' tag to point to an array of notes.
 	if(ref $gnotei eq 'ARRAY') {
 	  for my $n (@{$gnotei}) {
 	    $n or next;
-	    $response .= qq($spacing  <NOTE>$n</NOTE>\n);
+	    $response .= qq(<NOTE>$n</NOTE>);
 	  }
 
 	} elsif($gnotei) {
-	  $response .= qq($spacing  <NOTE>$gnotei</NOTE>\n);
+	  $response .= qq(<NOTE>$gnotei</NOTE>);
 	}
-        $response .= $self->_gen_link_das_response($glinki, $glinktxti, "$spacing  ");
+        $response .= $self->_gen_link_das_response($glinki, $glinktxti);
 
 	if(ref $gtargeti eq 'ARRAY') {
 	  for my $t (@{$gtargeti}) {
-	    $response .= sprintf qq($spacing  <TARGET%s%s%s>%s</TARGET>\n),
+	    $response .= sprintf qq(<TARGET%s%s%s>%s</TARGET>),
 				 $t->{'id'}    ?qq( id="$t->{'id'}")       :q(),
 				 $t->{'start'} ?qq( start="$t->{'start'}") :q(),
 				 $t->{'stop'}  ?qq( stop="$t->{'stop'}")   :q(),
@@ -450,12 +483,12 @@ sub _gen_feature_das_response {
 	  }
 	}
 
-        $response .= qq($spacing  </GROUP>\n);
+        $response .= q(</GROUP>);
       }
     }
   }
 
-  $response .= qq($spacing</FEATURE>\n);
+  $response .= q(</FEATURE>);
   return $response;
 }
 
@@ -471,27 +504,38 @@ sub das_features {
   for my $seg (@{$opts->{'segments'}}) {
     my ($seg, $coords) = split /:/mx, $seg;
     my ($start, $end)  = split /,/mx, $coords || q();
-    my $segstart       = $start || $self->start($seg) || q();
-    my $segend         = $end   || $self->end($seg)   || q();
 
-    if ( $self->known_segments() ) {
-      if(!grep { /$seg/mx } $self->known_segments()) {
-	$response .= $self->unknown_segment($seg);
-	next;
-      }
+    # If the requested segment is known to be not available it is an unknown or error segment.
+    my @known_segments = $self->known_segments();
+    if(@known_segments && !grep { /$seg/mx } @known_segments) {
+      $response .= $self->unknown_segment($seg);
+      next;
     }
 
+    # The bounds of the segment (if known).
+    my $segstart        = $self->start($seg);
+    my $segend          = $self->end($seg);
+    # If the request is known to be out of range it is an error segment.
+    if ( ($start && $segstart && $start < $segstart) || ($end && $segend && $end > $segend ) ) {
+      $response .= $self->error_segment($seg, $start, $end);
+      next;
+    }
+    
+    # The actual sequence positions we are querying for.
+    my $actstart        = $start || $segstart || q();
+    my $actend          = $end   || $segend   || q();
     my $segment_version = $self->segment_version($seg) || q(1.0);
-    $response          .= qq(    <SEGMENT id="$seg" version="$segment_version" start="$segstart" stop="$segend">\n);
+    $response          .= qq(<SEGMENT id="$seg" version="$segment_version" start="$actstart" stop="$actend">);
 
     for my $feature ($self->build_features({
 					    'segment' => $seg,
 					    'start'   => $start,
 					    'end'     => $end,
+                                            'maxbins' => $opts->{'maxbins'},
 					   })) {
       $response .= $self->_gen_feature_das_response($feature, q(    ));
     }
-    $response .= qq(    </SEGMENT>\n);
+    $response .= q(</SEGMENT>);
   }
 
   #########
@@ -514,9 +558,9 @@ sub das_features {
       my $segstart = $feature->{'segment_start'}   || $feature->{'start'} || q();
       my $segend   = $feature->{'segment_end'}     || $feature->{'end'}   || q();
       my $segver   = $feature->{'segment_version'} || q(1.0);
-      $response   .= qq(    <SEGMENT id="$seg" version="$segver" start="$segstart" stop="$segend">\n);
+      $response   .= qq(<SEGMENT id="$seg" version="$segver" start="$segstart" stop="$segend">);
       $response   .= $self->_gen_feature_das_response($feature, q(    ));
-      $response   .= qq(    </SEGMENT>\n);
+      $response   .= q(</SEGMENT>);
     }
   }
 
@@ -540,9 +584,9 @@ sub das_features {
       my $segend   = $feature->{'segment_end'}     || $feature->{'end'}   || q();
       my $segver   = $feature->{'segment_version'} || q(1.0);
       if($lastsegid) {
-	$response   .= qq(    </SEGMENT>\n);
+	$response   .= q(</SEGMENT>);
       }
-      $response   .= qq(    <SEGMENT id="$seg" version="$segver" start="$segstart" stop="$segend">\n);
+      $response   .= qq(<SEGMENT id="$seg" version="$segver" start="$segstart" stop="$segend">);
 
       $lastsegid = $feature->{'segment'};
     }
@@ -550,7 +594,7 @@ sub das_features {
   }
 
   if($lastsegid) {
-    $response .= qq(    </SEGMENT>\n);
+    $response .= q(</SEGMENT>);
   }
 
   return $response;
@@ -558,9 +602,7 @@ sub das_features {
 
 sub error_feature {
   my ($self, $f) = @_;
-  return qq(    <SEGMENT id=q()>
-      <UNKNOWNFEATURE id="$f" />
-    </SEGMENT>\n);
+  return q(<SEGMENT id=""><UNKNOWNFEATURE id="$f" /></SEGMENT>);
 }
 
 sub das_dna {
@@ -570,8 +612,26 @@ sub das_dna {
   for my $seg (@{$segref->{'segments'}}) {
     my ($seg, $coords) = split /:/mx, $seg;
     my ($start, $end)  = split /,/mx, $coords || q();
-    my $segstart       = $start || $self->start($seg) || q();
-    my $segend         = $end   || $self->end($seg)   || q();
+    
+    # If the requested segment is known to be not available it is an unknown or error segment.
+    my @known_segments = $self->known_segments();
+    if(@known_segments && !grep { /$seg/mx } @known_segments) {
+      $response .= $self->unknown_segment($seg);
+      next;
+    }
+
+    # The bounds of the segment (if known).
+    my $segstart        = $self->start($seg);
+    my $segend          = $self->end($seg);
+    # If the request is known to be out of range it is an error segment.
+    if ( ($start && $segstart && $start < $segstart) || ($end && $segend && $end > $segend ) ) {
+      $response .= $self->error_segment($seg, $start, $end);
+      next;
+    }
+    
+    # The actual sequence positions we are querying for.
+    my $actstart        = $start || $segstart || q();
+    my $actend          = $end   || $segend   || q();
     my $sequence       = $self->sequence({
 					  'segment' => $seg,
 					  'start'   => $start,
@@ -579,9 +639,11 @@ sub das_dna {
 					 });
     my $seq            = $sequence->{'seq'};
     my $moltype        = $sequence->{'moltype'};
-    my $version        = $sequence->{'version'} || q(1.0);
+    my $version        = $sequence->{'version'} || $self->segment_version($seg) || q(1.0);
     my $len            = CORE::length $seq;
-    $response         .= qq(  <SEQUENCE id="$seg" start="$segstart" stop="$segend" moltype="$moltype" version="$version">\n);
+    $actstart        ||= 1;
+    $actend          ||= $len + ($actstart-1);
+    $response         .= qq(  <SEQUENCE id="$seg" start="$actstart" stop="$actend" moltype="$moltype" version="$version">\n);
     $response         .= qq(  <DNA length="$len">\n$seq\n  </DNA>\n  </SEQUENCE>\n);
   }
   return $response;
@@ -594,8 +656,26 @@ sub das_sequence {
   for my $seg (@{$segref->{'segments'}}) {
     my ($seg, $coords) = split /:/mx, $seg;
     my ($start, $end)  = split /,/mx, $coords || q();
-    my $segstart       = $start || $self->start($seg) || q();
-    my $segend         = $end   || $self->end($seg)   || q();
+    
+    # If the requested segment is known to be not available it is an unknown or error segment.
+    my @known_segments = $self->known_segments();
+    if(@known_segments && !grep { /$seg/mx } @known_segments) {
+      $response .= $self->unknown_segment($seg);
+      next;
+    }
+
+    # The bounds of the segment (if known).
+    my $segstart        = $self->start($seg);
+    my $segend          = $self->end($seg);
+    # If the request is known to be out of range it is an error segment.
+    if ( ($start && $segstart && $start < $segstart) || ($end && $segend && $end > $segend ) ) {
+      $response .= $self->error_segment($seg, $start, $end);
+      next;
+    }
+    
+    # The actual sequence positions we are querying for.
+    my $actstart        = $start || $segstart || q();
+    my $actend          = $end   || $segend   || q();
     my $sequence       = $self->sequence({
 					  'segment' => $seg,
 					  'start'   => $start,
@@ -603,9 +683,10 @@ sub das_sequence {
 					 });
     my $seq            = $sequence->{'seq'};
     my $moltype        = $sequence->{'moltype'};
-    my $version        = $sequence->{'version'} || q(1.0);
-    my $len            = CORE::length($seq);
-    $response         .= qq(  <SEQUENCE id="$seg" start="$segstart" stop="$segend" moltype="$moltype" version="$version">\n$seq\n</SEQUENCE>\n);
+    my $version        = $sequence->{'version'} || $self->segment_version($seg) || q(1.0);
+    $actstart ||= 1;
+    $actend   ||= CORE::length($seq) + ($actstart-1);
+    $response         .= qq(  <SEQUENCE id="$seg" start="$actstart" stop="$actend" moltype="$moltype" version="$version">\n$seq\n  </SEQUENCE>\n);
   }
   return $response;
 }
@@ -613,7 +694,6 @@ sub das_sequence {
 sub das_types {
   my ($self, $opts) = @_;
   my $response      = q();
-  my @types         = ();
   my $data          = {};
 
   if(!scalar @{$opts->{'segments'}}) {
@@ -624,35 +704,48 @@ sub das_types {
     for my $seg (@{$opts->{'segments'}}) {
       my ($seg, $coords) = split /:/mx, $seg;
       my ($start, $end)  = split /,/mx, $coords || q();
-      my $segstart       = $start || $self->start($seg) || q();
-      my $segend         = $end   || $self->end($seg)   || q();
-
-      $data->{$seg} = [];
-      @types = $self->build_types({
+      
+      # If the requested segment is known to be not available it is an unknown or error segment.
+      my @known_segments = $self->known_segments();
+      if(@known_segments && !grep { /$seg/mx } @known_segments) {
+        $response .= $self->unknown_segment($seg);
+        next;
+      }
+      
+      # The bounds of the segment (if known).
+      my $segstart        = $self->start($seg);
+      my $segend          = $self->end($seg);
+      # If the request is known to be out of range it is an error segment.
+      if ( ($start && $segstart && $start < $segstart) || ($end && $segend && $end > $segend ) ) {
+        $response .= $self->error_segment($seg, $start, $end);
+        next;
+      }
+      
+      # The actual sequence positions we are querying for.
+      my $actstart        = $start || $segstart || q();
+      my $actend          = $end   || $segend   || q();
+      push @{$data->{"$seg:$actstart,$actend"}}, $self->build_types({
 				   'segment' => $seg,
 				   'start'   => $start,
 				   'end'     => $end,
 				  });
-
-      push @{$data->{$seg}}, @types;
     }
   }
 
-  for my $seg (keys %{$data}) {
-    my ($seg, $coords) = split /:/mx, $seg;
+  for my $key (keys %{$data}) {
+    my ($seg, $coords) = split /:/mx, $key;
     my ($start, $end)  = split /,/mx, $coords || q();
-    my $segstart       = $start || $self->start($seg) || q();
-    my $segend         = $end   || $self->end($seg)   || q();
 
     if ($seg ne 'anon') {
-      $response .= qq(  <SEGMENT id="$seg" start="$segstart" stop="$segend" version="1.0">\n);
+      my $version = $self->segment_version($seg) || '1.0';
+      $response .= qq(<SEGMENT id="$seg" start="$start" stop="$end" version="$version">);
 
     } else {
-      $response .= qq(  <SEGMENT version="1.0">\n);
+      $response .= q(<SEGMENT version="1.0">);
     }
 
-    for my $type (@{$data->{$seg}}) {
-      $response .= sprintf qq(    <TYPE id="%s"%s%s%s%s%s%s>%s</TYPE>\n),
+    for my $type (@{$data->{$key}}) {
+      $response .= sprintf qq(<TYPE id="%s"%s%s%s%s%s%s>%s</TYPE>),
 			   $type->{'type'}       || q(),
 			   $type->{'method'}      ?qq( method="$type->{'method'}")           : q(),
 			   $type->{'category'}    ?qq( category="$type->{'category'}")       : q(),
@@ -662,96 +755,159 @@ sub das_types {
 			   $type->{'description'} ?qq( description="$type->{'description'}") : q(),
 			   $type->{'count'}      || q();
     }
-    $response .= qq(  </SEGMENT>\n);
+    $response .= q(</SEGMENT>);
   }
+
   return $response;
 }
 
 sub das_entry_points {
   my $self    = shift;
   my $content = q();
-
+  
   for my $ep ($self->build_entry_points()) {
-    my $subparts = $ep->{'subparts'} || 'yes'; # default to yes here as we're giving entrypoints
-    $content    .= qq(    <SEGMENT id="$ep->{'segment'}" size="$ep->{'length'}" subparts="$subparts" />\n);
+    # default to yes here as we're giving entrypoints (if 'no' is specified, omit the field for brevity)
+    # NOTE THAT THIS IS THE REVERSE OF THE DAS SPEC
+    my $subparts = $ep->{'subparts'} && $ep->{'subparts'} eq 'no' ? q() : qq( subparts="yes") ;
+    $content    .= qq(<SEGMENT id="$ep->{'segment'}" size="$ep->{'length'}"$subparts />);
   }
 
   return $content;
 }
 
+sub build_entry_points {
+  my $self = shift;
+  return map { { 'segment' => $_, 'length' => $self->length($_) } } $self->known_segments();
+}
+
 sub das_stylesheet {
   my $self = shift;
-  return $self->_plain_response('stylesheet') || qq(<?xml version="1.0" standalone="yes"?>
-<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
-<DASSTYLE>
-<STYLESHEET version="1.0">
-  <CATEGORY id="default">
-    <TYPE id="default">
-      <GLYPH>
-        <BOX>
-          <FGCOLOR>black</FGCOLOR>
-          <FONT>sanserif</FONT>
-          <BUMP>0</BUMP>
-          <BGCOLOR>black</BGCOLOR>
-        </BOX>
-      </GLYPH>
-    </TYPE>
-  </CATEGORY>
-</STYLESHEET>
-</DASSTYLE>\n);
+  return $self->_plain_response('stylesheet') || qq(<?xml version="1.0" standalone="yes"?><!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd"><DASSTYLE><STYLESHEET version="1.0"><CATEGORY id="default"><TYPE id="default"><GLYPH><BOX><FGCOLOR>black</FGCOLOR><FONT>sanserif</FONT><BUMP>0</BUMP><BGCOLOR>black</BGCOLOR></BOX></GLYPH></TYPE></CATEGORY></STYLESHEET></DASSTYLE>);
 }
 
 sub das_homepage {
   my $self = shift;
   my $dsn  = $self->dsn() || q();
-  my $mm   = $self->mapmaster() || $self->config->{'mapmaster'} || q();
+  my $mm   = $self->mapmaster();
   $mm      = $mm?qq(<a href="$mm">$mm</a>):'none configured';
-  my $seg  = $self->config->{'example_segment'};
+  my @segs = values %{ $self->coordinates };
+  my $seg  = @segs ? $segs[0] : $self->config->{'example_segment'}; # example_segment is deprecated but supported
 
   return $self->_plain_response('homepage') || qq(<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
-  <head>
-    <title>ProServer: Source Information for $dsn</title>
+ <head>
+  <title>ProServer: Source Information for $dsn</title>
 <style type="text/css">
-html,body{background:#ffc;font-family:helvetica,arial,sans-serif;}
-thead{background-color:#700;color:#fff;}
-thead th{margin:0;padding:2px;}
-a{color:#a00;}a:hover{color:#aaa;}
+html,body{background:#ffc;font-family:helvetica,arial,sans-serif}
+thead{background-color:#700;color:#fff}
+thead th{margin:0;padding:2px}
+a{color:#a00;}a:hover{color:#aaa}
 </style>
-  </head>
-  <body>
-    <h1>ProServer: Source Information for $dsn</h1>
-    <dl>
-      <dt>DSN</dt>
-      <dd>$dsn</dd>
-      <dt>Description</dt>
-      <dd>@{[$self->description() || $self->config->{'description'} || 'none configured']}</dd>
-      <dt>Mapmaster</dt>
-      <dd>$mm</dd>
-      <dt>Capabilities</dt>
-      <dd>@{[map { my ($c) = $_ =~ m|(\w+)|;
-                   if($seg && $c eq 'features') { $c = "$c?segment=$seg"; }
+ </head>
+ <body>
+  <h1>ProServer: Source Information for $dsn</h1>
+  <dl>
+   <dt>DSN</dt>
+   <dd>$dsn</dd>
+   <dt>Description</dt>
+   <dd>@{[$self->description()]}</dd>
+   <dt>Mapmaster</dt>
+   <dd>$mm</dd>
+   <dt>Capabilities</dt>
+   <dd>@{[map { my ($c) = $_ =~ m|(\w+)|;
+                if($seg && $c eq 'features') { $c = "$c?segment=$seg"; }
                    qq(<a href="$dsn/$c">$_</a>);
-                 } split /;/mx, $self->das_capabilities()]}
-    </dl>
-  </body>
-</html>\n);}
+                } split /;/mx, $self->das_capabilities()]}
+  </dl>
+ </body>
+</html>\n);
+}
+
+sub das_sourcedata {
+  my ($self, $opts) = @_;
+  
+  #########
+  # The metadata for each source is built from:
+  # 1. the adaptor
+  # 2. the adaptor config
+  # 3. global config
+  
+  my $g_coords  = $opts->{'allcoos'};
+  # These values are for the response URL
+  my $host      = $self->{'hostname'};
+  my $port      = $self->{'port'} ? ':'.$self->{'port'} : q();
+  my $protocol  = $self->{'protocol'}  || 'http';
+  my $baseuri   = $self->{'baseuri'}   || q();
+  my $base_href = "$protocol://$host$port$baseuri";
+  
+  # Opening tag for this source implementation (version)
+  my $resp = sprintf(qq[    <VERSION uri="%s" created="%s">\n], $self->version_uri, $self->dsncreated_iso);
+
+  # Co-ordinate systems (key can be URI or description, value is test range)
+  while (my ($key, $test_range) = each %{ $self->coordinates }) {
+    $key = lc $key;
+    my $taxid   = $g_coords->{$key}{taxid}   ? qq[ taxid="$g_coords->{$key}{taxid}"]     : '';
+    my $version = $g_coords->{$key}{version} ? qq[ version="$g_coords->{$key}{version}"] : '';
+    $resp .= sprintf(
+      qq[      <COORDINATES uri="%s" source="%s" authority="%s"%s%s test_range="%s">%s</COORDINATES>\n],
+      $g_coords->{$key}{uri}, $g_coords->{$key}{source}, $g_coords->{$key}{authority}, $taxid, $version, $test_range, $g_coords->{$key}{description}
+    );
+  }
+
+  # Supported commands
+  # Capabilities are of form 'features' => '1.0'
+  while (my ($cap, $ver) = each %{ $self->capabilities }) {
+    my $type = 'das'.int($ver);
+    my $query_uri = (exists $Bio::Das::ProServer::WRAPPERS->{$cap} ? sprintf(q[ query_uri="%s/%s/%s/%s"], $base_href, $type, $self->dsn, $cap): q());
+    $resp .= qq[      <CAPABILITY type="$type:$cap"$query_uri />\n];
+  }
+
+  # Custom properties
+  while (my ($name, $value) = each %{ $self->properties }) {
+    my @values = (ref $value && ref $value eq 'ARRAY' ? @$value : ($value));
+    for my $detail (@values) {
+      $resp .= sprintf(qq[      <PROP name="%s" value="%s" />\n], $name, $detail);
+    }
+  }
+
+  $resp .= "    </VERSION>\n";
+  
+  # Full data for all versions of a source
+  if(!$opts->{'skip_open'}) {
+    $resp = sprintf(
+      qq[  <SOURCE uri="%s" title="%s" doc_href="%s" description="%s">\n    <MAINTAINER email="%s" />\n],
+      $self->source_uri, $self->title, $self->doc_href || "$base_href'/das/".$self->dsn, $self->description, $self->maintainer
+    ).$resp;
+  }
+
+  if(!$opts->{'skip_close'}) {
+    $resp .= qq[  </SOURCE>\n];
+  }
+  
+  return $resp;
+}
 
 sub das_xsl {
   my ($self, $opts) = @_;
   my $call = $opts->{'call'};
 
-  return q() if(!$call);
-  my $response = $self->_plain_response("xsl_$call");
-  if(!$response) {
-    $response = $XSL->{$call};
-    $response =~ s/<head>/<head>$XSLFLUFF/smix;
+  if(!$call) {
+    return q();
   }
+
+  my ($type)      = $call =~ m/(.+)\.xsl$/;
+  my $defaultfile = File::Spec->catfile($self->{'styleshome'}, "xsl_$call"); 
+  my $response    = $self->_plain_response($type.q(_xsl), $defaultfile);
+
+  if(!$response) {
+    carp "Unable to parse $type XSL from disk\n";
+  }
+
   return $response;
 }
 
 sub _plain_response {
-  my ($self, $cfghead) = @_;
+  my ($self, $cfghead, $default) = @_;
   if(!$cfghead) {
     return q();
   }
@@ -762,22 +918,22 @@ sub _plain_response {
     #
     return $self->config->{$cfghead};
 
-  } elsif($self->config->{"${cfghead}file"}) {
+  } elsif(my $filename = $self->config->{"${cfghead}file"} || $default) {
     #########
     # import homepage file
     #
     my $filedata = $self->{"${cfghead}file"};
-    if(!$filedata) {
-      my ($fn) = $self->config->{"${cfghead}file"} =~ m|([a-z0-9_\./\-]+)|mix;
+    if(!$filedata && -e $filename) {
+      my ($fn) = $filename =~ m|([a-z0-9_\./\-]+)|mix;
       eval {
-	open my $fh, '<', $fn or croak "opening $cfghead '$fn': $!";
-	local $RS = undef;
-	$filedata = <$fh>;
-	close $fh;
+        open my $fh, '<', $fn or croak "opening $filename '$fn': $!";
+        local $RS = undef;
+        $filedata = <$fh>;
+        close $fh;
       };
       carp $EVAL_ERROR if($EVAL_ERROR);
     }
-
+    # Cache unless configured not to do so
     if(($self->config->{"cache${cfghead}file"}||'yes') eq 'yes') {
       $self->{"${cfghead}file"} ||= $filedata;
     }
@@ -791,72 +947,79 @@ sub das_alignment {
   my ($self, $opts) = @_;
   my $response      = q();
   my $query         = $opts->{'query'};
-  my $subjects_refs  = $opts->{'subjects'};
-  my $sub_coos       = $opts->{'subcoos'} || q();
+  my $subjects_refs = $opts->{'subjects'};
+  my $sub_coos      = $opts->{'subcoos'} || q();
   my $rows          = $opts->{'rows'}    || q();
+  
+  # If the requested segment is known to be not available it is an unknown or error segment.
+  my @known_segments = $self->known_segments();
+  if(scalar @known_segments &&
+     !grep { /$query/mx } @known_segments) {
+    return $self->unknown_segment($query);
+  }
 
   #The build_alignment should be encoded by the SoureAdaptor subclasses
   for my $ali ($self->build_alignment($query, $rows, $subjects_refs, $sub_coos)) {
-    $response .= sprintf qq(  <alignment name="%s" alignType="%s"%s%s>\n),
+    $response .= sprintf q(<alignment name="%s" alignType="%s"%s%s>),
 			 $ali->{'name'},
 			 $ali->{'type'} || 'unknown',
 			 $ali->{'max'}      ?qq( max="$ali->{'max'}"):q(),
 			 $ali->{'position'} ?qq( position="$ali->{'position'}"):q();
 
     for my $ali_obj (grep { $_ } @{$ali->{'alignObj'}}) {
-      $response .= _gen_align_object_response($ali_obj, q(   ));
+      $response .= _gen_align_object_response($ali_obj);
     }
 
     for my $score (@{$ali->{'scores'}}) {
-      $response .= _gen_align_score_response($score, q(   ));
+      $response .= _gen_align_score_response($score);
     }
 
     for my $block (@{$ali->{'blocks'}}) {
-      $response .= _gen_align_block_response($block, q(   ));
+      $response .= _gen_align_block_response($block);
     }
 
     for my $geo3d (@{$ali->{'geo3D'}}) {
-      $response .= _gen_align_geo3d_response($geo3d, q(   ));
+      $response .= _gen_align_geo3d_response($geo3d);
     }
-    $response .= qq (  </alignment>\n);
+    $response .= q(</alignment>);
   }
 
   return $response;
 }
 
 sub _gen_align_object_response {
-  my ($ali_obj, $spacing) = @_;
-  my $children            = 0;
+  my ($ali_obj) = @_;
+  my $children  = 0;
 
-  my $response = sprintf q(%s  <alignObject objectVersion="%s" intObjectId="%s" %s dbSource="%s" dbVersion="%s" dbAccessionId="%s" %s>),
-                         $spacing,
+  my $coos = $ali_obj->{'dbCoordSys'} || $ali_obj->{'coos'};
+  my $response = sprintf q(<alignObject objectVersion="%s" intObjectId="%s" %s dbSource="%s" dbVersion="%s" dbAccessionId="%s" %s>),
 			 $ali_obj->{'version'}   || '1.0',
-			 $ali_obj->{'intID'}     || 'unknown',
+			 $ali_obj->{'id'}        || $ali_obj->{'intID'}     || 'unknown',
 			 $ali_obj->{'type'}?qq(type="$ali_obj->{'type'}"):q(),
 			 $ali_obj->{'dbSource'}  || 'unknown',
 			 $ali_obj->{'dbVersion'} || 'unknown',
-			 $ali_obj->{'accession'} || 'unknown',
-			 $ali_obj->{'coos'}?qq(dbCoodSys="$ali_obj->{'coos'}"):q();
+			 $ali_obj->{'dbAccession'} || $ali_obj->{'accession'} || 'unknown',
+			 $coos?qq(dbCoordSys="$coos"):q();
 
   for my $detail (@{$ali_obj->{'aliObjectDetail'}}) {
     $children++;
-    $response .= sprintf qq(%s    <alignObjectDetail dbSource="%s" property="%s"%s>\n),
-                         $spacing,
-			 $detail->{'source'}   || 'unknown',
+    my $value = $detail->{'value'} || $detail->{'detail'};
+    $response .= sprintf qq(<alignObjectDetail dbSource="%s" property="%s"%s>),
+			 $detail->{'dbSource'} || $detail->{'source'}   || 'unknown',
 			 $detail->{'property'} || 'unknown',
-			 $detail->{'detail'}?qq(>$detail->{'detail'}</alignObjectDetail):q(/);
+			 $value?qq(>$value</alignObjectDetail):q(/);
 
   }
 
   #Finally if the sequence is present, add this
   if(my $seq = $ali_obj->{'sequence'}) {
     $children++;
-    $response .= qq($spacing    <sequence>$seq</sequence>\n);
+    $response .= qq(<sequence>$seq</sequence>);
   }
 
   #Finish off the ALIGNOBLECT
   if($children) {
-    $response .= qq($spacing  </alignObject>\n);
+    $response .= qq(</alignObject>);
 
   } else {
      #bit of a hack, but makes nice well formed xml
@@ -867,15 +1030,14 @@ sub _gen_align_object_response {
 }
 
 sub _gen_align_score_response {
-  my($score, $spacing) = @_;
-  return sprintf qq(%s <score methodName="%s" value="%s" />\n),
-                 $spacing,
+  my($score) = @_;
+  return sprintf qq(<score methodName="%s" value="%s"/>),
                  $score->{'method'} || 'unknown',
 		 $score->{'score'}  || '0';
 }
 
 sub _gen_align_block_response {
-  my($block, $spacing) = @_;
+  my($block) = @_;
 
   #########
   # The code assumes that if a block is passed in, it has an alignment
@@ -886,59 +1048,57 @@ sub _gen_align_block_response {
   #########
   # Block tag with required and optional attributes
   #
-  my $response .= sprintf qq(%s <block blockOrder="%s" %s>\n),
-                  $spacing,
+  my $response .= sprintf q(<block blockOrder="%s" %s>),
 		  $block->{'blockOrder'} || 1,
 		  $block->{'blockScore'}?qq(blockScore="$block->{'blockScore'}"):q();
   
   for my $segment (@{$block->{'segments'}}) {
-    $response .= sprintf qq(%s  <segment intObjectId="%s"%s%s%s%s\n),
-                         $spacing,
-			 $segment->{'objectId'},
+    $response .= sprintf q(<segment intObjectId="%s"%s%s%s%s),
+			 $segment->{'id'} || $segment->{'objectId'},
 			 (exists $segment->{'start'})?qq( start="$segment->{'start'}"):q(),
 			 (exists $segment->{'end'})  ?qq( end="$segment->{'end'}"):q(),
 			 $segment->{'orientation'}?qq( orientation="$segment->{'orientation'}"):q(),
-			 $segment->{'cigar'}?qq( >\n$spacing   <cigar>"$segment->{'cigar'}"</cigar>\n$spacing  </segment>):q(/>);
+			 $segment->{'cigar'}?qq(><cigar>$segment->{'cigar'}</cigar></segment>):q(/>);
   }
 
   #########
   # close the block
   #
-  $response .= qq($spacing </block>\n);
+  $response .= q(</block>);
   return $response;
 }
 
 sub _gen_align_geo3d_response {
-  my($geo3d, $spacing) = @_;
+  my($geo3d) = @_;
 
   #########
   # The geo3d is a reference to a 2D array.
   #
   my $response = q();
-  my $id       = $geo3d->{'intObjectId'} || 'unknown';
+  my $id       = $geo3d->{'id'} || $geo3d->{'intObjectId'} || 'unknown';
   my $vector   = $geo3d->{'vector'};
   my $matrix   = $geo3d->{'matrix'};
   
-  $response .= qq($spacing <geo3d intObjectId="$id">\n);
+  $response .= qq(<geo3D intObjectId="$id">);
 
   if($vector && $matrix) { #These are both required
     my $x      = $vector->{'x'} || '0.0';
     my $y      = $vector->{'y'} || '0.0';
     my $z      = $vector->{'z'} || '0.0';
-    $response .= qq($spacing  <vector x="$x" y="$y" z="$z" />\n);
-    $response .= qq($spacing  <matrix>\n);
+    $response .= qq(<vector x="$x" y="$y" z="$z"/>);
+    $response .= q(<matrix);
 
     for my $m1 (0,1,2) {
       for my $m2 (0,1,2) {
 	my $coordinate = $matrix->[$m1]->[$m2] || '0.0';
 	my $n1         = $m1 + 1;#Bit of a hack, but ensures data integrity between the array and xml with next to no effort.
 	my $n2         = $m2 + 1;#ditto
-	$response     .= qq($spacing    <max$n1$n2 coord="$coordinate" />\n);
+	$response     .= qq( mat$n1$n2="$coordinate");
       }
     }
-    $response .= qq($spacing  </matrix>\n);
+    $response .= q(/>);
   }
-  $response .= qq($spacing </geo3d>\n);
+  $response .= q(</geo3D>);
   return $response;
 }
 
@@ -951,6 +1111,12 @@ sub das_structure {
   my $query  = $opts->{'query'};
   my $chains = $opts->{'chains'} || undef;
   my $model  = $opts->{'model'}  || undef;
+  
+  # If the requested segment is known to be not available it is an unknown or error segment.
+  my @known_segments = $self->known_segments();
+  if(@known_segments && !grep { /$query/mx } @known_segments) {
+    return $self->unknown_segment($query);
+  }
 
   #The build_structure should be specified by the sourceAdaptor subclass
 
@@ -972,11 +1138,10 @@ sub das_structure {
 }
 
 sub _gen_object_response {
-  my ($object, $spacing) = @_;
-  my $children           = 0;
+  my ($object) = @_;
+  my $children = 0;
 
-  my $response .= sprintf q(%s <object objectVersion="%s"%sdbSource="%s" dbVersion="%s" dbAccessionId="%s" dbCoodSys="%s">),
-                          $spacing,
+  my $response .= sprintf q(<object objectVersion="%s"%sdbSource="%s" dbVersion="%s" dbAccessionId="%s" dbCoordSys="%s">),
 			  $object->{'dbVersion'}     || '1.0',
 			  $object->{'type'}?qq( type="$object->{'type'}" ):q(),
 			  $object->{'dbSource'}      || 'unknown',
@@ -986,8 +1151,7 @@ sub _gen_object_response {
 
   for my $objDetail (@{$object->{'objectDetails'}}) {
     $children++;
-    $response .= sprintf qq(%s   <objectDetail dbSource="%s" property="%s" %s>\n),
-                         $spacing,
+    $response .= sprintf qq(<objectDetail dbSource="%s" property="%s" %s>\n),
 			 $objDetail->{'source'}   || 'unknown',
 			 $objDetail->{'property'} || 'unknown',
 			 $objDetail->{'detail'}?qq(>$objDetail->{'detail'}</objectDetail):q();
@@ -998,7 +1162,7 @@ sub _gen_object_response {
   # Finish off the object
   #
   if($children) {
-    $response .= qq($spacing  </object>);
+    $response .= q(</object>);
 
   } else {
     #########
@@ -1012,7 +1176,7 @@ sub _gen_object_response {
 }
 
 sub _gen_chain_response {
-  my ($chain, $spacing) = @_;
+  my ($chain) = @_;
 
   #########
   # Set up the chain properties, chain id, swisprot mapping and model number.
@@ -1022,8 +1186,7 @@ sub _gen_chain_response {
     $id = q();
   }
 
-  my $response .= sprintf qq(%s<chain id="%s" %s %s>\n),
-                          $spacing,
+  my $response .= sprintf qq(<chain id="%s" %s %s>),
 			  $id,
 		          $chain->{'modelNumber'}?qq(model="$chain->{'modelNumber'}"):q(),
 		          $chain->{'SwissprotId'}?qq(SwissprotId="$chain->{'SwissprotId'}"):q();
@@ -1035,8 +1198,7 @@ sub _gen_chain_response {
     #########
     # Residue properties
     #
-    $response .= sprintf qq(%s  <group type="%s" groupID="%s" name="%s" %s>\n),
-                         $spacing,
+    $response .= sprintf qq(<group type="%s" groupID="%s" name="%s" %s>),
 			 $group->{'type'},
 			 $group->{'id'},
 			 $group->{'name'},
@@ -1046,35 +1208,204 @@ sub _gen_chain_response {
     # Add the atoms to the chain
     #
     for my $atom (@{$group->{'atoms'}}) {
-      $response .= sprintf qq(%s    <atom x="%s" y="%s" z="%s" atomName="%s" atomID="%s" %s %s %s/>\n),
-	                   $spacing,
+      $response .= sprintf qq(<atom x="%s" y="%s" z="%s" atomName="%s" atomID="%s" %s %s %s/>),
 			   (map { $atom->{$_} } qw(x y z atomName atomId)),
 			   (map { $atom->{$_}?qq($_="$atom->{$_}"):q() } qw(occupancy tempFactor altLoc));
 
     }
     #close group tag
-    $response .= qq($spacing   </group>\n); 
+    $response .= q(</group>); 
   }
 
   #close chain tag
-  $response .= qq($spacing </chain>\n);
+  $response .= q(</chain>);
   return $response;
 }
 
 sub _gen_connect_response {
-  my ($connect, $spacing) = @_;
+  my ($connect)    = @_;
   my $response     = q();
   my $atom_serial  = $connect->{'atomSerial'} || undef;
   my $connect_type = $connect->{'type'}       || 'unknown';
 
   if($atom_serial) {
-    $response .= qq($spacing <connect atomSerial="$atom_serial" type="$connect_type">\n);
+    $response .= qq(<connect atomSerial="$atom_serial" type="$connect_type">);
 
     for my $atom (@{$connect->{'atom_ids'}}) {
-      $response .= qq($spacing   <atomid atomID="$atom"/>\n);
+      $response .= q(<atomid atomID="$atom"/>);
     }
-    $response .= qq($spacing </connect>);
+    $response .= q(</connect>);
   }
+  return $response;
+}
+
+sub das_interaction {
+  my ($self, $opts) = @_;
+  
+  my $interactors = $opts->{'interactors'};
+  my %details = ();
+  for (@{ $opts->{'details'} }) {
+    my ($key, $val) = split /,/, $_;
+    $key =~ s/^property://;
+    $val =~ s/^value:// if defined $val;
+    $details{$key} = $val;
+  }
+  
+  my $struct = $self->build_interaction({
+                                         'interactors' => $interactors,
+                                         'details' => \%details,
+                                        });
+
+  my $response = q();
+  for my $interactor (@{ $struct->{'interactors'} }) {
+    $response .= _gen_interactor_response($interactor);
+  }
+  
+  for my $interaction (@{ $struct->{'interactions'} }) {
+    $response .= _gen_interaction_response($interaction);
+  }
+  
+  return $response;
+  
+}
+
+sub _gen_interactor_response {
+  my ($interactor) = @_;
+  
+  my $response = sprintf q(<INTERACTOR id="%s" shortLabel="%s" dbSource="%s" dbAccessionId="%s" dbCoordSys="%s"),
+                         $interactor->{'id'}          || 'unknown',
+                         $interactor->{'label'}       || $interactor->{'name'} || 'unknown',
+                         $interactor->{'dbSource'}    || 'unknown',
+                         $interactor->{'dbAccession'} || 'unknown',
+                         $interactor->{'dbCoordSys'}  || 'unknown';
+  $response .= sprintf q( dbSourceCvId="%s"), $interactor->{'dbSourceCvId'} if $interactor->{'dbSourceCvId'};
+  $response .= sprintf q( dbVersion="%s"),    $interactor->{'dbVersion'}    if $interactor->{'dbVersion'};
+  $response .= exists $interactor->{'details'} || exists $interactor->{'sequence'} ? q(>) : q(/>);
+  
+  my $details = $interactor->{'details'} || [];
+  if (ref $details eq 'HASH') {
+    $details = [$details];
+  }
+  
+  for my $detail (@$details) {
+    $response .= _gen_interaction_detail_response($detail);
+  }
+  
+  if (my $sequence = $interactor->{'sequence'}) {
+    $sequence = {'sequence'=>$sequence} if (! ref $sequence);
+    $response .= sprintf q(<SEQUENCE%s%s>%s</SEQUENCE>),
+                         $sequence->{'start'} ? qq( start="$sequence->{'start'}") : q(),
+                         $sequence->{'end'}   ? qq( end="$sequence->{'end'}")     : q(),
+                         $sequence->{'sequence'};
+  }
+
+  if(exists $interactor->{'details'} || exists $interactor->{'sequence'}) {
+    $response .= q(</INTERACTOR>);
+  }
+
+  return $response;
+}
+
+sub _gen_interaction_response {
+  my ($interaction) = @_;
+  
+  my $response = sprintf q(<INTERACTION name="%s" dbSource="%s" dbAccessionId="%s"),
+                         $interaction->{'label'}       || $interaction->{'name'} || 'unknown',
+                         $interaction->{'dbSource'}    || 'unknown',
+                         $interaction->{'dbAccession'} || 'unknown';
+  $response .= sprintf q( dbSourceCvId="%s"), $interaction->{'dbSourceCvId'} if $interaction->{'dbSourceCvId'};
+  $response .= sprintf q( dbVersion="%s"),    $interaction->{'dbVersion'}    if $interaction->{'dbVersion'};
+  $response .= q(>);
+  
+  my $details = $interaction->{'details'} || [];
+  if (ref $details eq 'HASH') {
+    $details = [$details];
+  }
+
+  for my $detail (@{$details}) {
+    $response .= _gen_interaction_detail_response($detail);
+  }
+  
+  for my $participant (@{ $interaction->{'participants'} }) {
+    $response .= qq(<PARTICIPANT id="$participant->{'id'}");
+    $response .= exists $participant->{'details'} ? q(>) : qq(/>);
+    $details = $participant->{'details'} || [];
+
+    if (ref $details eq 'HASH') {
+      $details = [$details];
+    }
+
+    for my $detail (@{$details}) {
+      $response .= _gen_interaction_detail_response($detail);
+    }
+    $response .= exists $participant->{'details'} ? q(</PARTICIPANT>) : q();
+  }
+  $response .= q(</INTERACTION>);
+  return $response;
+}
+
+sub _gen_interaction_detail_response {
+  my ($details) = @_;
+  
+  my $response = sprintf q(<DETAIL property="%s" value="%s"),
+                         $details->{'property'} || $details->{'key'},
+                         $details->{'value'}    || $details->{'details'};
+  $response .= sprintf q( propertyCvId="%s"), $details->{'propertyCvId'} if $details->{'propertyCvId'};
+  $response .= sprintf q( valueCvId="%s"),    $details->{'valueCvId'}    if $details->{'valueCvId'};
+  
+  if ($details->{'start'}) {
+    $response .= q(>);
+    $response .= sprintf qq(<RANGE start="%s" end="%s"),
+                         $details->{'start'},
+                         $details->{'end'} || $details->{'start'};
+    $response .= sprintf q( startStatus="%s"), $details->{'startStatus'} if $details->{'startStatus'};
+    $response .= sprintf q( endStatus="%s"),   $details->{'endStatus'}   if $details->{'endStatus'};
+    $response .= sprintf q( startStatusCvId="%s"), $details->{'startStatusCvId'} if $details->{'startStatusCvId'};
+    $response .= sprintf q( endStatusCvId="%s"),   $details->{'endStatusCvId'}   if $details->{'endStatusCvId'};
+    $response .= q(/></DETAIL>);
+  } else {
+    $response .= q(/>);
+  }
+  
+  return $response;
+}
+
+sub das_volmap {
+  my ($self, $opts) = @_;
+  
+  my $segment = $opts->{'query'} || q();
+  # If the requested segment is known to be not available it is an unknown or error segment.
+  my @known_segments = $self->known_segments();
+  if ( !$segment || (@known_segments && !grep { /$segment/mx } @known_segments) ) {
+    return $self->unknown_segment($segment);
+  }
+  
+  my $volmap = $self->build_volmap($segment);
+  my $response = sprintf q(<VOLMAP id="%s" class="%s" type="%s" version="%s">),
+                         $volmap->{'id'},
+                         $volmap->{'class'},
+                         $volmap->{'type'},
+                         $volmap->{'version'};
+  my $link    = $volmap->{'link'};
+  my $linktxt = $volmap->{'linktxt'} || $link;
+
+  if (ref $link && ref $link eq 'HASH') {
+    my @tmp = keys %{ $link };
+    $linktxt = $link->{$tmp[0]};
+    $link    = $tmp[0];
+  }
+
+  $response .= qq(<LINK href="$link">$linktxt</LINK></VOLMAP>);
+  
+  my $notes = $volmap->{'note'} || [];
+  if(!ref $notes) {
+    $notes = [$notes];
+  }
+
+  for (@{$notes}) {
+    $response .= sprintf q(<NOTE>%s</NOTE>), $_;
+  }
+  
   return $response;
 }
 
@@ -1083,29 +1414,34 @@ sub cleanup {
   my $debug = $self->{'debug'};
 
   if(!$self->config->{'autodisconnect'}) {
-    $debug and print {*STDERR} "${self}::cleanup retaining transport\n";
+    $debug and print {*STDERR} "${self}::cleanup retaining transports\n";
     return;
 
   } else {
     if(!$self->{'_transport'}) {
-      $debug and print {*STDERR} "${self}::cleanup no transport loaded\n";
+      $debug and print {*STDERR} "${self}::cleanup no transports loaded\n";
       return;
     }
 
-    my $transport = $self->transport();
-    if($self->config->{'autodisconnect'} eq 'yes') {
-      eval {
-	$self->transport->disconnect();
-	$debug and print {*STDERR} qq(${self}::cleanup performed forced transport disconnect\n);
-      };
-    } elsif($self->config->{'autodisconnect'} =~ /(\d+)/mx) {
-      if(time - $self->transport->init_time() > $1) {
-	eval {
-	  $self->transport->disconnect();
-	  $debug and print {*STDERR} qq(${self}::cleanup performed timed transport disconnect\n);
-	};
+    for my $name (keys %{$self->{'_transport'}}) {
+      my $transport = $self->transport($name);
+      if($self->config->{'autodisconnect'} eq 'yes') {
+        eval {
+          $transport->disconnect();
+          $debug and print {*STDERR} qq(${self}::cleanup performed forced transport disconnect\n);
+        };
+      } elsif($self->config->{'autodisconnect'} =~ /(\d+)/mx) {
+        my $now = time;
+        if($now - $transport->init_time() > $1) {
+          eval {
+            $transport->disconnect();
+            $transport->init_time($now);
+            $debug and print {*STDERR} qq(${self}::cleanup performed timed transport disconnect\n);
+          };
+        }
       }
     }
+
   }
   return;
 }
@@ -1119,7 +1455,7 @@ Bio::Das::ProServer::SourceAdaptor - base class for sources
 
 =head1 VERSION
 
-$Revision: 2.59 $
+$Revision: 2.70 $
 
 =head1 SYNOPSIS
 
@@ -1127,7 +1463,7 @@ A base class implementing stubs for all SourceAdaptors.
 
 =head1 DESCRIPTION
 
-SourceAdaptor.pm generats XML and manages callouts for DAS request
+SourceAdaptor.pm generates XML and manages callouts for DAS request
 handling.
 
 If you're extending ProServer, this class is probably what you need to
@@ -1138,6 +1474,8 @@ extend. build_features() in particular.
 
 Roger Pettett <rmp@sanger.ac.uk>
 
+Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
+
 =head1 SUBROUTINES/METHODS
 
 =head2 new : Constructor
@@ -1146,6 +1484,8 @@ Roger Pettett <rmp@sanger.ac.uk>
     'dsn'      => q(),
     'port'     => q(),
     'hostname' => q(),
+    'protocol' => q(),
+    'baseuri'  => q(),
     'config'   => q(),
     'debug'    => 1,
   });
@@ -1158,15 +1498,51 @@ Roger Pettett <rmp@sanger.ac.uk>
 
 =head2 length : Returns the segment-length given a segment
 
-  my $sSegmentLength = $oSourceAdaptor->length('1:1,100000');
+  my $sSegmentLength = $oSourceAdaptor->length('DYNA_CHICK');
+  
+  By default returns 0
 
-=head2 mapmaster : Mapmaster for this source. Overrides configuration 'mapmaster' setting
+=head2 mapmaster : Mapmaster for this source.
 
   my $sMapMaster = $oSourceAdaptor->mapmaster();
+  
+  By default returns configuration 'mapmaster' setting
 
-=head2 description : Description for this source. overrides configuration 'description' setting
+=head2 description : Description for this source.
 
   my $sDescription = $oSourceAdaptor->description();
+  
+  By default returns configuration 'description' setting or $self->title
+
+=head2 doc_href : Location of a homepage for this source.
+
+  my $sDocHref = $oSourceAdaptor->doc_href();
+  
+  By default returns configuration 'doc_href' setting
+
+=head2 title : Short title for this source.
+
+  my $title = $oSourceAdaptor->title();
+  
+  By default returns configuration 'title' setting or $self->source_uri
+
+=head2 source_uri : URI for all versions of a source.
+
+  my $uriS = $oSourceAdaptor->source_uri();
+  
+  By default returns configuration 'source_uri' setting or $self->dsn
+
+=head2 version_uri : URI for a specific version of a source.
+
+  my $uriV = $oSourceAdaptor->version_uri();
+  
+  By default returns configuration 'version_uri' setting or $self->source_uri
+
+=head2 maintainer : Contact email for this source.
+
+  my $email = $oSourceAdaptor->maintainer();
+  
+  By default returns configuration 'maintainer' setting, global 'maintainer' setting or an empty string
 
 =head2 build_features : (subclasses only) Fetch feature data
 
@@ -1235,13 +1611,12 @@ and strings) refer to the specification on biodas.org.
 
 =head2 build_types : (Subclasses only) fetch type data
 
-This call is made by das_types(). It is passed one of:
-
- [{ 'segment'    => $, 'start' => $, 'end' => $ }, {}...]
+This call is made by das_types(). If no specific segments are requested by the
+client, it is passed no arguments. Otherwise it is passed:
 
  { 'segment'    => $, 'start' => $, 'end' => $ }
 
- and is expected to return a reference to an array of hash references, i.e.
+It is expected to return a reference to an array of hash references, i.e.
  [{},{}...{}]
 
 Each hash returned represents a single type and should contain a
@@ -1272,6 +1647,184 @@ and strings) refer to the specification on biodas.org.
  length   => $
  subparts => $
 
+=head2 build_alignment : (Subclasses only) fetch alignment data
+
+This call is made by das_alignment(). It is passed these arguments:
+
+ (
+  $,        # query sequence
+  $,        # number of rows
+  [ $, $ ], # subjects
+  $         # subject coordinate system
+ )
+
+It is expected to return an array reference of alignment hash references:
+
+ [
+  {
+   name     => $,
+   type     => $,
+   max      => $,
+   position => $,
+   alignObj => [
+                {
+                 id              => $, # internal object ID
+                 version         => $,
+                 type            => $,
+                 dbSource        => $,
+                 dbVersion       => $,
+                 dbAccession     => $,
+                 dbCoordSys      => $,
+                 sequence        => $,
+                 aliObjectDetail => [
+                                     {
+                                      property => $,
+                                      value    => $,
+                                      dbSource => $,
+                                     },
+                                    ],
+                },
+               ],
+   scores   => [
+                {
+                 method => $,
+                 score  => $,
+                },
+               ],
+   blocks   => [
+                {
+                 blockOrder => $,
+                 blockScore => $,
+                 segments   => [
+                                {
+                                 id          => $, # internal object ID
+                                 start       => $,
+                                 end         => $,
+                                 orientation => $, # + / - / undef
+                                 cigar       => $,
+                                },
+                               ],
+               ],
+   geo3D    => [
+                {
+                 id
+                 vector => {
+                            x => $,
+                            y => $,
+                            z => $,
+                           },
+                 matrix => [
+                            [$,$,$], # mat11, mat12, mat13
+                            [$,$,$], # mat21, mat22, mat23
+                            [$,$,$], # mat31, mat32, mat33
+                           ],
+                },
+               ],
+
+=head2 build_interaction : (Subclasses only) fetch interaction data
+
+This call is made by das_interaction(). It is passed this structure:
+
+ # For request:
+ # /interaction?interactor=$;interactor=$;detail=property:$;detail=property:$,value:$
+ {
+  interactors => [$, $, ..],
+  details     => {
+                  $ => undef, # property exists
+                  $ => $,     # property has a certain value
+                 },
+ }
+
+It is expected to return a hash reference of interactions and interactors where 
+all the requested interactors are part of the interaction:
+
+ {
+  interactors => [
+                  {
+                   id            => $,
+                   label || name => $,
+                   dbSource      => $,
+                   dbSourceCvId  => $, # controlled vocabulary ID
+                   dbVersion     => $,
+                   dbAccession   => $,
+                   dbCoordSys    => $, # co-ordinate system
+                   sequence      => $,
+                   details       => [
+                                     {
+                                      property        => $,
+                                      value           => $,
+                                      propertyCvId    => $,
+                                      valueCvId       => $,
+                                      start           => $, 
+                                      end             => $,
+                                      startStatus     => $,
+                                      endStatus       => $,
+                                      startStatusCvId => $,
+                                      endStatusCvId   => $,
+                                     },
+                                     ..
+                                    ],
+                  },
+                  ..
+                 ],
+  interactions => [
+                   {
+                    label || name => $,
+                    dbSource      => $,
+                    dbSourceCvId  => $,
+                    dbVersion     => $,
+                    dbAccession   => $,
+                    details       => [
+                                      {
+                                       property     => $,
+                                       value        => $,
+                                       propertyCvId => $,
+                                       valueCvId    => $,
+                                      },
+                                      ..
+                                     ],
+                    participants  => [
+                                      {
+                                       id      => $,
+                                       details => [
+                                                   {
+                                                    property        => $,
+                                                    value           => $,
+                                                    propertyCvId    => $,
+                                                    valueCvId       => $,
+                                                    start           => $,
+                                                    end             => $,
+                                                    startStatus     => $,
+                                                    endStatus       => $,
+                                                    startStatusCvId => $,
+                                                    endStatusCvId   => $,
+                                                   },
+                                                   ..
+                                                  ],
+                                      },
+                                      ..
+                                     ],
+                   },
+                   ..
+                  ],
+ }
+
+=head2 build_volmap : (Subclasses only) fetch volume map data
+
+This call is made by das_volmap(). It is passed a single 'query' argument.
+
+It is expected to return a hash reference for a single volume map:
+
+ {
+  id      => $,
+  class   => $,
+  type    => $,
+  version => $,
+  link    => $,                  # href for data
+  linktxt => $,                  # text
+  note    => $  OR  [ $, $, .. ]
+ }
+
 =head2 init_segments : hook for optimising results to be returned.
 
   By default - do nothing
@@ -1295,20 +1848,80 @@ and strings) refer to the specification on biodas.org.
 =head2 dsnversion : get accessor for this sourceadaptor's dsn version
 
   my $sDSNVersion = $oSourceAdaptor->dsnversion();
+  
+  By default returns $self->{'dsnversion'}, configuration 'dsnversion' setting or '1.0'
+
+=head2 dsncreated : get accessor for this sourceadaptor's update time (variable format)
+  
+  # e.g. '2007-09-20T15:26:23Z'      -- ISO 8601, Coordinated Universal Time
+  # e.g. '2007-09-20T16:26:23+01:00' -- ISO 8601, British Summer Time
+  # e.g. '2007-09-20 07:26:23 -08'   -- indicating Pacific Standard Time
+  # e.g. 1190301983                  -- UNIX
+  # e.g. '2007-09-20'
+  my $sDSNCreated = $oSourceAdaptor->dsncreated(); 
+  
+  By default tries and returns the following:
+    1. $self->{'dsncreated'}
+    2. configuration 'dsncreated' setting
+    3. adaptor's 'last_modified' method (if it exists)
+    4. zero (epoch)
+
+=head2 dsncreated_unix : this sourceadaptor's update time, in UNIX format
+
+  # e.g. 1190301983
+  my $sDSNCreated = $oSourceAdaptor->dsncreated_unix();
+
+=head2 dsncreated_iso : this sourceadaptor's update time, in ISO 8601 format
+
+  # e.g. '2007-09-20T15:26:23Z'
+  my $sDSNCreated = $oSourceAdaptor->dsncreated_iso();
+
+=head2 coordinates : Returns this sourceadaptor's supported coordinate systems
+
+  my $hCoords = $oSourceAdaptor->coordinates();
+  
+  Hash contains a key-value pair for each coordinate system, the key being
+  either the URI or description, and the value being a suitable test range.
+  
+  By default returns an empty hash reference
+
+=head2 capabilities : Returns this sourceadaptor's supported commands
+
+  my $hCapabilities = $oSourceAdaptor->capabilities();
+  
+  Hash contains a key-value pair for each command, the key being the command
+  name, and the value being the implementation version.
+  
+  By default returns: { 'dsn' => '1.0' }
+
+=head2 properties : Returns custom properties for this sourceadaptor
+
+  my $hProps = $oSourceAdaptor->properties();
+  
+  Hash contains key-scalar or key-array pairs for custom properties.
+  
+  By default returns an empty hash reference
 
 =head2 start : get accessor for segment start given a segment
 
-  my $sStart = $oSourceAdaptor->start('DYNA_CHICK:35,127');
+  my $sStart = $oSourceAdaptor->start('DYNA_CHICK');
 
-  Returns 1 by default
+  By default returns 1
 
 =head2 end : get accessor for segment end given a segment
 
-  my $sEnd = $oSourceAdaptor->end('DYNA_CHICK:35,127');
+  my $sEnd = $oSourceAdaptor->end('DYNA_CHICK');
+  
+  By default returns $self->length
 
 =head2 transport : Build the relevant B::D::PS::SA::Transport::<...> configured for this adaptor
 
   my $oTransport = $oSourceAdaptor->transport();
+  
+  OR
+  
+  my $oTransport1 = $oSourceAdaptor->transport('foo');
+  my $oTransport2 = $oSourceAdaptor->transport('bar');
 
 =head2 config : get/set config settings for this adaptor
 
@@ -1324,66 +1937,93 @@ and strings) refer to the specification on biodas.org.
 
   my $sHTTPHeader = $oSourceAdaptor->das_capabilities();
 
-=head2 das_dsn : DAS-response for dsn request
-
-  my $sXMLResponse = $sa->das_dsn();
-
-=head2 open_dasdsn : DAS-response dsn xml leader
-
-  my $sXMLResponse = $sa->open_dasdsn();
-
-=head2 close_dasdsn : DAS-response dsn xml trailer
-
-  my $sXMLResponse = $sa->close_dasdsn();
-
-=head2 unknown_segment : DAS-response unknown segment error response
+=head2 unknown_segment : DAS-response unknown/error segment error response
 
   my $sXMLResponse = $sa->unknown_segment();
+  
+  Reference sources (i.e. those implementing the 'dna' or 'sequence' command) will return an <ERRORSEGMENT> element.
+  Annotation sources will return an <UNKNOWNSEGMENT> element.
 
-=head2 das_features : DAS-response for 'features' request
+=head2 error_segment : DAS-response error segment error response
 
-  my $sXMLResponse = $sa->das_features();
+  my $sXMLResponse = $sa->error_segment();
+  
+  Returns an <ERRORSEGMENT> element.
 
 =head2 error_feature : DAS-response unknown feature error
 
   my $sXMLResponse = $sa->error_feature();
 
+=head2 das_features : DAS-response for 'features' request
+
+  my $sXMLResponse = $sa->das_features();
+  
+  See the build_features method for details of custom implementations.
+
 =head2 das_dna : DAS-response for DNA request
 
   my $xml = $sa->das_dna();
+  
+  See the sequence method for details of custom implementations.
 
 =head2 das_sequence : DAS-response for sequence request
 
   my $sXMLResponse = $sa->das_sequence();
+  
+  See the sequence method for details of custom implementations.
 
 =head2 das_types : DAS-response for 'types' request
 
   my $sXMLResponse = $sa->das_types();
+  
+  See the build_types method for details of custom implementations.
 
 =head2 das_entry_points : DAS-response for 'entry_points' request
 
   my $sXMLResponse = $sa->das_entry_points();
+  
+  See the build_entry_points method for details of custom implementations.
+  
+=head2 das_interaction : DAS-response for 'interaction' request
+
+  my $sXMLResponse = $sa->das_interaction();
+  
+  See the build_interaction method for details of custom implementations.
+  
+=head2 das_volmap : DAS-response for 'volmap' request
+
+  my $sXMLResponse = $sa->das_volmap();
+  
+  See the build_volmap method for details of custom implementations.
 
 =head2 das_stylesheet : DAS-response for 'stylesheet' request
 
   my $sXMLResponse = $sa->das_stylesheet();
 
-=head2 das_homepage : DAS-response (non-standard) for 'homepage' request
+=head2 das_sourcedata : DAS-response for 'sources' request
+
+  my $sXMLResponse = $sa->das_sourcedata();
+
+=head2 das_homepage : DAS-response (non-standard) for 'homepage' or blank request
 
   my $sHTMLResponse = $sa->das_homepage();
+
+=head2 das_dsn : DAS-response (non-standard) for 'dsn' request
+
+  my $sXMLResponse = $sa->das_dsn();
 
 =head2 das_xsl : DAS-response (non-standard) for 'xsl' request
 
   my $sXSLResponse = $sa->das_xsl();
 
-=head2 das_alignment
+=head2 das_alignment : DAS-response for 'alignment' request
 
- Title    : das_alignment
- Function : This produces the das repsonse for an alignment
- Args     : query options
- returns  : string containing Das repsonse for the alignment
+  my $sXMLResponse = $sa->das_alignment();
+  
+  See the build_alignment method for details of custom implementations.
+  
+  Example Response:
 
- Example Response:
 <alignment>
   <alignObject>
     <alignObjectDetail />
@@ -1396,52 +2036,40 @@ and strings) refer to the specification on biodas.org.
     </segment>
   </block>
   <geo3D>
-    <matrix>
-      <max11 coord="float" />
-      <max12 coord="float" />
-      <max13 coord="float" />
-      <max21 coord="float" />
-      <max22 coord="float" />
-      <max23 coord="float" />
-      <max31 coord="float" />
-      <max32 coord="float" />
-      <max33 coord="float" />
-    </matrix>
+    <vector />
+    <matrix mat11="float" mat12="float" mat13="float"
+            mat21="float" mat22="float" mat23="float"
+            mat31="float" mat32="float" mat33="float" />
   </geo3D>	
 </alignment>
 
 =head2 _gen_align_object_response
 
  Title    : _gen_align_object_response
- Function : Formats the supplied alignment object data structure and
-          : arbitrary spacing for pretty printing and converts the
-          : data structure into dasalignment xml
- Args     : align data structure, spacing string
+ Function : Formats alignment object into dasalignment xml
+ Args     : align data structure
  Returns  : Das Response string encapuslating aliObject
 
 =head2 _gen_align_score_response
 
  Title   : _gen_align_score_response
- Function: The takes an input score data structure and arbitrary spacing 
-         : for pretty printing and converts the data structure into 
-         : dasalignment xml
- Args    : score data structure, spacing string
+ Function: Formats input score data structure into dasalignment xml
+ Args    : score data structure
  Returns : Das Response string from alignment score
 
 =head2 _gen_align_block_response
 
  Title   : _gen_align_block_response
- Function: The takes an input block data structure and arbitrary spacing 
-         : for pretty printing and converts the block data structure into 
+ Function: Formats an input block data structure into 
          : dasalignment xml
- Args    : block data structure, spacing string
+ Args    : block data structure
  Returns : Das Response string from alignmentblock
 
 =head2 _gen_align_geo3d_response
 
   Title    : genAlignGeo3d
-  Function : Takes a geo3d data structure and arbitrary spacing for pretty printing and convertis it into DAS repsonse XML that represents the alignment matrix.
-  Args     : data structure containing the vector and matrix, spacing string
+  Function : Formats geo3d data structure into alignment matrix xml
+  Args     : data structure containing the vector and matrix
   Returns  : String containing the DAS response xml
 
 =head2 das_structure 
@@ -1482,10 +2110,8 @@ and strings) refer to the specification on biodas.org.
 =head2 _gen_object_response
 
  Title    : _gen_object_response
- Function : Formats the supplied structure object data structure and
-          : arbitrary spacing for pretty printing and converts the
-          : data structure into dasstructure xml
- Args     : object data structure, spacing string
+ Function : Formats the supplied structure object data structure into dasstructure xml
+ Args     : object data structure
  Returns  : Das Response string encapuslating 'object'
  Comment  : The object response allows the details of the coordinates to be descriped. For example
           : the fact that the coos are part of a pdb file.
@@ -1493,10 +2119,8 @@ and strings) refer to the specification on biodas.org.
 =head2 _gen_chain_response
 
  Title    : _gen_chain_response
- Function : Formats the supplied chain object data structure and
-          : arbitrary spacing for pretty printing and converts the
-          : data structure into dasstructure xml
- Args     : chain data structure, spacing string
+ Function : Formats the supplied chain object data structure into dasstructure xml
+ Args     : chain data structure
  Returns  : Das Response string encapuslating 'chain'
  Comment  : Chain objects contain all of the atom positions (including hetatoms).
           : The groups are typically residues or ligands.
@@ -1504,10 +2128,8 @@ and strings) refer to the specification on biodas.org.
 =head2 _gen_connect_response
 
  Title    : _gen_connect_response
- Function : Formats the supplied connect data structure and
-          : arbitrary spacing for pretty printing and converts the
-          : data structure into dasstructure xml
- Args     : connect data structure, spacing string
+ Function : Formats the supplied connect data structure into dasstructure xml
+ Args     : connect data structure
  Returns  : Das Response string encapuslating "connect"
  Comment  : Such objects are specified to enable groups of atoms to be connected together.
 
@@ -1523,7 +2145,17 @@ set $self->{'debug'} = 1
 
 =head1 DEPENDENCIES
 
-HTML::Entities
+=over
+
+=item L<HTML::Entities>
+
+=item L<HTTP::Date>
+
+=item L<English>
+
+=item L<Carp>
+
+=back
 
 =head1 INCOMPATIBILITIES
 

@@ -1,0 +1,15 @@
+body {
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 0.9em;
+}
+th {
+  font-weight: normal;
+  font-style: italic;
+}
+table {
+  text-align: left;
+}
+div.code {
+  background-color: rgb(220, 220, 220);
+  border: 1px dotted;
+}

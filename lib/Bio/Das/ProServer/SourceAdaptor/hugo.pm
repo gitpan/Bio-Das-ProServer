@@ -2,7 +2,7 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2007-01-04
-# Last Modified: $Date: 2007/01/26 23:10:41 $ $Author: rmp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
 #
 # HUGO-based data mapped via Ensembl
 # Contact me if you'd like the loader-script used to download, map and insert data into this schema.
@@ -52,7 +52,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION         = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION         = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 our $TABLESET        = 'hugo36';
 our $UNBOUNDED_QUERY = qq(SELECT name,chr_start,chr_end,description
                           FROM   $TABLESET

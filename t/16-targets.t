@@ -1,23 +1,7 @@
 use Test::More tests => 1;
 
 my $sa = SA::Stub->new();
-my $expected_response = qq(    <SEGMENT id="test" version="1.0" start="1" stop="">
-    <FEATURE id="1" label="1">
-      <TYPE id=""  reference="no" subparts="no" superparts="no"></TYPE>
-      <START>0</START>
-      <END>0</END>
-      <ORIENTATION>0</ORIENTATION>
-      <TARGET id="t1" start="123" stop="234">target t1</TARGET>
-    </FEATURE>
-    <FEATURE id="2" label="2">
-      <TYPE id=""  reference="no" subparts="no" superparts="no"></TYPE>
-      <START>0</START>
-      <END>0</END>
-      <ORIENTATION>0</ORIENTATION>
-      <TARGET id="t2" start="345" stop="456">target t2</TARGET>
-      <TARGET id="t3" start="567" stop="678">target t3</TARGET>
-    </FEATURE>
-    </SEGMENT>\n);
+my $expected_response = q(<SEGMENT id="test" version="1.0" start="1" stop=""><FEATURE id="1" label="1"><TYPE id=""></TYPE><START>0</START><END>0</END><TARGET id="t1" start="123" stop="234">target t1</TARGET></FEATURE><FEATURE id="2" label="2"><TYPE id=""></TYPE><START>0</START><END>0</END><TARGET id="t2" start="345" stop="456">target t2</TARGET><TARGET id="t3" start="567" stop="678">target t3</TARGET></FEATURE></SEGMENT>);
 
 is_deeply($sa->das_features({
 		      'segments' => ['test'],

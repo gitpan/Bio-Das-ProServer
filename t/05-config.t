@@ -16,6 +16,6 @@ ok(scalar $cfg->adaptors() == 0,     "no adaptors by default");
 isa_ok($cfg->adaptor(),  "Bio::Das::ProServer::SourceAdaptor", "generic adaptor creation ok");
 #adaptor pos test
 is($cfg->knows("foo"),   undef,       "fictitious adaptor is unknown");
-is($cfg->das_version(),  "DAS/1.50",  "default version is ok");
+is($cfg->das_version(),  "DAS/1.53E", "default version is ok");
 is($cfg->hydra_adaptor(), undef,      "default hydra-based sourceadaptor is undef");
 is($cfg->hydra(),         undef,      "default hydraadaptor is undef");

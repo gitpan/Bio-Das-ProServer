@@ -2,7 +2,7 @@
 # Author:        rmp
 # Maintainer:    $Author: rmp $
 # Created:       2003-05-20
-# Last Modified: $Date: 2007/03/01 10:59:33 $
+# Last Modified: $Date: 2007/11/20 20:12:21 $
 #
 # Builds DAS features from parsed interpro entries served from SRS
 #
@@ -24,7 +24,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 1.3 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self = shift;

@@ -11,7 +11,7 @@ use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
 
-our $VERSION = do { my @r = (q$Revision: 1.2 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self                = shift;
@@ -71,7 +71,7 @@ sub build_features {
 			AND    hsc.name         = pf.hard_start_clone_name
 			AND    hec.name         = pf.hard_end_clone_name
                         AND    ft.id            = pf.type_id
-                        AND    (ft.description   like '%de novo%' OR ft.description   like '%cnv%')
+                        AND    ft.description   like '%cnv%'
 			AND    sc.chr           = ?
 			AND    ec.chr           = ?
 			AND    hsc.chr          = ?
@@ -143,10 +143,10 @@ sub build_features {
 		     'ori'          => ($cc < 2)?'-':'+',
 		     'group'        => $lbl, 
 		     'grouplink'    => sprintf($plinktmpl, $patient->{'project_id'}, $id),
-		     'grouplinktxt' => 'Patient Report',
-		     'typecategory' => 'decipher',
-		     'link'         => sprintf($plinktmpl, $patient->{'project_id'}, $id),
-		     'linktxt'      => 'Patient Report',
+		     'grouplinktxt' => 'Report',
+		     'typecategory' => 'decipher_cnv',
+		     #'link'         => sprintf($plinktmpl, $patient->{'project_id'}, $id),
+		     #'linktxt'      => 'Report',
 		     'note'         => $classtxt || '',
 		     'groupnote'    => $classtxt || '',
 		    };
@@ -165,14 +165,14 @@ sub build_features {
 		     'method'       => 'decipher_cnv',
 		     'start'        => $softstart,
 		     'end'          => $softend,
-		     'link'         => sprintf($plinktmpl, $patient->{'project_id'}, $id),
-		     'linktxt'      => 'Patient Report',
+		     #'link'         => sprintf($plinktmpl, $patient->{'project_id'}, $id),
+		     #'linktxt'      => 'Report',
 		     'note'         => $classtxt,
 		     'ori'          => ($cc < 2)?'-':'+',
 		     'group'        => $lbl,
 		     'grouplink'    => sprintf($plinktmpl, $patient->{'project_id'}, $id),
-		     'grouplinktxt' => 'Patient Report',
-		     'typecategory' => 'decipher',
+		     'grouplinktxt' => 'Report',
+		     'typecategory' => 'decipher_cnv',
 		     'groupnote'    => $classtxt || '',
 		    };
     $gid++;

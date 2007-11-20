@@ -1,0 +1,175 @@
+#########
+# Author:        rmp
+# Maintainer:    rmp
+# Created:       2003-05-20
+# Last Modified: $Date: 2007/07/11 10:22:29 $
+# Id:            $Id: dbi.pm,v 2.55 2007/07/11 10:22:29 rmp Exp $
+# $HeadURL$
+#
+# Transport layer for DBI
+#
+package Bio::Das::ProServer::SourceAdaptor::Transport::dbi;
+use strict;
+use warnings;
+use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
+use DBI;
+use HTTP::Date;
+use Carp;
+use English qw(-no_match_vars);
+
+our $VERSION = do { my @r = (q$Revision: 2.55 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+
+sub dbh {
+  my $self     = shift;
+  my $config   = $self->config();
+  my $host     = $config->{'dbhost'}   || $config->{'host'}     || 'localhost';
+  my $port     = $config->{'dbport'}   || $config->{'port'}     || '3306';
+  my $dbname   = $config->{'dbname'};
+  my $username = $config->{'dbuser'}   || $config->{'username'} || 'test';
+  my $password = $config->{'dbpass'}   || $config->{'password'} || q();
+  my $driver   = $config->{'driver'}   || 'mysql';
+  my $dsn      = "DBI:$driver:database=$dbname;host=$host;port=$port";
+
+  #########
+  # DBI connect_cached is slightly smarter than us just caching here
+  #
+  eval {
+    if(!$self->{'dbh'} ||
+       !$self->{'dbh'}->ping()) {
+      $self->{'dbh'} = DBI->connect_cached($dsn, $username, $password, {RaiseError => 1});
+    }
+  };
+  if($EVAL_ERROR) {
+    carp 'dsn = ', $self->{'dsn'},"\n";
+    croak $EVAL_ERROR;
+  }
+  return $self->{'dbh'};
+}
+
+sub query {
+  my ($self,
+      $query,
+      @args)      = @_;
+  my $ref          = [];
+  my $debug        = $self->{'debug'};
+  my $fetchall_arg = {};
+  (@args and ref $args[0]) and $fetchall_arg = shift @args;
+
+  $SIG{ALRM} = sub { croak 'timeout'; };
+  alarm 30;
+  eval {
+    $debug and carp "Preparing query...\n";
+    my $sth;
+    if($query =~ /\?/mx) {
+      $sth = $self->dbh->prepare_cached($query);
+    } else {
+      $sth = $self->dbh->prepare($query);
+    }
+
+    $debug and carp "Executing query...\n";
+    $sth->execute(@args);
+    $debug and carp "Fetching results...\n";
+    $ref    = $sth->fetchall_arrayref($fetchall_arg);
+    $debug and carp "Finishing...\n";
+    $sth->finish();
+  };
+  alarm 0;
+
+  if($EVAL_ERROR) {
+    carp "Error running query: $EVAL_ERROR\nArgs were: @{[join q( ), @_]}\n";
+  }
+
+  return $ref;
+}
+
+sub prepare {
+  my $self = shift;
+  return $self->dbh->prepare(@_);
+}
+
+sub disconnect {
+  my $self = shift;
+
+  if(!exists $self->{'dbh'}) {
+    return;
+  }
+
+  $self->{'dbh'}->disconnect();
+  delete $self->{'dbh'};
+  $self->{'debug'} and carp "$self performed dbh disconnect\n";
+  return;
+}
+
+sub last_modified {
+  my $self = shift;
+  $self->dbh->{Driver}->{Name} eq 'mysql' or return ; #Only know MySQL way at the moment....
+  return [sort { $a <=> $b }
+	  map  { str2time $_->{Update_time} }
+	  @{$self->query(q(SHOW TABLE STATUS),{Update_time=>1})}
+	 ]->[-1];
+}
+
+sub DESTROY {
+  my $self = shift;
+  return $self->disconnect();
+}
+
+1;
+
+__END__
+
+=head1 NAME
+
+=head1 VERSION
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=head1 SUBROUTINES/METHODS
+
+=head2 dbh - Database handle (mysqlish by default)
+
+  my $dbh = Bio::Das::ProServer::SourceAdaptor::Transport::dbi->dbh();
+
+=head2 query - Execute a given query with given args
+
+  my $arrayref = $dbitransport->query(qq(SELECT ... WHERE x = ? AND y = ?),
+				      $x,
+				      $y);
+
+=head2 prepare - DBI pass-through of 'prepare'
+
+  my $sth = $dbitransport->prepare($query);
+
+=head2 disconnect - DBI pass-through of disconnect
+
+  $dbitransport->disconnect();
+
+=head2 last_modified - machine time of last data change
+
+  $dbitransport->last_modified();
+
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+=head1 DEPENDENCIES
+
+=head1 INCOMPATIBILITIES
+
+=head1 BUGS AND LIMITATIONS
+
+=head1 AUTHOR
+
+Roger Pettett <rmp@sanger.ac.uk>.
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2007 The Sanger Institute
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.  See DISCLAIMER.txt for
+disclaimers of warranty.
+
+=cut

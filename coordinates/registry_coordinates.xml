@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<DASCOORDINATESYSTEM>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS62" taxid="9785" source="Chromosome" authority="BROADE" test_range="" version="1">BROADE_1,Chromosome,Loxodonta africana</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS15" source="Gene_ID" authority="Ensembl" test_range="">Ensembl,Gene_ID</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS107" taxid="9823" source="Clone" authority="EMBL" test_range="">EMBL,Clone,Sus scrofa</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS79" taxid="6239" source="Chromosome" authority="CEL" test_range="" version="130">CEL_130,Chromosome,Caenorhabditis elegans</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS30" taxid="10090" source="Chromosome" authority="NCBI m" test_range="" version="34">NCBI m_34,Chromosome,Mus musculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS43" taxid="9606" source="Clone" authority="NCBI" test_range="" version="36">NCBI_36,Clone,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS16" source="Protein Sequence" authority="Ensembl" test_range="">Ensembl,Protein Sequence</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS31" taxid="10116" source="Chromosome" authority="RGSC" test_range="" version="3.4">RGSC_3.4,Chromosome,Rattus norvegicus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS95" taxid="10090" source="Gene_ID" authority="Ensembl" test_range="">Ensembl,Gene_ID,Mus musculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS80" taxid="11706" source="Chromosome" authority="HIV" test_range="">HIV,Chromosome,HIV-1, strain HXB2</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS86" taxid="7955" source="Clone" authority="EMBL" test_range="">EMBL,Clone,Danio rerio</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS59" taxid="9371" source="Chromosome" authority="TENREC" test_range="">TENREC,Chromosome,Echinops telfairi</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS34" taxid="4932" source="Gene_ID" authority="SGD" test_range="" version="32">SGD_32,Gene_ID,Saccharomyces cerevisiae</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS73" source="Protein Sequence" authority="Pfam" test_range="">Pfam,Protein Sequence</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS41" taxid="9606" source="Contig" authority="NCBI" test_range="" version="36">NCBI_36,Contig,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS96" taxid="10116" source="Gene_ID" authority="Ensembl" test_range="">Ensembl,Gene_ID,Rattus norvegicus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS97" taxid="7165" source="Scaffold" authority="AgamP" test_range="" version="3">AgamP_3,Scaffold,Anopheles gambiae</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS70" taxid="31033" source="Chromosome" authority="FUGU" test_range="" version="4">FUGU_4,Chromosome,Fugu rubripes</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS85" taxid="4932" source="Chromosome" authority="SGD" test_range="" version="1.01">SGD_1.01,Chromosome,Saccharomyces cerevisiae</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS60" taxid="9031" source="Chromosome" authority="WASHUC" test_range="" version="1">WASHUC_1,Chromosome,Gallus gallus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS61" taxid="69293" source="Chromosome" authority="BROADS" test_range="" version="1">BROADS_1,Chromosome,Gasterosteus aculeatus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS106" taxid="9615" source="Clone" authority="EMBL" test_range="">EMBL,Clone,Canis familiaris</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS29" taxid="7" source="Chromosome" authority="MOZ2a" test_range="">MOZ2a,Chromosome</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS14" taxid="9606" source="Clone" authority="EMBL" test_range="">EMBL,Clone,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS100" taxid="7955" source="Chromosome" authority="ZFISH" test_range="" version="7">ZFISH_7,Chromosome,Danio rerio</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS83" taxid="9031" source="Chromosome" authority="WASHUC" test_range="" version="2">WASHUC_2,Chromosome,Gallus gallus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS68" taxid="9598" source="Chromosome" authority="CHIMP" test_range="" version="2.1">CHIMP_2.1,Chromosome,Pan troglodytes</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS47" source="Gene_ID" authority="Entrez" test_range="">Entrez,Gene_ID</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS82" taxid="9615" source="Chromosome" authority="BROADD" test_range="" version="2">BROADD_2,Chromosome,Canis familiaris</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS58" taxid="7227" source="Chromosome" authority="BDGP" test_range="" version="4.3">BDGP_4.3,Chromosome,Drosophila melanogaster</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS75" taxid="7955" source="Scaffold" authority="ZFISH" test_range="" version="6">ZFISH_6,Scaffold,Danio rerio</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS63" taxid="9544" source="Chromosome" authority="MMUL_" test_range="" version="1">MMUL__1,Chromosome,Macaca mulatta</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS103" taxid="30611" source="Chromosome" authority="BUSHBABY" test_range="" version="1">BUSHBABY_1,Chromosome,Otolemur garnettii</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS66" taxid="9986" source="Chromosome" authority="RABBIT" test_range="">RABBIT,Chromosome,Oryctolagus cuniculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS98" taxid="3702" source="Chromosome" authority="TAIR" test_range="" version="7">TAIR_7,Chromosome,Arabidopsis thaliana</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS81" taxid="39947" source="Chromosome" authority="IRGSP" test_range="" version="4.0">IRGSP_4.0,Chromosome,Oryza sativa subsp. japonica</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS12" source="Gene_ID" authority="HUGO_ID" test_range="">HUGO_ID,Gene_ID</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS27" taxid="31033" source="Protein Sequence" authority="Ensembl" test_range="">Ensembl,Protein Sequence,Fugu rubripes</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS44" taxid="10090" source="Chromosome" authority="NCBI m" test_range="" version="35">NCBI m_35,Chromosome,Mus musculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS64" taxid="13616" source="Chromosome" authority="BROADO" test_range="" version="3">BROADO_3,Chromosome,Monodelphis domestica</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS13" source="Clone" authority="EMBL" test_range="">EMBL,Clone</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS77" taxid="3702" source="Gene_ID" authority="TIGR" test_range="">TIGR,Gene_ID,Arabidopsis thaliana</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS28" taxid="4932" source="Chromosome" authority="SGD" test_range="" version="32">SGD_32,Chromosome,Saccharomyces cerevisiae</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS38" taxid="10090" source="Contig" authority="NCBI m" test_range="" version="34">NCBI m_34,Contig,Mus musculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS102" taxid="59463" source="Chromosome" authority="MICROBAT" test_range="" version="1">MICROBAT_1,Chromosome,Myotis lucifugus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS84" taxid="9258" source="Chromosome" authority="OANA" test_range="" version="5">OANA_5,Chromosome,Ornithorhynchus anatinus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS57" taxid="9361" source="Chromosome" authority="ARMA" test_range="">ARMA,Chromosome,Dasypus novemcinctus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS101" taxid="13616" source="Chromosome" authority="BROADO" test_range="" version="5">BROADO_5,Chromosome,Monodelphis domestica</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS94" taxid="9606" source="Gene_ID" authority="Ensembl" test_range="">Ensembl,Gene_ID,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS51" taxid="9913" source="Chromosome" authority="Btau_" test_range="" version="2.0">Btau__2.0,Chromosome,Bos taurus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS8" taxid="9606" source="Clone" authority="NCBI" test_range="" version="35">NCBI_35,Clone,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS40" taxid="9606" source="Chromosome" authority="NCBI" test_range="" version="36">NCBI_36,Chromosome,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS104" taxid="42254" source="Chromosome" authority="COMMON_SHREW" test_range="" version="1">COMMON_SHREW_1,Chromosome,Sorex araneus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS99" taxid="6239" source="Chromosome" authority="WB" test_range="" version="170">WB_170,Chromosome,Caenorhabditis elegans</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS87" taxid="9913" source="Chromosome" authority="Btau_" test_range="" version="3.1">Btau__3.1,Chromosome,Bos taurus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS72" taxid="8364" source="Chromosome" authority="JGI" test_range="" version="4.1">JGI_4.1,Chromosome,Xenopus tropicalis</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS35" source="Protein Sequence" authority="IPI" test_range="">IPI,Protein Sequence</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS7" source="Protein Structure" authority="PDBresnum" test_range="">PDBresnum,Protein Structure</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS71" taxid="99883" source="Chromosome" authority="TETRAODON" test_range="" version="7">TETRAODON_7,Chromosome,Tetraodon nigroviridis</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS49" taxid="7159" source="Chromosome" authority="AaegL" test_range="" version="1">AaegL_1,Chromosome,Aedes aegypti</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS54" taxid="7719" source="Chromosome" authority="JGI" test_range="" version="2">JGI_2,Chromosome,Ciona intestinalis</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS22" taxid="10090" source="Gene_ID" authority="MGI" test_range="">MGI,Gene_ID,Mus musculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS105" taxid="43179" source="Chromosome" authority="SQUIRREL" test_range="">SQUIRREL,Chromosome,Spermophilus tridecemlineatus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS9" taxid="9606" source="Contig" authority="NCBI" test_range="" version="35">NCBI_35,Contig,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS53" taxid="9615" source="Chromosome" authority="BROADD" test_range="" version="1">BROADD_1,Chromosome,Canis familiaris</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS65" taxid="10090" source="Chromosome" authority="NCBIM" test_range="" version="36">NCBIM_36,Chromosome,Mus musculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS33" taxid="3702" source="Chromosome" authority="NASC29" test_range="">NASC29,Chromosome,Arabidopsis thaliana</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS6" source="Protein Sequence" authority="UniProt" test_range="">UniProt,Protein Sequence</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS93" source="Protein Sequence" authority="UniParc" test_range="">UniParc,Protein Sequence</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS78" taxid="9598" source="Chromosome" authority="CHIMP" test_range="" version="1">CHIMP_1,Chromosome,Pan troglodytes</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS52" taxid="6239" source="Chromosome" authority="CEL" test_range="" version="160">CEL_160,Chromosome,Caenorhabditis elegans</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS42" taxid="10090" source="Contig" authority="NCBI m" test_range="" version="35">NCBI m_35,Contig,Mus musculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS88" taxid="10141" source="Chromosome" authority="GUINEAPIG" test_range="">GUINEAPIG,Chromosome</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS90" taxid="9685" source="Chromosome" authority="CAT" test_range="">CAT,Chromosome,Felis catus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS36" taxid="10090" source="Clone" authority="EMBL" test_range="">EMBL,Clone,Mus musculus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS26" taxid="7955" source="Scaffold" authority="Zv" test_range="" version="5">Zv_5,Scaffold,Danio rerio</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS55" taxid="51511" source="Chromosome" authority="CSAV" test_range="" version="2.0">CSAV_2.0,Chromosome,Ciona savignyi</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS11" taxid="9606" source="Protein Sequence" authority="NCBI" test_range="" version="35">NCBI_35,Protein Sequence,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS67" taxid="8090" source="Chromosome" authority="MEDAKA" test_range="" version="1">MEDAKA_1,Chromosome,Oryzias Latipes</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS50" taxid="7165" source="Chromosome" authority="AgamP" test_range="" version="3">AgamP_3,Chromosome,Anopheles gambiae</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS91" taxid="37347" source="Chromosome" authority="TREESHREW" test_range="">TREESHREW,Chromosome,Tupaia belangeri</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS76" taxid="3702" source="Chromosome" authority="TAIR" test_range="" version="6">TAIR_6,Chromosome,Arabidopsis thaliana</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS39" taxid="9606" source="Protein Sequence" authority="GENCODE" test_range="" version="2.2">GENCODE_2.2,Protein Sequence,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS45" source="Volume Map" authority="EMDB" test_range="">EMDB,Volume Map</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS92" source="Protein Structure" authority="CASP" test_range="">CASP,Protein Structure</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS89" taxid="9365" source="Chromosome" authority="HEDGEHOG" test_range="">HEDGEHOG,Chromosome,Erinaceus europaeus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS20" taxid="10116" source="Protein Sequence" authority="Ensembl" test_range="">Ensembl,Protein Sequence,Rattus norvegicus</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS46" source="Chromosome" authority="KEGG" test_range="">KEGG,Chromosome</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS25" taxid="7955" source="Chromosome" authority="Zv" test_range="" version="5">Zv_5,Chromosome,Danio rerio</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS10" taxid="7955" source="Chromosome" authority="Zv" test_range="" version="4">Zv_4,Chromosome,Danio rerio</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS56" taxid="7955" source="Chromosome" authority="ZFISH" test_range="" version="6">ZFISH_6,Chromosome,Danio rerio</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS5" taxid="9606" source="Chromosome" authority="NCBI" test_range="" version="35">NCBI_35,Chromosome,Homo sapiens</COORDINATES>
+  <COORDINATES uri="http://www.dasregistry.org/dasregistry/coordsys/CS_DS69" taxid="4932" source="Chromosome" authority="SGD" test_range="" version="1">SGD_1,Chromosome,Saccharomyces cerevisiae</COORDINATES>
+</DASCOORDINATESYSTEM>

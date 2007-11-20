@@ -6,6 +6,7 @@ WriteMakefile(
     NAME              => 'Bio::Das::ProServer',
     VERSION_FROM      => 'eg/proserver', # finds $VERSION
     PREREQ_PM         => {
+			  File::Spec                => undef,
 			  Getopt::Long              => undef,
 			  POSIX                     => undef,
 			  Sys::Hostname             => undef,
@@ -14,8 +15,10 @@ WriteMakefile(
 			  POE::Filter::HTTPD        => undef,
 			  POE::Wheel::ReadWrite     => undef,
 			  POE::Wheel::SocketFactory => undef,
+                          Socket                    => undef,
 			  HTTP::Request             => undef,
 			  HTTP::Response            => undef,
+                          HTTP::Date                => undef,
 			  Config::IniFiles          => undef,
 			  Compress::Zlib            => undef,
 			  HTML::Entities            => undef,

@@ -1,86 +1,114 @@
 #########
 # Author:        rmp
-# Maintainer:    rmp
-# Created:       2003-06-13
-# Last Modified: 2003-06-13
-#
-# generic transport layer
+# Maintainer:    $Author: rmp $
+# Created:       2003-05-22
+# Last Modified: $Date: 2007/11/20 20:12:21 $
+# Source:        $Source $
+# Id:            $Id $
+# $HeadURL$
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::generic;
-
-=head1 AUTHOR
-
-Roger Pettett <rmp@sanger.ac.uk>.
-
-Copyright (c) 2003 The Sanger Institute
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.  See DISCLAIMER.txt for
-disclaimers of warranty.
-
-=cut
-
 use strict;
 use warnings;
 
-our $VERSION  = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
-=head2 new : base-class object constructor
+sub new {
+  my ($class, $defs) = @_;
+  my $self = {
+	      'dsn'       => $defs->{'dsn'}    || 'unknown',
+              'config'    => $defs->{'config'} || {},
+	      'debug'     => $defs->{'debug'},
+             };
+  bless $self, $class;
+
+  $self->init_time(time);
+  $self->init();
+
+  return $self;
+}
+
+sub init_time {
+  my ($self, $time) = @_;
+  if (defined $time) {
+    $self->{'init_time'} = $time;
+  }
+  return $self->{'init_time'};
+}
+
+sub init { }
+
+sub config {
+  my $self = shift;
+  return $self->{'config'};
+}
+
+sub query { }
+
+1;
+__END__
+
+=head1 NAME
+
+Bio::Das::ProServer::SourceAdaptor::Transport::generic - A generic transport layer for deriving others from
+
+=head1 VERSION
+
+$Revision: 2.70 $
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=head1 SUBROUTINES/METHODS
+
+=head2 new - base-class object constructor
 
   my $transport = Bio::Das::ProServer::SourceAdaptor::Transport::<impl>->new({
     'dsn'    => 'my-dsn-name',   # useful for hydras
     'config' => $config->{$dsn}, # subsection of config file for this adaptor holding this transport
   });
 
-=cut
-sub new {
-  my ($class, $defs) = @_;
-  my $self = {
-	      'dsn'       => $defs->{'dsn'}    || 'unknown',
-              'config'    => $defs->{'config'} || {},
-	      'init_time' => time,
-             };
-  bless $self, $class;
-
-  $self->init();
-
-  return $self;
-}
-
-=head2 init_time : return the time() this transport was initialised
+=head2 init_time - get/set the time() this transport was initialised/reset
 
   my $iInitTime = $oTransport->init_time();
+  $oTransport->init_time($iInitTime);
 
-=cut
-sub init_time {
-  my $self = shift;
-  return $self->{'init_time'};
-}
-
-=head2 init : Post-constructor initialisation hook
+=head2 init - Post-constructor initialisation hook
 
   By default does nothing - override in subclasses if necessary
 
-=cut
-sub init { }
-
-=head2 config : Handle on config file (given at construction)
+=head2 config - Handle on config file (given at construction)
 
   my $cfg = $transport->config();
 
-=cut
-sub config {
-  my $self = shift;
-  return $self->{'config'};
-}
-
-=head2 query : Execute a query against this transport
+=head2 query - Execute a query against this transport
 
   Unimplemented in base-class. You almost always want to override this
 
   my $resultref = $transport->query(...);
 
-=cut
-sub query { }
+=head1 DIAGNOSTICS
 
-1;
+=head1 CONFIGURATION AND ENVIRONMENT
+
+=head1 DEPENDENCIES
+
+=head1 INCOMPATIBILITIES
+
+=head1 BUGS AND LIMITATIONS
+
+=head1 AUTHOR
+
+Roger Pettett <rmp@sanger.ac.uk>.
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2007 The Sanger Institute
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.  See DISCLAIMER.txt for
+disclaimers of warranty.
+
+
+=cut

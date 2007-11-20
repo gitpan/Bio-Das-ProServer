@@ -2,7 +2,7 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-10-28
-# Last Modified: $Date: 2007/01/26 23:10:41 $ $Author: rmp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
 #
 package Bio::Das::ProServer::SourceAdaptor::simple;
 
@@ -22,7 +22,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 2.50 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head1 SYNOPSIS
 

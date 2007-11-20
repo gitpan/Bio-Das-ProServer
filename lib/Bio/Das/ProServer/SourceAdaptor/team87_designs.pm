@@ -29,6 +29,7 @@ sub init {
 #######################################################################################################
 sub build_features {
   my ($self, $opts) = @_;
+  my $assembly_migid= $self->config->{'assembly_migid'}||"9";#default id of 9 corresponds to NCBIM36. NCBIM37 is 11
   my $seg     = $opts->{'segment'};
   my $start   = $opts->{'start'};
   my $end     = $opts->{'end'};
@@ -39,18 +40,20 @@ sub build_features {
   return if($shortsegnamehack and (CORE::length("$seg") > 4)); #(speedup?) only handle chromosomes or haplotypes
  
   $seg=$self->transport->dbh->quote($seg);
+  $assembly_migid=$self->transport->dbh->quote($assembly_migid);
   my $qbounds="";
   if(defined $start && defined $end){
     $start=$self->transport->dbh->quote($start);
     $end=$self->transport->dbh->quote($end);
-    $qbounds = qq(AND feature_start <= $end AND feature_end >= $start);
+    $qbounds = qq( AND feature_start <= $end AND feature_end >= $start);
   }
   
   my $query   = qq(SELECT * FROM display_feature, chromosome_dict
                    WHERE display_feature.chr_id = chromosome_dict.chr_id 
 		   AND name = $seg
-		   $qbounds
-                ); 
+		   AND assembly_id = $assembly_migid)
+		   .$qbounds;
+                
   $query .= " AND label=".$self->transport->dbh->quote($label) if defined($label);
   my @results;
   
@@ -81,7 +84,7 @@ sub build_features {
 			};
 
   }
-  
+
   return (@results);
 
 }

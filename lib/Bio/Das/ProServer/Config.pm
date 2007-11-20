@@ -3,7 +3,7 @@
 # Maintainer:    rmp
 # Created:       2003-06-03
 # Last Modified: 2005-11-22
-# Id:            $Id: Config.pm,v 2.55 2007/05/11 22:38:22 rmp Exp $
+# Id:            $Id: Config.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/Config.pm,v $
 # $HeadURL$
 #
@@ -12,6 +12,7 @@
 package Bio::Das::ProServer::Config;
 use strict;
 use warnings;
+use Bio::Das::ProServer;
 use Bio::Das::ProServer::SourceAdaptor;
 use Bio::Das::ProServer::SourceHydra;
 use Sys::Hostname;
@@ -19,12 +20,12 @@ use Config::IniFiles;
 use English qw(-no_match_vars);
 use Carp;
 
-our $VERSION = do { my @r = (q$Revision: 2.55 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub new {
   my ($class, $self)      = @_;
   $self                 ||= {};
-
+  bless $self,$class;
   my $inifile = $self->{'inifile'} || q();
   ($inifile)  = $inifile =~ m|([a-z\d_/\.\-]+)|mix;
 
@@ -49,8 +50,11 @@ sub new {
                   ensemblhome
                   oraclehome
                   bioperlhome
+                  coordshome
+                  styleshome
                   http_proxy
                   serverroot
+                  maintainer
                   logformat)) {
       if($conf->val('general', $f)) {
 	$self->{$f} ||= $conf->val('general', $f);
@@ -62,20 +66,10 @@ sub new {
     # build the adaptors substructure
     #
     for my $s ($conf->Sections()) {
-      if ($s eq 'general') {
-	next;
-      }
-
+      next if ($s eq 'general');
       print {*STDERR} qq(Configuring Adaptor $s );
-      for my $p ($conf->Parameters($s)) {
-	my $v = $conf->val($s, $p);
-	$v    =~ s/\%serverroot/$self->{'serverroot'}/smgx;
-	$self->{'adaptors'}->{$s}->{$p} = $v;
-
-	if($p eq 'state') {
-	  print {*STDERR} $self->{'adaptors'}->{$s}->{$p}, "\n";
-	}
-      }
+      $self->_build_adaptor_config($conf, $s);
+      print {*STDERR} $self->{'adaptors'}->{$s}->{'state'}, "\n";
     }
 
   } else {
@@ -88,9 +82,31 @@ sub new {
   $self->{'maxclients'} ||= 10;
   $self->{'port'}       ||= 9000;
   $self->{'hostname'}   ||= hostname();
+  $self->{'coordshome'} ||= 'coordinates';
+  $self->{'styleshome'} ||= 'stylesheets';
 
-  bless $self,$class;
   return $self;
+}
+
+sub _build_adaptor_config {
+  my ($self, $conf, $s) = @_;
+  exists $self->{'adaptors'}->{$s} && return $self->{'adaptors'}->{$s};
+  for my $p ($conf->Parameters($s)) {
+  	$p eq 'parent' && next;
+	my $v = $conf->val($s, $p);
+	$v    =~ s/\%serverroot/$self->{'serverroot'}/smgx;
+	$self->{'adaptors'}->{$s}->{$p} = $v;
+  }
+
+  # Configure parent last (allow chained inheritance and prevent infinite recursion)
+  my $parent = $conf->val($s, 'parent');
+  $parent    = $parent ? $self->_build_adaptor_config($conf, $parent) : {};
+
+  while (my ($p, $v) = each %{$parent}) {
+    $self->{'adaptors'}->{$s}->{$p} ||= $v;
+  }
+  
+  return $self->{'adaptors'}->{$s};
 }
 
 sub port {
@@ -192,7 +208,10 @@ sub adaptors {
       $self->{'debug'} and carp q(Cloning complete);
 
     } else {
-      push @adaptors, $self->adaptor($dsn);
+      my $adaptor = $self->adaptor($dsn);
+      if($adaptor) {
+	push @adaptors, $adaptor
+      }
     }
   }
   return @adaptors;
@@ -215,21 +234,26 @@ sub adaptor {
       my $adaptortype = q(Bio::Das::ProServer::SourceAdaptor::).$self->{'adaptors'}->{$dsn}->{'adaptor'};
       eval "require $adaptortype"; ## no critic
       if($EVAL_ERROR) {
-	carp "Error requiring $adaptortype: $EVAL_ERROR";
-	return;
+        carp "Error requiring $adaptortype: $EVAL_ERROR";
+        return;
       }
-
       eval {
 	$self->{'adaptors'}->{$dsn}->{'obj'} = $adaptortype->new({
-								  'dsn'      => $dsn,
-								  'config'   => $self->{'adaptors'}->{$dsn},
-								  'hostname' => $self->{'response_hostname'} || $self->{'hostname'},
-								  'port'     => $self->{'response_port'}     || $self->{'port'},
-								  'protocol' => $self->{'response_protocol'},
-								  'baseuri'  => $self->{'response_baseuri'},
-								  'debug'    => $self->{'debug'},
+								  'dsn'        => $dsn,
+								  'config'     => $self->{'adaptors'}->{$dsn},
+								  'hostname'   => $self->response_hostname,
+								  'port'       => $self->response_port,
+								  'protocol'   => $self->response_protocol,
+								  'baseuri'    => $self->response_baseuri,
+								  'maintainer' => $self->{'maintainer'},
+                                                                  'styleshome' => $self->{'styleshome'},
+								  'debug'      => $self->{'debug'},
 								 });
       };
+      if($EVAL_ERROR) {
+        carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
+        return;
+      }
     }
 
     return $self->{'adaptors'}->{$dsn}->{'obj'};
@@ -254,10 +278,14 @@ sub adaptor {
     # generic adaptor
     #
     $self->{'_genadaptor'} ||= Bio::Das::ProServer::SourceAdaptor->new({
-									'hostname' => $self->{'response_hostname'} || $self->{'hostname'},
-									'port'     => $self->{'response_port'}     || $self->{'port'},
-									'config'   => $self,
-									'debug'    => $self->{'debug'},
+                                                                        'hostname'   => $self->response_hostname,
+                                                                        'port'       => $self->response_port,
+                                                                        'protocol'   => $self->response_protocol,
+                                                                        'baseuri'    => $self->response_baseuri,
+                                                                        'maintainer' => $self->{'maintainer'},
+                                                                        'styleshome' => $self->{'styleshome'},
+                                                                        'config'     => $self,
+                                                                        'debug'      => $self->{'debug'},
 								       });
     return $self->{'_genadaptor'};
   }
@@ -297,8 +325,12 @@ sub knows {
   return;
 }
 
+sub server_version {
+  return sprintf q(ProServer/%s), $Bio::Das::ProServer::VERSION;
+}
+
 sub das_version {
-  return q(DAS/1.50);
+  return q(DAS/1.53E);
 }
 
 sub hydra_adaptor {
@@ -357,13 +389,23 @@ sub _hydra_adaptor {
   # build a source adaptor using the dsn from the hydra-managed source and the config for the hydra
   #
   $config->{'hydraname'} = $hydraname;
-  return $adaptortype->new({
-			    'dsn'      => $dsn,
-			    'config'   => $config,
-			    'hostname' => $self->{'hostname'},
-			    'port'     => $self->{'port'},
-			    'debug'    => $self->{'debug'},
+  eval {
+    return $adaptortype->new({
+                            'dsn'        => $dsn,
+                            'config'     => $config,
+                            'hostname'   => $self->response_hostname,
+                            'port'       => $self->response_port,
+                            'protocol'   => $self->response_protocol,
+                            'baseuri'    => $self->response_baseuri,
+                            'maintainer' => $self->{'maintainer'},
+                            'styleshome' => $self->{'styleshome'},
+                            'debug'      => $self->{'debug'},
 			   });
+  };
+  if($EVAL_ERROR) {
+    carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
+    return;
+  }
 }
 
 sub hydra {
@@ -400,7 +442,7 @@ Bio::Das::ProServer::Config - configuration parsing and hooks
 
 =head1 VERSION
 
-$Revision: 2.55 $
+$Revision: 2.70 $
 
 =head1 SYNOPSIS
 
@@ -408,34 +450,39 @@ $Revision: 2.55 $
 
 Configuration takes the following structure
 
-[general]
-interface         = *    # interface to bind to ('*' for all)
-port              = 9000 # port to listen on
-response_hostname =      # overriding hostname for responses
-response_port     =      # overriding port for responses
-response_protocol =      # overriding protocol (http/s) for responses
-response_baseuri  =      # overriding base-uri for responses
-maxclients        = 10
-pidfile           = 
-logfile           = 
-ensemblhome       =      # path to ensembl libs (for sharing across sources)
-oraclehome        =      # path to oracle libs  (for sharing across sources)
-bioperlhome       =      # path to bioperl libs (for sharing across sources)
-http_proxy        =      # proxy for sources requiring web access
-serverroot        = 
-logformat         = %i %t %r %s
+  [general]
+  interface         = *    # interface to bind to ('*' for all)
+  port              = 9000 # port to listen on
+  response_hostname =      # overriding hostname for responses
+  response_port     =      # overriding port for responses
+  response_protocol =      # overriding protocol (http/s) for responses
+  response_baseuri  =      # overriding base-uri for responses
+  maxclients        = 10
+  pidfile           = 
+  logfile           = 
+  ensemblhome       =      # path to ensembl libs (for sharing across sources)
+  oraclehome        =      # path to oracle libs  (for sharing across sources)
+  bioperlhome       =      # path to bioperl libs (for sharing across sources)
+  coordshome        =      # path to coordinate systems XML files
+  styleshome        =      # path to stylesheet XML files
+  http_proxy        =      # proxy for sources requiring web access
+  serverroot        = 
+  logformat         = %i %t %r %s
 
-# then many of these with directives specific to each source
-[sourcename]
-adaptor    = adaptorpackage
-stylesheet = /path/to/stylesheet.xml
-...
-
-# e.g. for mysql:
-dbhost = localhost
-dbport = 3306
-dbuser = proserverro
-dbpass = password
+  # then many of these with directives specific to each source
+  [sourcename]
+  adaptor        = adaptorpackage
+  title          = Source Name
+  description    = A description of The Source.
+  stylesheetfile = /path/to/stylesheet.xml
+  ...
+  
+  # e.g. for mysql:
+  transport = dbi
+  dbhost    = localhost
+  dbport    = 3306
+  dbuser    = proserverro
+  dbpass    = password
 
 =head1 SUBROUTINES/METHODS
 
@@ -526,7 +573,13 @@ dbpass = password
 
   my $sVersion = $oConfig->das_version();
 
-  By default 'DAS/1.50';
+  By default 'DAS/1.53E';
+
+=head2 server_version : Server release version
+
+  my $sVersion = $oConfig->server_version();
+
+  By default 'ProServer/2.7';
 
 =head2 hydra_adaptor : Build a hydra-based SourceAdaptor given dsn and optional hydraname
 

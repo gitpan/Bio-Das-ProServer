@@ -37,19 +37,25 @@ sub build_features {
   my ($self, $opts) = @_;
   my $slice         = $self->transport->chromosome_by_region($opts->{'segment'}, $opts->{'start'}, $opts->{'end'});
   my @features      = ();
-
-  for my $g (@{$slice->get_all_Genes('ensembl')}) {
-#    print STDERR qq(g = $g (@{[$g->stable_id()]})\n);
+  
+  for my $g (@{$slice->get_all_Genes('ensembl')},
+	     @{$slice->get_all_Genes('ensembl_havana_gene')},
+	     @{$slice->get_all_Genes('havana')}){ #sr5 changed: 31/05/07 - includes havana and ensemble_havana_genes list (previously only ensembl).
+    
+    #print STDERR qq(g = $g (@{[$g->stable_id()]}) ***\n);
+    
     my @links = @{$g->get_all_DBLinks()};
     my $label = $g->stable_id();
-#    print STDERR join(", ", map { $_->dbname() } @links), "\n";
+    
+    #print STDERR join(", ", map { $_->dbname() } @links), "\n";
     
     for my $preferred (qw(RefSeq SWISSPROT SPTREMBL)) {
-      for my $l (grep { $_->dbname() =~ /$preferred/i } @links) {
-	$label  = $l->display_id();
+      for my $l (grep { $_->dbname() =~ /$preferred/xgi } @links) {
+    	$label  = $l->display_id();
 	last;
       }
     }
+    
 
     push @features, {
 		     'id'      => $g->stable_id(),

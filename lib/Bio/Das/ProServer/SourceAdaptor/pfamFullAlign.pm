@@ -64,7 +64,7 @@ sub build_alignment {
 	my $pfamAData = $self->transport->query(qq(SELECT  auto_pfamA, pfamA_id, pfamA_acc, num_full
 						   FROM    pfamA
 						   WHERE   pfamA_acc = $qacc)); 
-	
+	my $auto_pfamA = $pfamAData->[0]->{'auto_pfamA'};
         #Now get all of the alignment data
 	my @statements;
 	my $noSubjects;
@@ -84,7 +84,7 @@ sub build_alignment {
 		    
 			$query = qq(SELECT tree_order 
 				    FROM   pfamA_reg_full, pfamseq
-				    WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
+				    WHERE  auto_pfamA = $auto_pfamA
 				    AND    pfamA_reg_full.auto_pfamseq = pfamseq.auto_pfamseq
 				    AND    in_full=1
 				    AND    pfamseq_acc=$qsubject); 
@@ -100,7 +100,7 @@ sub build_alignment {
 			
 			    push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar, tree_order, seq_start, seq_end 
 						 FROM   pfamA_reg_full, pfamseq
-						 WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
+						 WHERE  auto_pfamA = $auto_pfamA
 						 AND    pfamA_reg_full.auto_pfamseq = pfamseq.auto_pfamseq
 						 AND    in_full=1
 						 AND    tree_order <= $end
@@ -113,7 +113,7 @@ sub build_alignment {
 		    
 			push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar, tree_order, seq_start, seq_end 
 					     FROM   pfamA_reg_full, pfamseq
-					     WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
+					     WHERE  auto_pfamA = $auto_pfamA
 					     AND    pfamA_reg_full.auto_pfamseq = pfamseq.auto_pfamseq
 					     AND    in_full=1
 					     AND    pfamseq_acc=$qsubject));
@@ -129,7 +129,7 @@ sub build_alignment {
 	    
 		push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar, tree_order, seq_start, seq_end 
 				     FROM   pfamA_reg_full, pfamseq
-				     WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
+				     WHERE  auto_pfamA = $auto_pfamA
 				     AND    pfamA_reg_full.auto_pfamseq = pfamseq.auto_pfamseq
 				     AND    in_full=1
 				     AND    tree_order <= $end
@@ -144,7 +144,7 @@ sub build_alignment {
 	
 		push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar, tree_order, seq_start, seq_end 
 				     FROM   pfamA_reg_full, pfamseq
-				     WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
+				     WHERE  auto_pfamA = $auto_pfamA
 				     AND    pfamA_reg_full.auto_pfamseq = pfamseq.auto_pfamseq
 				     AND    in_full=1));
 	
@@ -177,7 +177,7 @@ sub build_alignment {
 		
 		push(@aliObjects, {'version' => $row->{'md5'},
 				   'intID' => $row->{'pfamseq_acc'},
-				   'type' => "Protein sequence",
+				   'type' => "PROTEIN",
 				   'dbSource' => "Pfam",
 				   'dbVersion' => $version->[0]->{'pfam_release'},
 				   'coos' => "UniProt",

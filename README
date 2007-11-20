@@ -26,6 +26,9 @@ To install this module type the following:
 
 RUNNING
 
+  There is a command-line executable in the eg directory:
+  eg/proserver --help
+
   To start the server, type:
   eg/proserver
 
@@ -38,16 +41,26 @@ RUNNING
 
 DEPENDENCIES
 
+Any missing dependencies will be reported during the build proces. All are
+available from CPAN (http://www.cpan.org).
+
 CGI
 Compress::Zlib
 Config::IniFiles
+File::Spec
 Getopt::Long
+HTML::Entities
 HTTP::Request
 HTTP::Response
+HTTP::Date
 POE
+POE::Filter::HTTPD
+POE::Wheel::ReadWrite
+POE::Wheel::SocketFactory
 POSIX
 Socket
 Sys::Hostname
+
 
 SECURITY
 
@@ -95,8 +108,9 @@ cached and reused wherever possible.
 
 KNOWN PROBLEMS
 
-ProServer does not correctly serve error segments. Usually error
-responses serve empty result sets.
+ProServer depends on source adaptors to provide details of known
+segments in order to correctly serve error or unknown segments.
+In the absence of this information responses serve empty result sets.
 
 COPYRIGHT AND LICENCE
 

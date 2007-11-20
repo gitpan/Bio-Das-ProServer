@@ -2,7 +2,7 @@
 # Author: rdf
 # Maintainer: rdf
 # Created: 2006-05-15
-# Last Modified: 2006-05-15
+# Last Modified: 2007-08-07
 # Builds DAS alignments from the pfam database
 #
 package Bio::Das::ProServer::SourceAdaptor::pfamSeedAlign;
@@ -84,7 +84,7 @@ sub build_alignment {
 			my $end = $posInfo->{'tree_order'} + $below;
 			$all_pos .= "$start-$end,";
 			print STDERR "$start, $end\n";
-			push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar_string, tree_order, seq_start, seq_end 
+			push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar, tree_order, seq_start, seq_end 
 					     FROM   pfamA_reg_seed a, pfamseq s
 					     WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
 					     AND    a.auto_pfamseq = s.auto_pfamseq
@@ -93,7 +93,7 @@ sub build_alignment {
 		    }
 		}else{
 		    my $qsubject = $self->transport->dbh->quote($subject);
-		    push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar_string, tree_order, seq_start, seq_end 
+		    push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar, tree_order, seq_start, seq_end 
 					 FROM   pfamA_reg_seed a, pfamseq s
 					 WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
 					 AND    a.auto_pfamseq = s.auto_pfamseq
@@ -104,7 +104,7 @@ sub build_alignment {
 	if($rows){
 	    my($start, $end) = split(/\-/, $rows);
 	    $all_pos .= "$start-$end,";
-	    push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar_string, tree_order, seq_start, seq_end 
+	    push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar, tree_order, seq_start, seq_end 
 				 FROM   pfamA_reg_seed a, pfamseq s
 				 WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
 				 AND    a.auto_pfamseq = s.auto_pfamseq
@@ -114,7 +114,7 @@ sub build_alignment {
 
 	if(!$rows && ! $noSubjects){
 	    #get the whole alignment
-	    push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar_string, tree_order, seq_start, seq_end 
+	    push(@statements, qq(SELECT pfamseq_acc, pfamseq_id, md5, sequence, cigar, tree_order, seq_start, seq_end 
 			     FROM   pfamA_reg_seed a, pfamseq s
 			     WHERE  auto_pfamA = $pfamAData->[0]->{'auto_pfamA'}
 			     AND    a.auto_pfamseq = s.auto_pfamseq));
@@ -136,7 +136,7 @@ sub build_alignment {
 		my @objectDetails;
 		push(@aliObjects, {'version' => $row->{'md5'},
 				   'intID' => $row->{'pfamseq_acc'},
-				   'type' => "Protein sequence",
+				   'type' => "PROTEIN",
 				   'dbSource' => "Pfam",
 				   'dbVersion' => $version->[0]->{'pfam_release'},
 				   'coos' => "UniProt",
@@ -145,7 +145,7 @@ sub build_alignment {
 				   'sequence' => $row->{'sequence'}});
 		$seen{$row->{'pfamseq_acc'}}++;
 	      }
-	    push(@segments, { 'cigar'    => $row->{'cigar_string'},
+	    push(@segments, { 'cigar'    => $row->{'cigar'},
 			      'objectId' => $row->{'pfamseq_acc'},
 			      'start'    => $row->{'seq_start'},
 			      'end'      => $row->{'seq_end'}, });

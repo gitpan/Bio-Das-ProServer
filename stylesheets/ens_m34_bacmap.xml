@@ -47,6 +47,17 @@
            </BOX>
         </GLYPH>
      </TYPE>
+     <TYPE id="default">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>gold</BGCOLOR>
+              <FGCOLOR>gold</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>09</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
   </CATEGORY>
   <CATEGORY id="default">
      <TYPE id="default">

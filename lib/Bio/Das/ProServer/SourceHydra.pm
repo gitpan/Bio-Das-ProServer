@@ -2,8 +2,8 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2007/02/20 20:37:08 $ $Author: rmp $
-# Id:            $Id: SourceHydra.pm,v 2.51 2007/02/20 20:37:08 rmp Exp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
+# Id:            $Id: SourceHydra.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra.pm,v $
 # $HeadURL$
 #
@@ -16,7 +16,7 @@ use Bio::Das::ProServer::SourceAdaptor;
 use English qw(-no_match_vars);
 use Carp;
 
-our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub new {
   my ($class, $defs) = @_;

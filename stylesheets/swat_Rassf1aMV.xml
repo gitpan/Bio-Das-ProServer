@@ -1,0 +1,67 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd">
+<DASSTYLE>
+<STYLESHEET version="1.0">
+  <CATEGORY id="Sau3AI">
+     <TYPE id="WT">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="KO">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>blue</BGCOLOR>
+              <FGCOLOR>blue</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="MspI">
+     <TYPE id="WT">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>white</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+     <TYPE id="KO">
+        <GLYPH>
+           <BOX>
+              <BGCOLOR>red</BGCOLOR>
+              <FGCOLOR>red</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </BOX>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+  <CATEGORY id="default">
+     <TYPE id="default">
+        <GLYPH>
+           <ANCHORED_ARROW>
+              <BGCOLOR>grey</BGCOLOR>
+              <FGCOLOR>grey</FGCOLOR>
+              <BUMP>0</BUMP>
+              <HEIGHT>10</HEIGHT>
+              <FONT>sanserif</FONT>
+           </ANCHORED_ARROW>
+        </GLYPH>
+     </TYPE>
+  </CATEGORY>
+</STYLESHEET>
+</DASSTYLE>

@@ -25,7 +25,7 @@ use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use File::stat;
 
-our $VERSION  = do { my @r = (q$Revision: 2.51 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub _fh {
   my $self = shift;

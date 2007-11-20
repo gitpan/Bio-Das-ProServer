@@ -1,0 +1,29 @@
+--- #YAML:1.0
+name:                Bio-Das-ProServer
+version:             2.070
+abstract:            ~
+license:             ~
+generated_by:        ExtUtils::MakeMaker version 6.32
+distribution_type:   module
+requires:     
+    CGI:                           
+    Compress::Zlib:                
+    Config::IniFiles:              
+    File::Spec:                    
+    Getopt::Long:                  
+    HTML::Entities:                
+    HTTP::Date:                    
+    HTTP::Request:                 
+    HTTP::Response:                
+    POE:                           
+    POE::Filter::HTTPD:            
+    POE::Wheel::ReadWrite:         
+    POE::Wheel::SocketFactory:     
+    POSIX:                         
+    Socket:                        
+    Sys::Hostname:                 
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
+author:
+    - Roger M Pettett <rmp@sanger.ac.uk>

@@ -2,7 +2,7 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2007-01-30
-# Last Modified: $Date: 2007/03/01 10:59:33 $ $Author: rmp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
 #
 # Transport layer for DBI/mole
 #
@@ -24,7 +24,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::dbi);
 
-our $VERSION = do { my @r = (q$Revision: 1.2 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head2 init : Load & process mole.ini
 

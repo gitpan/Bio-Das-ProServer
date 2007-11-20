@@ -2,8 +2,8 @@
 # Author: jws
 # Maintainer: jws, dj3
 # Created: 2005-04-19
-# Last Modified: $Date: 2007/02/27 16:51:07 $ $Author: dj3 $
-# Id:            $Id: grouped_db.pm,v 2.51 2007/02/27 16:51:07 dj3 Exp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
+# Id:            $Id: grouped_db.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm,v $
 # $HeadURL$
 # Builds DAS features from ProServer mysql database
@@ -16,7 +16,7 @@ use vars qw(@ISA);
 use Data::Dumper;
 use Bio::Das::ProServer::SourceAdaptor;
 @ISA = qw(Bio::Das::ProServer::SourceAdaptor);
-our $VERSION  = do { my @r = (q$Revision: 2.51 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 #######################################################################################################
 sub init {

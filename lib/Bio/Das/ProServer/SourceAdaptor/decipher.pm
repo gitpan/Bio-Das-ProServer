@@ -1,8 +1,8 @@
 #########
 # Author:        rmp
-# Maintainer:    $Author: sr5 $
+# Maintainer:    $Author: rmp $
 # Created:       2004-02-16
-# Last Modified: $Date: 2007/05/10 13:47:53 $
+# Last Modified: $Date: 2007/11/20 20:12:21 $
 #
 # Builds DAS features from Phenotypic Abnormalities Database
 #
@@ -24,7 +24,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self                = shift;
@@ -74,7 +74,8 @@ sub build_features {
                                clone           sc,
                                clone           ec,
                                clone           hsc,
-                               clone           hec
+                               clone           hec,
+                               feature_type    ft
 			WHERE  p.consent        = 'Y'
                         AND    p.parent        != 'Y'
 			AND    f.array_id       = a.id
@@ -83,6 +84,8 @@ sub build_features {
 			AND    ec.name          = f.soft_end_clone_name
 			AND    hsc.name         = f.hard_start_clone_name
 			AND    hec.name         = f.hard_end_clone_name
+                        AND    ft.id            = f.type_id
+                        AND    ft.description   not like '%cnv%'
 			AND    sc.chr           = ?
 			AND    ec.chr           = ?
 			AND    hsc.chr          = ?
@@ -269,20 +272,18 @@ sub build_features {
                                      b.topology              AS topology,
                                      tf.strand               AS tf_strand,
                                      p.project_id            AS project_id
-                              FROM   translocation_clone    tc,
+                              FROM   patient                p,
                                      translocation          t,
                                      breakpoint             b,
-                                     patient                p,
                                      translocation_features tf,
-                                     clone                  sc,
-                                     clone                  ec
+                                     translocation_clone    tc
+                                     straight_join clone sc on (sc.arraytype_id=tc.arraytype_id)
+                                     straight_join clone ec on (sc.arraytype_id=tc.arraytype_id)
                               WHERE  t.patient_id                 = p.id
                               AND    tf.translocation_clone_id    = tc.id
                               AND    tc.translocation_id          = t.id
                               AND    tc.start_clone_name          = sc.name
                               AND    tc.end_clone_name            = ec.name
-                              AND    sc.arraytype_id              = tc.arraytype_id
-                              AND    ec.arraytype_id              = tc.arraytype_id
                               AND    b.translocation_clone_id     = tc.id
                               AND    p.consent                    = 'Y'
                               AND    sc.chr                       = ?
@@ -301,12 +302,12 @@ sub build_features {
                                       tc.id           AS translocation_clone_id,
                                       t.id            AS trans_id,
                                       t.translocation_type_id AS type_id
-                               FROM   translocation_clone    tc,
+                               FROM   patient                p,
                                       translocation          t,
-                                      patient                p,
                                       translocation_features tf,
-                                      clone                  sc,
-                                      clone                  ec
+                                      translocation_clone    tc
+                                      straight_join clone sc on (sc.arraytype_id=tc.arraytype_id)
+                                      straight_join clone ec on (sc.arraytype_id=tc.arraytype_id)
                                WHERE  t.patient_id                 = p.id
                                AND    tf.translocation_clone_id    = tc.id
                                AND    tc.translocation_id          = t.id

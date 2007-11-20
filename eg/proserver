@@ -4,9 +4,9 @@
 # Author:        rmp
 # Maintainer:    $Author: rmp $
 # Created:       2003-05-22
-# Last Modified: $Date: 2007/05/16 09:48:55 $
+# Last Modified: $Date: 2007/11/20 20:12:20 $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/eg/proserver,v $
-# Id:            $Id: proserver,v 2.60 2007/05/16 09:48:55 rmp Exp $
+# Id:            $Id: proserver,v 2.70 2007/11/20 20:12:20 rmp Exp $
 # $HeadURL$
 #
 package proserver;
@@ -15,7 +15,7 @@ use Bio::Das::ProServer;
 use strict;
 use warnings;
 
-our $VERSION = do { my @r = (q$Revision: 2.60 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 Bio::Das::ProServer->run();
 0;

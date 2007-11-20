@@ -1,6 +1,6 @@
 #########
-# Author: rmp
-# Maintainer: rmp
+# Author: jc3 
+# Maintainer: jc3
 # Created: 2003-05-20
 # Last Modified: 2003-05-27
 # Builds DAS features from COSMIC Cancer database
@@ -9,7 +9,7 @@ package Bio::Das::ProServer::SourceAdaptor::cosmic;
 
 =head1 AUTHOR
 
-Roger Pettett <rmp@sanger.ac.uk>.
+Jody Clements <jc3@sanger.ac.uk>.
 
 Copyright (c) 2003 The Sanger Institute
 
@@ -62,21 +62,20 @@ sub build_features {
   my $start   = $opts->{'start'};
   my $end     = $opts->{'end'};
   my $qbounds = "";
-  $qbounds    = qq(AND sm.mut_start_position <= '$end' AND sm.mut_start_position+length(sm.mut_allele_seq) >= '$start') if($start && $end);
+  $qbounds    = qq(AND sm.aa_mut_start <= '$end' AND sm.aa_mut_start + length(sm.aa_mut_allele_seq) >= '$start') if($start && $end);
 
-  my $query   = qq(SELECT	SUBSTR(tr.transcript_aa_seq, sm.mut_start_position, 1) AS NORMAL,
-	sm.mut_start_position AS START_POINT,
-	sm.mut_allele_seq AS MUTANT,
+  my $query   = qq(SELECT sm.aa_wt_allele_seq AS NORMAL,
+	sm.aa_mut_start AS START_POINT,
+	sm.aa_mut_allele_seq AS MUTANT,
         t.paper_reference AS ID,
-	length(sm.mut_allele_seq) AS LEN
+	length(sm.aa_mut_allele_seq) AS LEN
 FROM 	gene_som gsom,
 	gene_study gs,
 	analysed_gene_sample ags,
 	gene_sample_mutation gsm,
         sample s,
         tumour t,
-	mutation m,
-	sequence_mut sm,
+	sequence_mutation sm,
 	transcript tr
 WHERE	gsom.gene_name = '$gid'
 AND	gsom.id_gene = gs.id_gene
@@ -84,9 +83,7 @@ AND	gs.id_gene_study = ags.id_gene_study
 AND 	ags.id_ags = gsm.id_ags
 AND     ags.id_sample = s.id_sample
 AND     s.id_tumour = t.id_tumour
-AND 	gsm.id_mutation = m.id_mutation
-AND 	m.id_mutation = sm.id_mutation
-AND 	sm.aa_mapped_to_ref_cdna = 'y'
+AND 	gsm.id_mutation = sm.id_mutation
 AND	gs.id_gene = tr.id_gene
 $qbounds
 ORDER BY START_POINT);

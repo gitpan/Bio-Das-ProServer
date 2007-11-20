@@ -2,8 +2,8 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2007/02/28 12:23:44 $ $Author: rmp $
-# Id:            $Id: dbi.pm,v 2.52 2007/02/28 12:23:44 rmp Exp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
+# Id:            $Id: dbi.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra/dbi.pm,v $
 # $HeadURL$
 #
@@ -16,7 +16,7 @@ use base qw(Bio::Das::ProServer::SourceHydra);
 use English qw(-no_match_vars);
 use Carp;
 
-our $VERSION       = do { my @r = (q$Revision: 2.52 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION       = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 our $CACHE_TIMEOUT = 30;
 
 #########
@@ -32,7 +32,7 @@ sub sources {
   # flush the table cache *at most* once every $CACHE_TIMEOUT
   # This may need signal triggering to have immediate support
   #
-  if($now > $self->{'_tablecache_timestamp'}+$CACHE_TIMEOUT) {
+  if($now > ($self->{'_tablecache_timestamp'} || 0)+$CACHE_TIMEOUT) {
     $self->{'debug'} and carp qq(Flushing table-cache for $dsn);
     delete $self->{'_tables'};
     $self->{'_tablecache_timestamp'} = $now;
@@ -77,7 +77,7 @@ Bio::Das::ProServer::SourceHydra::dbi - A database-backed implementation of B::D
 
 =head1 VERSION
 
-$Revision: 2.52 $
+$Revision: 2.70 $
 
 =head1 AUTHOR
 

@@ -9,7 +9,9 @@ my @pkgs = qw(Config
 	      SourceAdaptor::Transport::csv
 	      SourceAdaptor::Transport::dbi
 	      SourceAdaptor::Transport::oracle
+              SourceAdaptor::Transport::ensembl
 	      SourceAdaptor
+              SourceAdaptor::cache
 	      SourceAdaptor::simple
 	      SourceAdaptor::simpledb
 	      SourceHydra

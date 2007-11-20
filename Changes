@@ -1,15 +1,17 @@
 Revision history for Perl extension Bio::Das::ProServer.
 
-2.6	 	 Structure & alignment patches from Andreas
-		 Documentation about data structures in SourceAdaptor.pm
+2.7   Support for sources, interaction, volmap calls + documentation from Andy
 
-2.57	 	 dsn.xsl support, more output on startup, Transport::* version dumping on the homepage 
+2.6   Structure & alignment patches from Andreas
+      Documentation about data structures in SourceAdaptor.pm
 
-2.53		 XSL support
+2.57  dsn.xsl support, more output on startup, Transport::* version dumping on the homepage 
 
-2.5		 Added response_ settings for modifying XML & HTML responses
-		 Added tests, POD and generally cleaned up a bit
+2.53  XSL support
 
-2.04		 Improved access logging (See B::D::PS::Config::logformat)
+2.5   Added response_ settings for modifying XML & HTML responses
+      Added tests, POD and generally cleaned up a bit
 
-2.0		 New eg/proserver implementation based on POE rather than HTTP::Daemon with custom process handling.
+2.04  Improved access logging (See B::D::PS::Config::logformat)
+
+2.0   New eg/proserver implementation based on POE rather than HTTP::Daemon with custom process handling.

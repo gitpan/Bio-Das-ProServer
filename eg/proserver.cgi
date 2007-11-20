@@ -3,7 +3,7 @@
 # Author:        rmp
 # Maintainer:    $Author: rmp $
 # Created:       2003-05-22
-# Last Modified: $Date: 2007/03/09 14:22:43 $
+# Last Modified: $Date: 2007/11/20 20:12:20 $
 # Source:        $Source $
 # Id:            $Id $
 #
@@ -18,7 +18,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = do { my @r = (q$Revision: 1.1 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 main();
 0;

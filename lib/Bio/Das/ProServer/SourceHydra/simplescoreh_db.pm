@@ -2,8 +2,8 @@
 # Author:        dkj
 # Maintainer:    dkj
 # Created:       2005-11-15
-# Last Modified: $Date: 2007/03/09 14:23:56 $
-# Id:            $Id: simplescoreh_db.pm,v 2.51 2007/03/09 14:23:56 rmp Exp $
+# Last Modified: $Date: 2007/11/20 20:12:21 $
+# Id:            $Id: simplescoreh_db.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
 # Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra/simplescoreh_db.pm,v $
 # $HeadURL$
 #
@@ -14,7 +14,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceHydra);
 
-our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub sources {
   my $self = shift;
@@ -35,7 +35,7 @@ Bio::Das::ProServer::SourceHydra::simplescoreh_db - hydra broker for simplescore
 
 =head1 VERSION
 
-$Revision: 2.51 $
+$Revision: 2.70 $
 
 =head1 SYNOPSIS
 

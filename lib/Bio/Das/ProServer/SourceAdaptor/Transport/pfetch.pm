@@ -2,7 +2,7 @@
 # Author:        rmp
 # Maintainer:    $Author: rmp $
 # Created:       2006-07-03
-# Last Modified: $Date: 2007/02/02 10:29:15 $
+# Last Modified: $Date: 2007/11/20 20:12:21 $
 # Pfetch socket-based transport layer
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::pfetch;
@@ -24,7 +24,7 @@ use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use IO::Socket;
 
-our $VERSION = do { my @r = (q$Revision: 2.51 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
 
 =head2 query : Run a query against pfetch
 
