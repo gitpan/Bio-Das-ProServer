@@ -1,47 +1,35 @@
 #########
 # Author:        jws, dj3
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       2005-04-19
-# Last Modified: $Date: 2007/11/20 20:12:21 $
-# Id:            $Id: all_in_group.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm,v $
-# $HeadURL$
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Id:            $Id: all_in_group.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm,v $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm $
 #
-# Returns all features in groups represented in the range.
-# First fetches all groups represented in the range, then retrieves all
-# features in those groups.  Features outside the range are hacked to be one bp
-# features on the edge of the range, with a style of hidden.
-#
-# All this is so that grouped DAS displays can draw group lines to features
-# 'off the edge' off the display
-#
-# schema at eof
-
 package Bio::Das::ProServer::SourceAdaptor::all_in_group;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
-sub init {
-  my $self                = shift;
-  $self->{'capabilities'} = {
-			     'features'   => '1.0',
-			     'stylesheet' => '1.0',
-			    };
-  return;
+sub capabilities {
+  return {
+	  features   => '1.0',
+	  stylesheet => '1.0',
+	 };
 }
 
 sub build_features {
   my ($self, $opts) = @_;
-  my $seg     = $opts->{'segment'};
-  my $start   = $opts->{'start'};
-  my $end     = $opts->{'end'};
+  my $seg     = $opts->{segment};
+  my $start   = $opts->{start};
+  my $end     = $opts->{end};
   my $dbh     = $self->transport->dbh();
-  my $shortsegnamehack = defined($self->config->{'shortsegnamehack'})?$self->config->{'shortsegnamehack'}:1; #e.g. 1 (default) or 0
+  my $shortsegnamehack = (defined $self->config->{shortsegnamehack})?$self->config->{shortsegnamehack}:1; #e.g. 1 (default) or 0
 
-  if($shortsegnamehack and (CORE::length("$seg") > 4)) {#(speedup?) only handle chromosomes or haplotypes
+  if($shortsegnamehack and (CORE::length($seg) > 4)) {#(speedup?) only handle chromosomes or haplotypes
     return;
   }
 
@@ -49,7 +37,6 @@ sub build_features {
   # pull back the groups that are within the range, and then retrieve all the
   # features in those groups.
   
-  $seg        = $dbh->quote($seg);
   my $qbounds = q();
 
   if(defined $start && defined $end) {
@@ -58,26 +45,26 @@ sub build_features {
   }
 
   my $query   = qq(SELECT group_id FROM feature
-                   WHERE  segment = $seg $qbounds);
+                   WHERE  segment = ? $qbounds);
 
-  my @groups = @{$self->transport->query($query)};
+  my @groups = @{$self->transport->query($query, $seg)};
 
   if(!scalar @groups) {
     return;
   }
 
-  my $groupstring = qq( AND feature.group_id IN (@{[join q(, ), map { $dbh->quote($_->{'group_id'}) } @groups]}));
+  my $groupstring = qq( AND feature.group_id IN (@{[join q(, ), map { $dbh->quote($_->{group_id}) } @groups]}));
   $query          = qq(SELECT * FROM feature, fgroup
-                       WHERE  segment          = $seg $groupstring
+                       WHERE  segment          = ? $groupstring
                        AND    feature.group_id = fgroup.group_id
                        ORDER BY start);
   my @results;
   
-  foreach ( @{$self->transport->query($query)} ) {
-    my $fstart = $_->{'start'};
-    my $fend   = $_->{'end'};
-    my $type   = $_->{'type_id'};
-    my $method = $_->{'method'};
+  for ( @{$self->transport->query($query, $seg)} ) {
+    my $fstart = $_->{start};
+    my $fend   = $_->{end};
+    my $type   = $_->{type_id};
+    my $method = $_->{method};
 
     #fake features outside the range - das code will filter these otherwise
     if ($fend < $start) {
@@ -91,28 +78,28 @@ sub build_features {
     }
 
     push @results, {
-		    'id'           => $_->{'id'},
-		    'start'        => $fstart,
-		    'end'          => $fend,
-		    'label'        => $_->{'label'},
-		    'score'        => $_->{'score'},
-		    'ori'          => $_->{'orient'},
-		    'phase'        => $_->{'phase'},
-		    'type'         => $type,
-		    'typecategory' => $_->{'type_category'},
-		    'method'       => $method,
-		    'group'        => $_->{'group_id'},
-		    'grouptype'    => $_->{'group_type'},
-		    'grouplabel'   => $_->{'group_label'},
-		    'groupnote'    => $_->{'group_note'},
-		    'grouplink'    => $_->{'group_link_url'},
-		    'grouplinktxt' => $_->{'group_link_text'},
-		    'target_start' => $_->{'target_start'},
-		    'target_stop'  => $_->{'target_end'},
-		    'target_id'    => $_->{'target_id'},
-		    'link'         => $_->{'link_url'},
-		    'linktxt'      => $_->{'link_text'},
-		    'note'         => $_->{'note'},
+		    id           => $_->{id},
+		    start        => $fstart,
+		    end          => $fend,
+		    label        => $_->{label},
+		    score        => $_->{score},
+		    ori          => $_->{orient},
+		    phase        => $_->{phase},
+		    type         => $type,
+		    typecategory => $_->{type_category},
+		    method       => $method,
+		    group        => $_->{group_id},
+		    grouptype    => $_->{group_type},
+		    grouplabel   => $_->{group_label},
+		    groupnote    => $_->{group_note},
+		    grouplink    => $_->{group_link_url},
+		    grouplinktxt => $_->{group_link_text},
+		    target_start => $_->{target_start},
+		    target_stop  => $_->{target_end},
+		    target_id    => $_->{target_id},
+		    link         => $_->{link_url},
+		    linktxt      => $_->{link_text},
+		    note         => $_->{note},
 		   };
   }
 
@@ -120,8 +107,6 @@ sub build_features {
 }
 
 1;
-
-__END__
 
 # SCHEMA
 # Generic MySQL schema to hold DAS feature data for ProServer
@@ -158,12 +143,65 @@ __END__
 #	but these aren't implemented here.
 #	
 
+__END__
+
 =head1 NAME
 
 Bio::Das::ProServer::SourceAdaptor::all_in_group
 
 =head1 VERSION
 
-$Revision: 2.70 $
+$LastChangedRevision: 453 $
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+ Returns all features in groups represented in the range.  First
+ fetches all groups represented in the range, then retrieves all
+ features in those groups.  Features outside the range are hacked to
+ be one bp features on the edge of the range, with a style of hidden.
+
+ All this is so that grouped DAS displays can draw group lines to
+ features 'off the edge' off the display
+
+ schema at eof
+
+=head1 SUBROUTINES/METHODS
+
+=head2 capabilities
+
+=head2 build_features
+
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+=head1 DEPENDENCIES
+
+ Bio::Das::ProServer::SourceAdaptor
+
+=head1 INCOMPATIBILITIES
+
+=head1 BUGS AND LIMITATIONS
+
+=head1 AUTHOR
+
+$Author: jws, dj3$
+
+=head1 LICENSE AND COPYRIGHT
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut

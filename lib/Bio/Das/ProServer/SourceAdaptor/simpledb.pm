@@ -2,29 +2,80 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: 2003-12-12
-#
-# Builds simple DAS features from a database
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# $Id: simpledb.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simpledb.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::simpledb;
-
-=head1 AUTHOR
-
-Roger Pettett <rmp@sanger.ac.uk>.
-
-Copyright (c) 2003 The Sanger Institute
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.  See DISCLAIMER.txt for
-disclaimers of warranty.
-
-=cut
-
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+
+sub capabilities {
+  return {
+	  features => '1.0',
+	 };
+}
+
+sub build_features {
+  my ($self, $opts) = @_;
+  my $segment       = $opts->{segment};
+  my $start         = $opts->{start};
+  my $end           = $opts->{end};
+  my $dsn           = $self->{dsn};
+  my $dbtable       = $self->config->{dbtable} || $dsn;
+
+  #########
+  # if this is a hydra-based source the table name contains the hydra name and needs to be switched out
+  #
+  my $hydraname     = $self->config->{hydraname};
+
+  if($hydraname) {
+    my $basename = $self->config->{basename} || q();
+    $dbtable     =~ s/$hydraname/$basename/mx;
+  }
+
+  my @bound      = ($segment);
+  my $query      = qq(SELECT segmentid,featureid,start,end,type,note,link FROM $dbtable WHERE segmentid = ?);
+
+  if($start && $end) {
+    $query .= q(AND start <= ? AND end >= ?);
+    push @bound, ($end, $start);
+  }
+
+  my $ref      = $self->transport->query($query, @bound);
+  my @features;
+
+  for my $row (@{$ref}) {
+    my ($start, $end) = ($row->{start}, $row->{end});
+    if($start > $end) {
+      ($start, $end) = ($end, $start);
+    }
+    push @features, {
+                     id     => $row->{featureid},
+                     type   => $row->{type} || $dbtable,
+                     method => $row->{type} || $dbtable,
+                     start  => $start,
+                     end    => $end,
+		     note   => $row->{note},
+		     link   => $row->{link},
+                    };
+  }
+  return @features;
+}
+
+1;
+__END__
+
+=head1 NAME
+
+Bio::Das::ProServer::SourceAdaptor::simpledb - Builds simple DAS features from a database
+
+=head1 VERSION
+
+$LastChangedRevision: 453 $
 
 =head1 SYNOPSIS
 
@@ -32,8 +83,24 @@ our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d'
 
   segmentid,featureid,start,end,type,note,link
 
+=head1 DESCRIPTION
 
-  Configure with:
+=head1 SUBROUTINES/METHODS
+
+=head2 capabilities
+
+=head2 build_features - Return an array of features based on a query given in the config file
+
+  my @aFeatures = $oSourceAdaptor->build_features({
+                                                   segment => $sSegmentId,
+                                                   start   => $iSegmentStart, # Optional
+                                                   end     => $iSegmentEnd,   # Optional
+                                                   dsn     => $sDSN,          # if used as part of a hydra
+                                                  });
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
   [mysource]
   adaptor   = simpledb
   transport = dbi
@@ -55,77 +122,31 @@ our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d'
   dbuser    = proserverro
   dbpass    = topscret
 
-=head1 METHODS
+=head1 DEPENDENCIES
 
-=head2 init : Initialise capabilities for this source
+ Bio::Das::ProServer::SourceAdaptor
 
-  $oSourceAdaptor->init();
+=head1 INCOMPATIBILITIES
+
+=head1 BUGS AND LIMITATIONS
+
+=head1 AUTHOR
+
+$Author: Roger M Pettett$
+
+=head1 LICENSE AND COPYRIGHT
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
-sub init {
-  my $self                = shift;
-  $self->{'capabilities'} = {
-			     'features' => '1.0',
-			    };
-}
-
-=head2 build_features : Return an array of features based on a query given in the config file
-
-  my @aFeatures = $oSourceAdaptor->build_features({
-                                                   'segment' => $sSegmentId,
-                                                   'start'   => $iSegmentStart, # Optional
-                                                   'end'     => $iSegmentEnd,   # Optional
-                                                   'dsn'     => $sDSN,          # if used as part of a hydra
-                                                  });
-
-=cut
-sub build_features {
-  my ($self, $opts) = @_;
-  my $segment       = $opts->{'segment'};
-  my $start         = $opts->{'start'};
-  my $end           = $opts->{'end'};
-  my $dsn           = $self->{'dsn'};
-  my $dbtable       = $self->config->{'dbtable'} || $dsn;
-
-  #########
-  # if this is a hydra-based source the table name contains the hydra name and needs to be switched out
-  #
-  my $hydraname     = $self->config->{'hydraname'};
-
-  if($hydraname) {
-    my $basename = $self->config->{'basename'};
-    $dbtable     =~ s/$hydraname/$basename/;
-  }
-
-  my @bound      = ($segment);
-  my $query      = qq(SELECT segmentid,featureid,start,end,type,note,link
-		      FROM   $dbtable
-		      WHERE  segmentid = ?);
-
-  if($start && $end) {
-    $query .= qq(AND start <= ? AND end >= ?);
-    push @bound, ($end, $start);
-  }
-
-  my $ref      = $self->transport->query($query, @bound);
-  my @features = ();
-
-  for my $row (@{$ref}) {
-    my ($start, $end) = ($row->{'start'}, $row->{'end'});
-    if($start > $end) {
-      ($start, $end) = ($end, $start);
-    }
-    push @features, {
-                     'id'     => $row->{'featureid'},
-                     'type'   => $row->{'type'} || $dbtable,
-                     'method' => $row->{'type'} || $dbtable,
-                     'start'  => $start,
-                     'end'    => $end,
-		     'note'   => $row->{'note'},
-		     'link'   => $row->{'link'},
-                    };
-  }
-  return @features;
-}
-
-1;

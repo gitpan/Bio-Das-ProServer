@@ -1,17 +1,17 @@
 #########
 # Author:        rmp
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       2003-05-22
-# Last Modified: $Date: 2007/11/20 20:12:21 $
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
 # Source:        $Source $
 # Id:            $Id $
-# $HeadURL$
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/generic.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::generic;
 use strict;
 use warnings;
 
-our $VERSION  = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub new {
   my ($class, $defs) = @_;
@@ -36,14 +36,14 @@ sub init_time {
   return $self->{'init_time'};
 }
 
-sub init { }
+sub init {return;}
 
 sub config {
   my $self = shift;
   return $self->{'config'};
 }
 
-sub query { }
+sub query {return;}
 
 1;
 __END__
@@ -54,7 +54,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::generic - A generic transport lay
 
 =head1 VERSION
 
-$Revision: 2.70 $
+$Revision: 453 $
 
 =head1 SYNOPSIS
 

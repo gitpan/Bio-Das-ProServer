@@ -2,10 +2,10 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
-# Id:            $Id: dbi.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra/dbi.pm,v $
-# $HeadURL$
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
+# Id:            $Id: dbi.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra/dbi.pm,v $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra/dbi.pm $
 #
 # DBI-driven sourceadaptor broker
 #
@@ -16,7 +16,7 @@ use base qw(Bio::Das::ProServer::SourceHydra);
 use English qw(-no_match_vars);
 use Carp;
 
-our $VERSION       = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION       = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 our $CACHE_TIMEOUT = 30;
 
 #########
@@ -51,8 +51,7 @@ sub sources {
       $sth->execute();
 
       $self->{'_tables'} = [map {
-	my ($remainder) = $_->[0] =~ /^.{$l}(.*)$/mx;
-	$dsn.$remainder;
+	$dsn.($_->[0] =~ /^.{$l}(.*)$/mx)[0];
       } @{$sth->fetchall_arrayref()}];
 
       $sth->finish();
@@ -77,7 +76,7 @@ Bio::Das::ProServer::SourceHydra::dbi - A database-backed implementation of B::D
 
 =head1 VERSION
 
-$Revision: 2.70 $
+$Revision: 453 $
 
 =head1 AUTHOR
 

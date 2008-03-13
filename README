@@ -79,7 +79,7 @@ faults which may be present and minimised their consequences.
           safer all-round. Using chroot puts the ProServer processes
           in a jail from which they cannot easily access the rest of
           the filesystem. This may be complex to set up, depending on
-          the variety of your source adaptors and they access they
+          the variety of your source adaptors and the access they
           require to resources outside of your ProServer
           installation. This method also requires a dedicated copy of
           all dependencies such as a perl interpreter and system

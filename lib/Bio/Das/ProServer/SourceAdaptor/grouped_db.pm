@@ -1,125 +1,140 @@
 #########
-# Author: jws
-# Maintainer: jws, dj3
-# Created: 2005-04-19
-# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
-# Id:            $Id: grouped_db.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm,v $
-# $HeadURL$
+# Author:        jws
+# Maintainer:    jws, dj3
+# Created:       2005-04-19
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
+# Id:            $Id: grouped_db.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm,v $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm $
 # Builds DAS features from ProServer mysql database
 # schema at eof
-
 package Bio::Das::ProServer::SourceAdaptor::grouped_db;
-
 use strict;
-use vars qw(@ISA);
-use Data::Dumper;
-use Bio::Das::ProServer::SourceAdaptor;
-@ISA = qw(Bio::Das::ProServer::SourceAdaptor);
-our $VERSION  = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+use warnings;
+use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-#######################################################################################################
-sub init {
-  my $self                = shift;
-  $self->{'capabilities'} = {
-			     'features'   => '1.0',
-			     'stylesheet' => '1.0',
-                             'entry_points'  => '1.0',
-			     'types' =>'1.0',
-			    };
+our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+
+sub capabilities {
+  return {
+	  features     => '1.0',
+	  stylesheet   => '1.0',
+	  entry_points => '1.0',
+	  types        => '1.0',
+	 };
 }
 
-
-#######################################################################################################
 sub build_features {
   my ($self, $opts) = @_;
-  my $seg     = $opts->{'segment'};
-  my $start   = $opts->{'start'};
-  my $end     = $opts->{'end'};
-  my $shortsegnamehack = defined($self->config->{'shortsegnamehack'})?$self->config->{'shortsegnamehack'}:1; #e.g. 1 (default) or 0
+  my $seg     = $opts->{segment};
+  my $start   = $opts->{start};
+  my $end     = $opts->{end};
+  my $shortsegnamehack = (defined $self->config->{'shortsegnamehack'})?$self->config->{'shortsegnamehack'}:1; #e.g. 1 (default) or 0
 
+  if($shortsegnamehack && (CORE::length($seg) > 4)) {
+    return;
+  }
 
-  return if($shortsegnamehack and (CORE::length("$seg") > 4)); #(speedup?) only handle chromosomes or haplotypes
- 
-  $seg=$self->transport->dbh->quote($seg);
-  my $qbounds="";
-  if(defined $start && $start ne"" && defined $end && $end ne""){
-#  if(defined $start  && defined $end){
-    $start=$self->transport->dbh->quote($start);
-    $end=$self->transport->dbh->quote($end);
+  my $qbounds = q();
+
+  if(defined $start && $start ne q() && defined $end && $end ne q()) {
+    $start   = $self->transport->dbh->quote($start);
+    $end     = $self->transport->dbh->quote($end);
     $qbounds = qq(AND start <= $end AND end >= $start);
   }
 
   my $query   = qq(SELECT * FROM feature, fgroup
-                   WHERE  segment = $seg $qbounds
-		   AND feature.group_id = fgroup.group_id
-                   ORDER BY start); 
+                   WHERE  segment          = ? $qbounds
+                   AND    feature.group_id = fgroup.group_id
+                   ORDER BY start);
   my @results;
-  
-  foreach ( @{$self->transport->query($query)} ) {
-  	push @results, {
-				'id'		=> $_->{'id'},
-				'start'		=> $_->{'start'},
-				'end'		=> $_->{'end'},
-				'label'		=> $_->{'label'},
-				'score'		=> $_->{'score'},
-				'ori'		=> $_->{'orient'},
-				'phase'		=> $_->{'phase'},
-				'type'		=> $_->{'type_id'},
-				'typecategory'	=> $_->{'type_category'},
-				'method'	=> $_->{'method'},
-				'group'		=> $_->{'group_id'},
-				'grouptype'	=> $_->{'group_type'},
-				'grouplabel'	=> $_->{'group_label'},
-				'groupnote'	=> $_->{'group_note'},
-				'grouplink'	=> $_->{'group_link_url'},
-				'grouplinktxt'	=> $_->{'group_link_text'},
-				'target_start'	=> $_->{'target_start'},
-				'target_stop'	=> $_->{'target_end'},
-				'target_id'	=> $_->{'target_id'},
-				'link'		=> $_->{'link_url'},
-				'linktxt'	=> $_->{'link_text'},
-				'note'		=> $_->{'note'},
-			};
+
+  for ( @{$self->transport->query($query, $seg)} ) {
+    push @results, {
+		    id           => $_->{id},
+		    start        => $_->{start},
+		    end          => $_->{end},
+		    label        => $_->{label},
+		    score        => $_->{score},
+		    ori          => $_->{orient},
+		    phase        => $_->{phase},
+		    type         => $_->{type_id},
+		    typecategory => $_->{type_category},
+		    method       => $_->{method},
+		    group        => $_->{group_id},
+		    grouptype    => $_->{group_type},
+		    grouplabel   => $_->{group_label},
+		    groupnote    => $_->{group_note},
+		    grouplink    => $_->{group_link_url},
+		    grouplinktxt => $_->{group_link_text},
+		    target_start => $_->{target_start},
+		    target_stop  => $_->{target_end},
+		    target_id    => $_->{target_id},
+		    link         => $_->{link_url},
+		    linktxt      => $_->{link_text},
+		    note         => $_->{note},
+		   };
 
   }
-  
-  return (@results);
 
+  return @results;
 }
 
 sub build_types {
-	my $self = shift;
-	if(@_){
-		my @r=();
-		foreach(@_){
-			my ($seg,$start,$end)=@{$_}{qw(segment start end)};
-			$seg=$self->transport->dbh->quote($seg);
-			my $qbounds="";
-			if(defined $start && $start ne"" && defined $end && $end ne""){
-				$start=$self->transport->dbh->quote($start);
-				$end=$self->transport->dbh->quote($end);
-				$qbounds = qq(AND start <= $end AND end >= $start);
-			}
-			my $query   = qq(SELECT DISTINCT type_id type, method FROM feature
-					WHERE  segment = $seg $qbounds);
-			push @r,map{$_->{segment}=$seg; @{$_}{qw(start end)}=($start,$end)if $qbounds; $_}@{$self->transport->query($query)};
-		}
-		return @r;
-	}else{
-		my $query   = qq(SELECT DISTINCT type_id type, method FROM feature);
-		return @{$self->transport->query($query)};	
-	}
+  my ($self, @args) = @_;
+  if(!scalar @args) {
+    my $query   = q(SELECT DISTINCT type_id type, method FROM feature);
+    return @{$self->transport->query($query)};
+  }
+
+  my @r;
+
+  for (@args) {
+    my ($seg, $start, $end) = @{$_}{qw(segment start end)};
+    my $qbounds = q();
+
+    if(defined $start && $start ne q() && defined $end && $end ne q()) {
+      $start   = $self->transport->dbh->quote($start);
+      $end     = $self->transport->dbh->quote($end);
+      $qbounds = qq(AND start <= $end AND end >= $start);
+    }
+
+    my $query   = qq(SELECT DISTINCT type_id type, method FROM feature
+                     WHERE  segment = ? $qbounds);
+    push @r, map { $qbounds?$self->_build_types_population($_, $seg, $start, $end):$_; }
+                 @{$self->transport->query($query, $seg)};
+  }
+  return @r;
 }
+
+sub _build_types_population {
+  my ($self, $ref, $seg, $start, $end) = @_;
+  $ref->{segment} = $seg;
+  @{$ref}{qw(start end)} = ($start, $end);
+  return $ref;
+}
+
 sub build_entry_points {
   my ($self) = @_;
-  my $query   = qq(SELECT DISTINCT segment FROM feature);
-  return map{$_->{subparts}="no"; $_->{version}=$self->{config}{assembly}if exists $self->{config}{assembly} ;$_}@{$self->transport->query($query)};
+  my $query  = q(SELECT DISTINCT segment FROM feature);
+  return map { $self->_build_ep_population($_); }
+             @{$self->transport->query($query)};
 }
-sub segment_version{
-	my $self=shift; 
-	return exists($self->{config}{assembly})?$self->{config}{assembly}:undef;
+
+sub _build_ep_population {
+  my ($self, $ref) = @_;
+  $ref->{subparts} = 'no';
+  if(exists $self->{config}->{assembly}) {
+    $ref->{version}  = $self->{config}->{assembly};
+  }
+  return $ref;
 }
+
+sub segment_version {
+  my $self = shift;
+  return (exists $self->{config}->{assembly})?$self->{config}->{assembly}:undef;
+}
+
 1;
 
 # SCHEMA
@@ -157,3 +172,61 @@ sub segment_version{
 #	but these aren't implemented here.
 #	
 
+__END__
+
+=head1 NAME
+
+Bio::Das::ProServer::SourceAdaptor::grouped_db
+
+=head1 VERSION
+
+$LastChangedRevision: 453 $
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=head1 SUBROUTINES/METHODS
+
+=head2 capabilities
+
+=head2 build_features
+
+=head2 build_types
+
+=head2 build_entry_points
+
+=head2 segment_version
+
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+=head1 DEPENDENCIES
+
+Bio::Das::ProServer::SourceAdaptor
+
+=head1 INCOMPATIBILITIES
+
+=head1 BUGS AND LIMITATIONS
+
+=head1 AUTHOR
+
+$Author: Roger Pettett$
+
+=head1 LICENSE AND COPYRIGHT
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut

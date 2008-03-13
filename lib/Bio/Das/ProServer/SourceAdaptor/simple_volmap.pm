@@ -1,14 +1,23 @@
+#########
+# Author: $andyjenkinson$
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# $Id: simple_volmap.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple_volmap.pm $
+#
 package Bio::Das::ProServer::SourceAdaptor::simple_volmap;
-
 use strict;
+use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
+
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self = shift;
-  $self->{'capabilities'} = { map { $_ => '1.0' } qw(volmap entry_points) };
+  $self->{capabilities} = { map { $_ => '1.0' } qw(volmap entry_points) };
+  return;
 }
 
-sub length {
+sub length { ## no critic
   my ($self, $segment) = @_;
   return $self->transport->query("field0 = $segment")->[0]->[1];
 }
@@ -20,13 +29,15 @@ sub known_segments {
 
 sub build_volmap {
   my ($self, $segment) = @_;
-  my $row = $self->transport->query("field0 = $segment")->[0];
-  my %volmap = ();
+  my $row    = $self->transport->query("field0 = $segment")->[0];
+  my $volmap = {};
+
   for (qw(id _tmp class type version link linktxt)) {
-    $volmap{$_} = shift @$row;
+    $volmap->{$_} = shift @{$row};
   }
-  $volmap{'note'} = [@$row];
-  return \%volmap;
+
+  $volmap->{note} = [@{$row}];
+  return $volmap;
 }
 
 1;
@@ -36,15 +47,35 @@ __END__
 
   Bio::Das::ProServer::SourceAdaptor::simple_volmap
 
+=head1 VERSION
+
+$Revision: 453 $
+
 =head1 AUTHOR
 
   Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
+
+=head1 SYNOPSIS
+
+  Volume map for Vol01:
+  <host>/das/<source>/volmap?query=volumeID
+
 
 =head1 DESCRIPTION
 
   Serves up volume map DAS responses, using a file-based transport.
 
-=head1 CONFIGURATION
+=head1 SUBROUTINES/METHODS
+
+=head2 build_volmap
+
+=head2 init
+
+=head2 known_segments
+
+=head2 length
+
+=head1 CONFIGURATION AND ENVIRONMENT
 
   [simple_volmap]
   adaptor               = simple_volmap
@@ -52,16 +83,11 @@ __END__
   transport             = file
   filename              = /data/volmap.txt
   coordinates           = MyCoordSys -> Vol01
-  
+
   Tab-separated file formats:
-  
+
   --volmap.txt--
   id	length	class	type	version	link	linktxt
-
-=head1 USAGE
-
-  Volume map for Vol01:
-  <host>/das/<source>/volmap?query=volumeID
 
 =head1 DEPENDENCIES
 
@@ -70,6 +96,8 @@ __END__
 =item L<Bio::Das::ProServer::SourceAdaptor>
 
 =back
+
+=head1 DIAGNOSTICS
 
 =head1 INCOMPATIBILITIES
 

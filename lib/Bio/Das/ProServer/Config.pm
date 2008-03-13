@@ -3,9 +3,9 @@
 # Maintainer:    rmp
 # Created:       2003-06-03
 # Last Modified: 2005-11-22
-# Id:            $Id: Config.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/Config.pm,v $
-# $HeadURL$
+# Id:            $Id: Config.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/Config.pm,v $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Config.pm $
 #
 # ProServer source/parser configuration
 #
@@ -19,20 +19,22 @@ use Sys::Hostname;
 use Config::IniFiles;
 use English qw(-no_match_vars);
 use Carp;
+use POSIX qw(strftime);
+use File::Spec;
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub new {
   my ($class, $self)      = @_;
   $self                 ||= {};
   bless $self,$class;
   my $inifile = $self->{'inifile'} || q();
-  ($inifile)  = $inifile =~ m|([a-z\d_/\.\-]+)|mix;
+  ($inifile)  = $inifile =~ m{([a-z\d_/\.\-]+)}mix;
 
   if($inifile && -f $inifile) {
     my $conf = Config::IniFiles->new(
-				     -file => $inifile,
-				    );
+                                     -file => $inifile,
+                                    );
     #########
     # load general parameters
     #
@@ -55,11 +57,12 @@ sub new {
                   http_proxy
                   serverroot
                   maintainer
+                  strict_boundaries
                   logformat)) {
       if($conf->val('general', $f)) {
-	$self->{$f} ||= $conf->val('general', $f);
+        $self->{$f} ||= $conf->val('general', $f);
       }
-      printf {*STDERR} qq(%-20s => %s\n), $f, ($self->{$f}||q());
+      $self->log(sprintf q(%-20s => %s), $f, ($self->{$f}||q()));
     }
 
     #########
@@ -67,9 +70,8 @@ sub new {
     #
     for my $s ($conf->Sections()) {
       next if ($s eq 'general');
-      print {*STDERR} qq(Configuring Adaptor $s );
       $self->_build_adaptor_config($conf, $s);
-      print {*STDERR} $self->{'adaptors'}->{$s}->{'state'}, "\n";
+      $self->log(qq(Configuring Adaptor $s ), $self->{'adaptors'}->{$s}->{'state'});
     }
 
   } else {
@@ -82,10 +84,25 @@ sub new {
   $self->{'maxclients'} ||= 10;
   $self->{'port'}       ||= 9000;
   $self->{'hostname'}   ||= hostname();
-  $self->{'coordshome'} ||= 'coordinates';
-  $self->{'styleshome'} ||= 'stylesheets';
+  $self->{'coordshome'} ||= ($self->{'serverroot'}?File::Spec->catdir($self->{'serverroot'}, 'coordinates'):'coordinates');
+  $self->{'styleshome'} ||= ($self->{'serverroot'}?File::Spec->catdir($self->{'serverroot'}, 'stylesheets'):'stylesheets');
+
+  #########
+  # set inherited paramaters if unset
+  #
+  for my $adaptor_conf (values %{ $self->{'adaptors'} }) {
+    for my $key (qw(maintainer styleshome strict_boundaries)) {
+      $adaptor_conf->{$key} ||= $self->{$key};
+    }
+  }
 
   return $self;
+}
+
+sub log { ## no critic
+  my ($self, @args) = @_;
+  print {*STDERR} (strftime '[%Y-%m-%d %H:%M:%S] ', localtime), @args, "\n" or croak $OS_ERROR;
+  return;
 }
 
 sub _build_adaptor_config {
@@ -105,7 +122,7 @@ sub _build_adaptor_config {
   while (my ($p, $v) = each %{$parent}) {
     $self->{'adaptors'}->{$s}->{$p} ||= $v;
   }
-  
+
   return $self->{'adaptors'}->{$s};
 }
 
@@ -128,13 +145,13 @@ sub maxclients {
 
 sub pidfile {
   my $self = shift;
-  ($self->{'pidfile'}) = ($self->{'pidfile'}||q()) =~ m|([a-z\d/\-_\.]+)|mix;
+  ($self->{'pidfile'}) = ($self->{'pidfile'}||q()) =~ m{([a-z\d/\-_\.]+)}mix;
   return $self->{'pidfile'};
 }
 
 sub logfile {
   my $self = shift;
-  ($self->{'logfile'}) = ($self->{'logfile'}||q()) =~ m|([a-z\d/\-_\.]+)|mix;
+  ($self->{'logfile'}) = ($self->{'logfile'}||q()) =~ m{([a-z\d/\-_\.]+)}mix;
   return $self->{'logfile'};
 }
 
@@ -152,7 +169,7 @@ sub host {
     $h       = $self->{'hostname'};
   }
 
-  ($self->{'hostname'}) = $h =~ m|([a-z\d/\-_\.]+)|mix;
+  ($self->{'hostname'}) = $h =~ m{([a-z\d/\-_\.]+)}mix;
   return $self->{'hostname'}||q();
 }
 
@@ -224,8 +241,8 @@ sub adaptor {
      exists $self->{'adaptors'}->{$dsn} &&
      $self->{'adaptors'}->{$dsn}->{'state'} &&
      $self->{'adaptors'}->{$dsn}->{'state'} eq 'on') {
-    
-    $self->{'debug'} and print {*STDERR} qq(Acquiring unmanaged adaptor for $dsn\n);
+
+    $self->{'debug'} and $self->log(qq(Acquiring unmanaged adaptor for $dsn));
 
     #########
     # normal adaptor
@@ -238,17 +255,15 @@ sub adaptor {
         return;
       }
       eval {
-	$self->{'adaptors'}->{$dsn}->{'obj'} = $adaptortype->new({
-								  'dsn'        => $dsn,
-								  'config'     => $self->{'adaptors'}->{$dsn},
-								  'hostname'   => $self->response_hostname,
-								  'port'       => $self->response_port,
-								  'protocol'   => $self->response_protocol,
-								  'baseuri'    => $self->response_baseuri,
-								  'maintainer' => $self->{'maintainer'},
-                                                                  'styleshome' => $self->{'styleshome'},
-								  'debug'      => $self->{'debug'},
-								 });
+        $self->{'adaptors'}->{$dsn}->{'obj'} = $adaptortype->new({
+                                                                  'dsn'      => $dsn,
+                                                                  'config'   => $self->{'adaptors'}->{$dsn},
+                                                                  'hostname' => $self->response_hostname,
+                                                                  'port'     => $self->response_port,
+                                                                  'protocol' => $self->response_protocol,
+                                                                  'baseuri'  => $self->response_baseuri,
+                                                                  'debug'    => $self->{'debug'},
+                                                                 });
       };
       if($EVAL_ERROR) {
         carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
@@ -260,12 +275,12 @@ sub adaptor {
 
   } elsif($dsn &&
 	  ((substr $dsn, 0, 5) eq 'hydra' ||
-	   grep {
+	   scalar grep {
 	     $dsn=~/^$_/mx &&
 	     $self->{'adaptors'}->{$_}->{'hydra'}
 	   } keys %{$self->{'adaptors'}})) {
 
-    $self->{'debug'} and print {*STDERR} qq(Acquiring managed adaptor for $dsn\n);
+    $self->{'debug'} and $self->log(qq(Acquiring managed adaptor for $dsn));
 
     #########
     # hydra adaptor
@@ -273,20 +288,18 @@ sub adaptor {
     return $self->hydra_adaptor($dsn);
 
   } else {
-    $self->{'debug'} and print {*STDERR} qq(Acquiring generic adaptor for unknown dsn @{[$dsn||"undef"]}\n);
+    $self->{'debug'} and $self->log(qq(Acquiring generic adaptor for unknown dsn @{[$dsn||'undef']}));
     #########
     # generic adaptor
     #
     $self->{'_genadaptor'} ||= Bio::Das::ProServer::SourceAdaptor->new({
-                                                                        'hostname'   => $self->response_hostname,
-                                                                        'port'       => $self->response_port,
-                                                                        'protocol'   => $self->response_protocol,
-                                                                        'baseuri'    => $self->response_baseuri,
-                                                                        'maintainer' => $self->{'maintainer'},
-                                                                        'styleshome' => $self->{'styleshome'},
-                                                                        'config'     => $self,
-                                                                        'debug'      => $self->{'debug'},
-								       });
+                                                                        'hostname' => $self->response_hostname,
+                                                                        'port'     => $self->response_port,
+                                                                        'protocol' => $self->response_protocol,
+                                                                        'baseuri'  => $self->response_baseuri,
+                                                                        'config'   => $self,
+                                                                        'debug'    => $self->{'debug'},
+                                                                       });
     return $self->{'_genadaptor'};
   }
 }
@@ -317,7 +330,7 @@ sub knows {
     my $hydra = $self->hydra($hydraname);
     $hydra or next;
 
-    if(grep { $_ eq $dsn } $hydra->sources()) {
+    if(scalar grep { $_ eq $dsn } $hydra->sources()) {
       return 1;
     }
   }
@@ -373,7 +386,7 @@ sub _hydra_adaptor {
   my $config = $self->{'adaptors'}->{$hydraname};
   my $hydra  = $self->hydra($hydraname);
 
-  if(!( grep { $_ eq $dsn } $hydra->sources())) {
+  if(!(scalar grep { $_ eq $dsn } $hydra->sources())) {
     return;
   }
 
@@ -389,23 +402,24 @@ sub _hydra_adaptor {
   # build a source adaptor using the dsn from the hydra-managed source and the config for the hydra
   #
   $config->{'hydraname'} = $hydraname;
+  my $adaptor;
   eval {
-    return $adaptortype->new({
-                            'dsn'        => $dsn,
-                            'config'     => $config,
-                            'hostname'   => $self->response_hostname,
-                            'port'       => $self->response_port,
-                            'protocol'   => $self->response_protocol,
-                            'baseuri'    => $self->response_baseuri,
-                            'maintainer' => $self->{'maintainer'},
-                            'styleshome' => $self->{'styleshome'},
-                            'debug'      => $self->{'debug'},
-			   });
+    $adaptor = $adaptortype->new({
+                            'dsn'      => $dsn,
+                            'config'   => $config,
+                            'hostname' => $self->response_hostname,
+                            'port'     => $self->response_port,
+                            'protocol' => $self->response_protocol,
+                            'baseuri'  => $self->response_baseuri,
+                            'debug'    => $self->{'debug'},
+                           });
   };
   if($EVAL_ERROR) {
     carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
     return;
   }
+  
+  return $adaptor;
 }
 
 sub hydra {
@@ -422,13 +436,13 @@ sub hydra {
       carp "Error requiring $hydraimpl: $EVAL_ERROR";
       return;
     }
-    print {*STDERR} qq(Loaded $hydraimpl for $hydraname\n);
+    $self->log(qq(Loaded $hydraimpl for $hydraname));
 
     $self->{'adaptors'}->{$hydraname}->{'_hydra'}  ||= $hydraimpl->new({
-									'dsn'    => $hydraname,
-									'config' => $self->{'adaptors'}->{$hydraname},
-									'debug'  => $self->{'debug'},
-								       });
+                                                                        'dsn'    => $hydraname,
+                                                                        'config' => $self->{'adaptors'}->{$hydraname},
+                                                                        'debug'  => $self->{'debug'},
+                                                                       });
   }
   return $self->{'adaptors'}->{$hydraname}->{'_hydra'} || undef;
 }
@@ -442,11 +456,15 @@ Bio::Das::ProServer::Config - configuration parsing and hooks
 
 =head1 VERSION
 
-$Revision: 2.70 $
+$Revision: 453 $
 
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
+
+Builds the ProServer configuration.
+
+=head1 CONFIGURATION AND ENVIRONMENT
 
 Configuration takes the following structure
 
@@ -463,10 +481,12 @@ Configuration takes the following structure
   ensemblhome       =      # path to ensembl libs (for sharing across sources)
   oraclehome        =      # path to oracle libs  (for sharing across sources)
   bioperlhome       =      # path to bioperl libs (for sharing across sources)
+  serverroot        =      # path to root directory (for stylesheets/coordinates)
   coordshome        =      # path to coordinate systems XML files
   styleshome        =      # path to stylesheet XML files
   http_proxy        =      # proxy for sources requiring web access
-  serverroot        = 
+  maintainer        =      # email address
+  strict_boundaries =      # whether to filter out-of-range segments
   logformat         = %i %t %r %s
 
   # then many of these with directives specific to each source
@@ -486,27 +506,27 @@ Configuration takes the following structure
 
 =head1 SUBROUTINES/METHODS
 
-=head2 new : Constructor
+=head2 new - Constructor
 
   my $oConfig = Bio::Das::ProServer::Config->new("/path/to/proserver.ini");
 
-=head2 port : get accessor for configured port
+=head2 port - get accessor for configured port
 
   my $sPort = $oConfig->port();
 
-=head2 maxclients : get/set accessor for configured maxclients
+=head2 maxclients - get/set accessor for configured maxclients
 
   my $sMaxClients = $oConfig->maxclients();
 
-=head2 pidfile : get accessor for configured pidfile
+=head2 pidfile - get accessor for configured pidfile
 
   my $sPidFile = $oConfig->pidfile();
 
-=head2 logfile : get accessor for configured logfile
+=head2 logfile - get accessor for configured logfile
 
   my $sLogFile = $oConfig->logfile();
 
-=head2 logformat : get accessor for configured logformat
+=head2 logformat - get accessor for configured logformat
 
   my $sLogformat = $oConfig->logformat();
 
@@ -517,13 +537,13 @@ Configuration takes the following structure
   %r      Request URI
   %s      HTTP status code
 
-=head2 host : get accessor for configured host
+=head2 host - get accessor for configured host
 
   my $sHost = $cfg->host();
 
   Examines 'interface' and 'hostname' settings in that order
 
-=head2 response_hostname : get accessor for configured response_hostname
+=head2 response_hostname - get accessor for configured response_hostname
 
   Useful for setting the hostname in XML/HTML responses when behind a reverse-proxy.
 
@@ -531,7 +551,7 @@ Configuration takes the following structure
 
   Examines 'response_hostname', 'interface' and 'hostname' settings in that order
 
-=head2 response_port : get accessor for configured response_port
+=head2 response_port - get accessor for configured response_port
 
   Useful for setting the port in XML/HTML responses when behind a reverse-proxy.
 
@@ -539,61 +559,63 @@ Configuration takes the following structure
 
   Examines 'response_port' and 'port' settings in that order
 
-=head2 response_protocol : get accessor for configured response_protocol
+=head2 response_protocol - get accessor for configured response_protocol
 
   Useful for setting the protocol in XML/HTML responses when behind a reverse-proxy.
 
   my $sResponse_Protocol = $cfg->response_protocol();
 
-=head2 response_baseuri : get accessor for configured response_baseuri
+=head2 response_baseuri - get accessor for configured response_baseuri
 
   Useful for setting the baseuri (i.e. preceeding /das) in XML/HTML responses when behind a reverse-proxy.
 
   my $sResponse_Baseuri = $cfg->response_baseuri();
 
-=head2 interface : get accessor configured interface
+=head2 interface - get accessor configured interface
 
   my $sInterface = $cfg->interface();
 
-=head2 adaptors : Build all known Bio::Das::ProServer::SourceAdaptors (including those Hydra-based)
+=head2 adaptors - Build all known Bio::Das::ProServer::SourceAdaptors (including those Hydra-based)
 
   my @aAdaptors = $oConfig->adaptors();
 
   Note this can be an expensive call if lots of sources or large hydra sets are configured.
 
-=head2 adaptor : Build a SourceAdaptor given a dsn (may be a hydra-based adaptor)
+=head2 adaptor - Build a SourceAdaptor given a dsn (may be a hydra-based adaptor)
 
   my $oSourceAdaptor = $oConfig->adaptor($sWantedDSN);
 
-=head2 knows : Is a requested dsn known about?
+=head2 knows - Is a requested dsn known about?
 
   my $bDSNIsKnown = $oConfig->knows($sWantedDSN);
 
-=head2 das_version : Server-supported das version
+=head2 das_version - Server-supported das version
 
   my $sVersion = $oConfig->das_version();
 
   By default 'DAS/1.53E';
 
-=head2 server_version : Server release version
+=head2 server_version - Server release version
 
   my $sVersion = $oConfig->server_version();
 
   By default 'ProServer/2.7';
 
-=head2 hydra_adaptor : Build a hydra-based SourceAdaptor given dsn and optional hydraname
+=head2 hydra_adaptor - Build a hydra-based SourceAdaptor given dsn and optional hydraname
 
   my $oAdaptor = $oConfig->hydra_adaptor($sWantedDSN, $sHydraName); # fast
 
   my $oAdaptor = $oConfig->hydra_adaptor($sWantedDSN); # slow, performs a full scan of any configured hydras
 
-=head2 hydra : Build SourceHydra for a given dsn/hydraname
+=head2 hydra - Build SourceHydra for a given dsn/hydraname
 
   my $oHydra = $oConfig->hydra($sHydraName);
 
-=head1 DIAGNOSTICS
+=head2 log - log to STDERR with timestamp
 
-=head1 CONFIGURATION AND ENVIRONMENT
+  $oConfig->log('a message');
+
+=head1 DIAGNOSTICS
 
 =head1 DEPENDENCIES
 

@@ -2,9 +2,9 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-05-20
-# Last Modified: $Date: 2007/11/20 20:12:21 $
-# Id:            $Id: dbi.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# $HeadURL$
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Id:            $Id: dbi.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/dbi.pm $
 #
 # Transport layer for DBI
 #
@@ -13,45 +13,45 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use DBI;
-use HTTP::Date;
 use Carp;
 use English qw(-no_match_vars);
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub dbh {
   my $self     = shift;
   my $config   = $self->config();
-  my $host     = $config->{'dbhost'}   || $config->{'host'}     || 'localhost';
-  my $port     = $config->{'dbport'}   || $config->{'port'}     || '3306';
-  my $dbname   = $config->{'dbname'};
-  my $username = $config->{'dbuser'}   || $config->{'username'} || 'test';
-  my $password = $config->{'dbpass'}   || $config->{'password'} || q();
-  my $driver   = $config->{'driver'}   || 'mysql';
+  my $host     = $config->{dbhost}  || $config->{host}     || 'localhost';
+  my $port     = $config->{dbport}  || $config->{port}     || '3306';
+  my $dbname   = $config->{dbname};
+  my $username = $config->{dbuser}  || $config->{username} || 'test';
+  my $password = $config->{dbpass}  || $config->{password} || q();
+  my $driver   = $config->{driver}  || 'mysql';
   my $dsn      = "DBI:$driver:database=$dbname;host=$host;port=$port";
 
   #########
   # DBI connect_cached is slightly smarter than us just caching here
   #
   eval {
-    if(!$self->{'dbh'} ||
-       !$self->{'dbh'}->ping()) {
-      $self->{'dbh'} = DBI->connect_cached($dsn, $username, $password, {RaiseError => 1});
+    if(!$self->{dbh} ||
+       !$self->{dbh}->ping()) {
+      $self->{dbh} = DBI->connect_cached($dsn, $username, $password, {RaiseError => 1});
     }
   };
+
   if($EVAL_ERROR) {
-    carp 'dsn = ', $self->{'dsn'},"\n";
-    croak $EVAL_ERROR;
+    croak "$dsn = $self->{dsb}\n$EVAL_ERROR";
   }
-  return $self->{'dbh'};
+
+  return $self->{dbh};
 }
 
 sub query {
   my ($self,
       $query,
-      @args)      = @_;
+      @args)       = @_;
   my $ref          = [];
-  my $debug        = $self->{'debug'};
+  my $debug        = $self->{debug};
   my $fetchall_arg = {};
   (@args and ref $args[0]) and $fetchall_arg = shift @args;
 
@@ -76,38 +76,42 @@ sub query {
   alarm 0;
 
   if($EVAL_ERROR) {
-    carp "Error running query: $EVAL_ERROR\nArgs were: @{[join q( ), @_]}\n";
+    croak "Error running query: $EVAL_ERROR\nArgs were: @{[join q( ), @_]}\n";
   }
 
   return $ref;
 }
 
 sub prepare {
-  my $self = shift;
-  return $self->dbh->prepare(@_);
+  my ($self, @args) = @_;
+  return $self->dbh->prepare(@args);
 }
 
 sub disconnect {
   my $self = shift;
 
-  if(!exists $self->{'dbh'} || !$self->{'dbh'}) {
+  if(!exists $self->{dbh} || !$self->{dbh}) {
     return;
   }
 
-  $self->{'dbh'}->disconnect();
-  delete $self->{'dbh'};
-  $self->{'debug'} and carp "$self performed dbh disconnect\n";
+  $self->{dbh}->disconnect();
+  delete $self->{dbh};
+  $self->{debug} and carp "$self performed dbh disconnect\n";
   return;
 }
 
 sub last_modified {
   my $self = shift;
-  $self->dbh->{Driver}->{Name} eq 'mysql' or return undef ; #Only know MySQL way at the moment....
-  my $server_text = [sort { $b cmp $a }
-                     map { $_->{'Update_time'} }
-                     @{ $self->query("SHOW TABLE STATUS",{Update_time=>1}) }
+
+  if($self->dbh->{Driver}->{Name} ne 'mysql') {
+    return;
+  }
+
+  my $server_text = [sort { $b cmp $a } ## no critic
+                     map { $_->{Update_time} }
+                     @{ $self->query(q(SHOW TABLE STATUS),{Update_time=>1}) }
                     ]->[0]; # server local time
-  my $server_unix = $self->query("select UNIX_TIMESTAMP(?) as 'unix'", $server_text)->[0]{'unix'}; # sec since epoch
+  my $server_unix = $self->query(q(SELECT UNIX_TIMESTAMP(?) as 'unix'), $server_text)->[0]{unix}; # sec since epoch
   return $server_unix;
 }
 
@@ -121,6 +125,8 @@ sub DESTROY {
 __END__
 
 =head1 NAME
+
+Bio::Das::ProServer::SourceAdaptor::Transport::dbi - A DBI transport layer (actually customised for MySQL)
 
 =head1 VERSION
 

@@ -1,10 +1,9 @@
-#!/usr/local/bin/perl
 #########
 # ProServer DAS Server
 # Author:        rmp
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       2003-05-22
-# Last Modified: $Date: 2007/11/20 20:12:21 $
+# Last Modified: $Date: 2008-03-12 17:27:42 +0000 (Wed, 12 Mar 2008) $
 # Source:        $Source $
 # Id:            $Id $
 #
@@ -32,9 +31,10 @@ use English qw(-no_match_vars);
 use Carp;
 
 our $DEBUG          = 0;
-our $VERSION        = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION        = do { my @r = (q$Revision: 457 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 our $GZIP_THRESHOLD = 10_000;
 $ENV{'PATH'}        = '/bin:/usr/bin:/usr/local/bin';
+our $COORDINATES    = undef;
 our $WRAPPERS       = {
 		       'sources'      => {
 					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<?xml-stylesheet type="text/xsl" href="sources.xsl"?>\n<SOURCES>\n),
@@ -97,7 +97,7 @@ sub run {
                             qw(debug
                                version
                                port=i
-                               help|usage
+                               h|help|usage
                                hostname=s
                                inifile|config|c=s
                                pidfile=s
@@ -108,7 +108,7 @@ sub run {
   my $vstr = "ProServer DAS Server v$VERSION (c) GRL 2007";
 
   if($opts->{'version'}) {
-    print $vstr, "\n";
+    print $vstr, "\n" or croak $OS_ERROR;
     return;
   }
 
@@ -122,16 +122,16 @@ sub run {
 
   my $maxmsg = (sort { $a <=> $b } map { length $_ } @msg)[-1];
 
-  print  q(#)x($maxmsg+6), "\n";
+  print  q(#)x($maxmsg+6), "\n" or croak $OS_ERROR;
   for my $m (@msg) {
-    printf qq(#  %-${maxmsg}s  #\n), $m;
+    printf qq(#  %-${maxmsg}s  #\n), $m or croak $OS_ERROR;
   }
-  print  q(#)x($maxmsg+6), "\n\n";
+  print  q(#)x($maxmsg+6), "\n\n" or croak $OS_ERROR;
 
-  @ARGV = @saveargv;
+  @ARGV = @saveargv; ## no critic
 
   if($opts->{'help'}) {
-    print qq(
+    print <<'EOT' or croak $ERRNO;
  -debug           # Enable extra debugging
  -port   <9000>   # Listen on this port (overrides configuration file)
  -hostname <*>    # Listen on this interface x (overrides configuration file)
@@ -145,17 +145,18 @@ sub run {
    kill -TERM `cat eg/proserver.myhostname.pid`
 
  To restart the server:
-   kill -USR1 `cat eg/proserver.myhostname.pid`\n\n);
+   kill -USR1 `cat eg/proserver.myhostname.pid`
+EOT
     return;
   }
 
   if(!$opts->{'inifile'}) {
     $opts->{'inifile'} = File::Spec->catfile('eg', 'proserver.ini');
-    print {*STDERR} qq(Using default '$opts->{'inifile'}' file.\n);
+    $class->log(qq(Using default '$opts->{'inifile'}' file.));
   }
 
   if(!-e $opts->{'inifile'}) {
-    print {*STDERR} qq(Invalid configuration file: $opts->{'inifile'}. Stopping.\n);
+    $class->log(qq(Invalid configuration file: $opts->{'inifile'}. Stopping.));
     return;
   }
 
@@ -167,16 +168,18 @@ sub run {
   $self->{'config'} = $config;
 
   # Load in the co-ordinates file
-  my $coord_dir   = $config->{'coordshome'};
+  my $coord_dir  = $config->{'coordshome'};
   my %all_coords = ();
 
   for my $coordfile ( glob File::Spec->catfile($coord_dir, '*.xml') ) {
     open my $fh_coord, q(<), $coordfile or croak "Unable to open coordinates file $coordfile";
-    my @coordfull = split m|</COORDINATES>|mx,
-                           join q(),
-                                grep { (s|^\s*(<\?xml.*?>)?(\s*</?DASCOORDINATESYSTEM>\s*)?||mix || $_) &&
-				       (s/\s*$//mx || $_) &&
-				       $_ } <$fh_coord>;
+    my @coordfull;
+    while (my $blk = <$fh_coord>) {
+      $blk =~ s{^\s*(<\?xml.*?>)?(\s*</?DASCOORDINATESYSTEM>\s*)?}{}mix;
+      $blk =~ s/\s*$//mx;
+      push @coordfull, grep { $_ }
+                       split m{</COORDINATES>}mx, $blk;
+    }
     close $fh_coord or croak "Unable to close coordinates file $coordfile";
 
     my %coords;
@@ -186,19 +189,20 @@ sub run {
       $coords{lc $des} = $coords{lc $uri} = {
         'uri'         => $uri,
         'description' => $des,
-        'source'      => my ($t) = m/source\s*=\s*"(.*?)"/mx,
-        'authority'   => my ($a) = m/authority\s*=\s*"(.*?)"/mx,
-        'version'     => my ($v) = m/version\s*=\s*"(.*?)"/mx,
-        'taxid'       => my ($s) = m/taxid\s*=\s*"(.*?)"/mx,
+        'source'      => my ($t)  = m/source\s*=\s*"(.*?)"/mx,
+        'authority'   => my ($au) = m/authority\s*=\s*"(.*?)"/mx,
+        'version'     => my ($v)  = m/version\s*=\s*"(.*?)"/mx,
+        'taxid'       => my ($s)  = m/taxid\s*=\s*"(.*?)"/mx,
       };
     }
-    print {*STDERR} q(Loaded ).((scalar keys %coords)/2)." co-ordinate systems from $coordfile\n";
+    
+    $class->log(q(Loaded ).((scalar keys %coords)/2)." co-ordinate systems from $coordfile");
     %all_coords = (%all_coords, %coords);
   }
-  $self->{'coordinates'} =\%all_coords;
+  $COORDINATES = \%all_coords;
   
   if(!$opts->{'X'} && fork) {
-    print {*STDERR} qq(Parent process detached...\n);
+    $class->log(q(Parent process detached...));
     return;
 
   } elsif($opts->{'X'}) {
@@ -221,38 +225,40 @@ sub run {
     $logfile = File::Spec->catpath($vol, $path, sprintf 'proserver.%s.log', hostname() );
   }
 
-  open STDIN, '<', File::Spec->devnull or croak "Can't open STDIN from the null device: [$!]";
+  open STDIN, '<', File::Spec->devnull or croak "Can't open STDIN from the null device: [$!]"; ## no critic
   if(!$opts->{'X'}) {
     my $errlog = $logfile;
     $errlog    =~ s/\.log$/.err/mx;
-    print {*STDERR} qq(Logging STDOUT to $logfile and STDERR to $errlog\n);
-    open STDOUT, '>', $logfile or croak "Can't open STDOUT to $logfile: [$!]";
-    open STDERR, '>', $errlog  or croak "Can't open STDERR to STDOUT: [$!]";
+    $class->log(qq(Logging STDOUT to $logfile and STDERR to $errlog));
+    open STDOUT, '>>', $logfile or croak "Can't open STDOUT to $logfile: [$!]"; ## no critic
+    open STDERR, '>>', $errlog  or croak "Can't open STDERR to STDOUT: [$!]";   ## no critic
   }
 
   if(exists $config->{'ensemblhome'}) {
-    my ($eroot) = $config->{'ensemblhome'} =~ m|([a-zA-Z0-9_/\.\-]+)|mx;
+    my ($eroot) = $config->{'ensemblhome'} =~ m{([a-zA-Z0-9_/\.\-]+)}mx;
     $ENV{'ENS_ROOT'}     = $eroot;
     unshift @INC, File::Spec->catdir($eroot, 'ensembl' , 'modules');
-    print {*STDERR} qq(Set ENS_ROOT to $ENV{'ENS_ROOT'}\n);
+    $class->log(qq(Set ENS_ROOT to $ENV{'ENS_ROOT'}));
   }
 
   if(exists $config->{'oraclehome'}) {
     $ENV{'ORACLE_HOME'}  = $config->{'oraclehome'};
-    print {*STDERR} qq(Set ORACLE_HOME to $ENV{'ORACLE_HOME'}\n);
+    $class->log(qq(Set ORACLE_HOME to $ENV{'ORACLE_HOME'}));
   }
 
   if(exists $config->{'bioperlhome'}) {
-    my ($broot) = $config->{'bioperlhome'} =~ m|([a-zA-Z0-9_/\.\-]+)|mx;
+    my ($broot) = $config->{'bioperlhome'} =~ m{([a-zA-Z0-9_/\.\-]+)}mx;
     $ENV{'BIOPERL_HOME'} = $broot;
     unshift @INC, $broot;
-    print {*STDERR} qq(Set BIOPERL_HOME to $ENV{'BIOPERL_HOME'}\n);
+    $class->log(qq(Set BIOPERL_HOME to $ENV{'BIOPERL_HOME'}));
   }
 
   $self->{'logformat'} = $config->logformat();
 
   # Spawn up to max server processes, and then run them.  Exit
   # when they are done.
+  
+  $class->log(q(Proserver started));
 
   $self->server_spawn($config->maxclients());
   $poe_kernel->run();
@@ -291,7 +297,8 @@ sub server_spawn {
 ### bookkeeping information, then fork the initial child processes.
 
 sub server_start {
-  my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
+  my @args = @_;
+  my ( $kernel, $heap ) = @args[ KERNEL, HEAP ]; ## no critic
   my $config = $heap->{'self'}->{'config'};
 
   $heap->{server} = POE::Wheel::SocketFactory->new
@@ -316,9 +323,9 @@ sub server_start {
   $heap->{children}   = {};
   $heap->{is_a_child} = 0;
 
-  carp sprintf qq(Server %d has begun listening on %s:%d\n),
+  carp sprintf q(Server %d has begun listening on %s:%d),
     $PID,
-    $config->interface(),
+    $config->interface() || q(*),
     $config->port();
 
   $kernel->yield('do_fork');
@@ -330,10 +337,12 @@ sub server_start {
 ### children, signal them to shutdown too.
 
 sub server_stop {
-  my $heap = $_[HEAP];
+  my @args = @_;
+  my $heap = $args[HEAP];
   DEBUG and carp "Server $PID stopped.\n";
   if ( my @children = keys %{ $heap->{children} } ) {
     DEBUG and carp "Server $PID is signaling children to stop.\n";
+    print {*STDOUT} qq([ @{[scalar(localtime)]} ] Server received shutdown signal.\n) or croak $ERRNO;
     kill INT => @children;
   }
   return $heap->{'self'}->remove_pidfile();
@@ -342,7 +351,8 @@ sub server_stop {
 ### The server session has encountered an error.  Shut it down.
 
 sub server_got_error {
-  my ( $heap, $syscall, $errno, $error ) = @_[ HEAP, ARG0 .. ARG2 ];
+  my @args = @_;
+  my ( $heap, $syscall, $errno, $error ) = @args[ HEAP, ARG0 .. ARG2 ];
   DEBUG and
     carp( "Server $PID got $syscall error $errno: $error\n",
 	  "Server $PID is shutting down.\n",
@@ -356,7 +366,8 @@ sub server_got_error {
 ### Fork off as many child processes as we need.
 
 sub server_do_fork {
-  my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
+  my @args = @_;
+  my ( $kernel, $heap ) = @args[ KERNEL, HEAP ];
 
   return if $heap->{is_a_child};
 
@@ -395,17 +406,18 @@ sub server_do_fork {
 ### The server session received SIGHUP.  Re-execute this process, remembering any argv options
 
 sub server_got_sig_hup {
+  my (@args) = @_;
   DEBUG and carp "Server $PID received SIGHUP|USR1.\n";
 
   #########
   # shutdown children
   #
-  server_stop(@_);
+  server_stop(@args);
 
   #########
   # exec(self)
   #
-  print {*STDERR} qq(0=$PROGRAM_NAME, argv=@ARGV\n);
+  __PACKAGE__->log(qq(0=$PROGRAM_NAME, argv=@ARGV));
   return exec $PROGRAM_NAME, @ARGV;
 }
 
@@ -422,7 +434,8 @@ sub server_got_sig_int {
 ### list, and trigger more fork() calls to spawn new children.
 
 sub server_got_sig_chld {
-  my ( $kernel, $heap, $child_pid ) = @_[ KERNEL, HEAP, ARG1 ];
+  my @args = @_;
+  my ( $kernel, $heap, $child_pid ) = @args[ KERNEL, HEAP, ARG1 ];
 
   if ( delete $heap->{children}->{$child_pid} ) {
     DEBUG and carp "Server $PID received SIGCHLD.\n";
@@ -435,15 +448,16 @@ sub server_got_sig_chld {
 ### client handler session to parse the request and respond to it.
 
 sub server_got_connection {
-  my ( $heap, $socket, $peer_addr, $peer_port ) = @_[ HEAP, ARG0, ARG1, ARG2 ];
+  my @args = @_;
+  my ( $heap, $socket, $peer_addr, $peer_port ) = @args[ HEAP, ARG0, ARG1, ARG2 ];
 
   DEBUG and carp "Server $PID received a connection.\n";
 
   POE::Session->create(
 		       inline_states =>
-		       { _start      => sub { eval { client_start(@_); }; carp $EVAL_ERROR if($EVAL_ERROR); },
+		       { _start      => sub { my @args = @_; eval { client_start(@args); }; carp $EVAL_ERROR if($EVAL_ERROR); },
 			 _stop       => \&client_stop,
-			 got_request => sub { eval { client_got_request(@_); }; carp $EVAL_ERROR if($EVAL_ERROR); },
+			 got_request => sub { my @args = @_; eval { client_got_request(@args); }; carp $EVAL_ERROR if($EVAL_ERROR); },
 			 got_flush   => \&client_flushed_request,
 			 got_error   => \&client_got_error,
 			 _parent     => sub { 0 },
@@ -466,7 +480,8 @@ sub server_got_connection {
 ### wheel to begin interacting with it.
 
 sub client_start {
-  my $heap = $_[HEAP];
+  my @args = @_;
+  my $heap = $args[HEAP];
 
   $heap->{client} = POE::Wheel::ReadWrite->new(
 					       Handle       => $heap->{socket},
@@ -476,14 +491,15 @@ sub client_start {
 					       FlushedEvent => 'got_flush',
 					      );
 
-  DEBUG and carp "Client handler $PID/", $_[SESSION]->ID, " started.\n";
+  DEBUG and carp "Client handler $PID/", $args[SESSION]->ID, " started.\n";
   return;
 }
 
 ### The client handler has stopped.  Log that fact.
 
 sub client_stop {
-  DEBUG and carp "Client handler $PID/", $_[SESSION]->ID, " stopped.\n";
+  my @args = @_;
+  DEBUG and carp "Client handler $PID/", $args[SESSION]->ID, " stopped.\n";
   return;
 }
 
@@ -494,10 +510,11 @@ sub client_stop {
 ### HTTP::Response object in response.
 
 sub client_got_request {
-  my ( $heap, $request) = @_[ HEAP, ARG0 ];
+  my @args = @_;
+  my ( $heap, $request) = @args[ HEAP, ARG0 ];
 
   DEBUG and
-    carp "Client handler $PID/", $_[SESSION]->ID, " is handling a request.\n";
+    carp "Client handler $PID/", $args[SESSION]->ID, " is handling a request.\n";
 
   if ( $request->isa('HTTP::Response') ) {
     $heap->{client}->put($request);
@@ -512,25 +529,18 @@ sub client_got_request {
 }
 
 sub response_xsl {
-  my ($heap, $request, $response, $call) = @_;
+  my ($heap, $request, $call) = @_;
   my $config   = $heap->{'self'}->{'config'};
+  my $response = HTTP::Response->new(200);
   $response->content_type('text/xsl');
   $response->content($config->adaptor()->das_xsl({'call'=>$call}));
-  return;
+  return $response;
 }
 
 sub response_general {
-  my ($heap, $request, $response, $dsn, $call) = @_;
+  my ($heap, $request, $dsn, $call) = @_;
   
-  my $method   = "das_$call";
-  if(substr($call, -3, 3) eq 'xsl') {
-    $method = 'das_xsl';
-    $response->content_type('text/xsl');
-
-  } elsif($call eq 'homepage') {
-    $response->content_type('text/html');
-  }
-
+  my $response;
   my $cgi;
   my $http_method = lc $request->method();
 
@@ -546,7 +556,34 @@ sub response_general {
   }
 
   my $config  = $heap->{'self'}->{'config'};
-  my $adaptor = $config->adaptor($dsn);
+  eval {
+    my $adaptor = $config->adaptor($dsn);
+
+    # Perform authentication (if specified)
+    if (my $authenticator = $adaptor->authenticator()) {
+      $response = $authenticator->authenticate({
+                                                  'socket'    => $heap->{'socket'},
+                                                  'peer_addr' => $heap->{'peer_addr'},
+                                                  'peer_port' => $heap->{'peer_port'},
+                                                  'request'   => $request,
+                                                  'cgi'       => $cgi,
+                                                  'call'      => $call,
+                                                  });
+      # If the authenticator returns a response, use it (exit the eval)
+      defined $response && return;
+    }
+      
+  $response = HTTP::Response->new(200);
+  my $method   = "das_$call";
+  if(substr($call, -3, 3) eq 'xsl') {
+    $method = 'das_xsl';
+    $response->content_type('text/xsl');
+  } elsif($call eq 'homepage') {
+    $response->content_type('text/html');
+  } else {
+    $response->content_type('text/xml');
+  }
+    
   my $query   = {
 		 # Features command / shared:
 		 'segments'    => [$cgi->param('segment')],
@@ -566,11 +603,8 @@ sub response_general {
 		 # Interaction command:
 		 'interactors' => [$cgi->param('interactor')],
 		 'details'     => [$cgi->param('detail')],
-		 # Sources command:
-		 'allcoos'     => $heap->{'self'}->{'coordinates'} || {},
 		};
 
-  eval {
     if($adaptor->implements($call) ||
        $call   eq 'homepage'       ||
        $method eq 'das_xsl') {
@@ -582,7 +616,9 @@ sub response_general {
 
         my $enc = $request->header('Accept-Encoding') || q();
         if($enc =~ /gzip/mix) {
-	  DEBUG and carp 'Client accepts compression';
+	  if(DEBUG) {
+	    carp 'Client accepts compression';
+	  }
 	  $use_gzip = 1;
         }
       }
@@ -623,7 +659,7 @@ sub response_general {
       $response->header('X-DAS-Status' => 404);
       $response->content('Bad stylesheet (requested stylesheet unknown)');
 
-    } elsif(not exists $WRAPPERS->{$call}) {
+    } elsif(!exists $WRAPPERS->{$call}) {
       $response->content_type('text/plain');
       $response->header('X-DAS-Status' => 400);
       $response->content("Bad command (command not recognized: $call)");
@@ -637,29 +673,31 @@ sub response_general {
 
   if($EVAL_ERROR) {
     carp $EVAL_ERROR;
+    $response = HTTP::Response->new(500);
     $response->content_type('text/plain');
-    $response->code(500); #?
     $response->header('X-DAS-Status' => 500);
     $response->content("Bad data source $dsn (error processing command: $call)");
   }
 
-  return;
+  return $response;
 }
 
 sub response_dsn {
-  my ($heap, $request, $response) = @_;
+  my ($heap, $request) = @_;
   my $config  = $heap->{'self'}->{'config'};
-  my $resp = $WRAPPERS->{'dsn'}->{'open'};
+  my $resp    = $WRAPPERS->{'dsn'}->{'open'};
   for my $adaptor (sort { lc $a->dsn cmp lc $b->dsn } grep { defined $_ } $config->adaptors()) {
     $resp .= $adaptor->das_dsn();
   }
   $resp .= $WRAPPERS->{'dsn'}->{'close'};
+  my $response = HTTP::Response->new(200);
+  $response->content_type('text/xml');
   $response->content($resp);
-  return;
+  return $response;
 }
 
 sub response_sources {
-  my ($heap, $request, $response, $call) = @_;
+  my ($heap, $request, $call) = @_;
   # Note that structure of 'sources' call is backwards (baseuri/das/sources/<dsn>)
   my $config  = $heap->{'self'}->{'config'};
   my %data;
@@ -672,14 +710,16 @@ sub response_sources {
   my $resp = $WRAPPERS->{'sources'}->{'open'};
   while (my ($s_uri, $s_data) = each %data) {
     my @versions = keys %{$s_data};
+    if(!scalar @versions) {
+      next;
+    }
 
-    for (my $i=0; $i<scalar @versions; $i++) {
+    for my $i (0..(scalar @versions -1)) {
       eval {
         $resp .= $s_data->{$versions[$i]}->das_sourcedata({
-          'skip_open'  => $i > 0,
-          'skip_close' => $i+1 < scalar @versions,
-          'allcoos'    => $heap->{'self'}->{'coordinates'},
-        });
+                                                           'skip_open'  => $i > 0,
+                                                           'skip_close' => $i+1 < scalar @versions,
+                                                          });
       };
       if ($EVAL_ERROR) {
         carp "Error generating source data for '$versions[$i]':\n$EVAL_ERROR\n";
@@ -687,13 +727,17 @@ sub response_sources {
     }
   }
   $resp .= $WRAPPERS->{'sources'}->{'close'};
+  
+  my $response = HTTP::Response->new(200);
+  $response->content_type('text/xml');
   $response->content($resp);
-  return;
+  return $response;
 }
 
 sub response_homepage {
-  my ($heap, $request, $response) = @_;
+  my ($heap, $request) = @_;
   my $config  = $heap->{'self'}->{'config'};
+  my $response = HTTP::Response->new(200);
   $response->content_type('text/html');
   my $content = qq(<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
@@ -723,30 +767,33 @@ Bioinformatics 2007; <a href="http://bioinformatics.oxfordjournals.org/cgi/conte
     $content .= qq(<p>This server has no configured maintainer.</p>\n);
   }
   
-  $content .= sprintf q(<p>Perform a <a href="%s://%s:%s%s/das/dsn">DSN</a> or <a href="%1$s://%2$s:%3$s%4$s/das/sources">SOURCES</a> request.</p>)."\n",
-  $config->response_protocol, $config->response_hostname, $config->response_port, $config->response_baseuri;
+  $content .= sprintf q(<p>Perform a <a href="%s://%s:%s%s/das/dsn">DSN</a> or <a href="%1$s://%2$s:%3$s%4$s/das/sources">SOURCES</a> request.</p>)."\n", ## no critic
+              $config->response_protocol(),
+	      $config->response_hostname(),
+	      $config->response_port(),
+	      $config->response_baseuri();
   if(scalar $config->adaptors()) {
-    $content .= qq(<table><thead><tr><th>Source</th><th>Mapmaster</th><th>Description</th><th>Capabilities</th></tr></thead><tbody>
-@{[map {
-  my $mm = $_->mapmaster();
-  $mm    = $mm?qq(<a href="$mm">$mm</a>):'-';
-  sprintf q(<tr><td><a href="%s://%s:%s%s/das/%s">%5$s</a></td><td>%s</td><td>%s</td><td>%s</td></tr>)."\n",
-  $config->response_protocol, $config->response_hostname, $config->response_port, $config->response_baseuri,
-  $_->dsn(),
-  $mm,
-  $_->description(),
-  $_->das_capabilities() || '-';
-} sort { lc $a->dsn cmp lc $b->dsn } grep { defined $_ } $config->adaptors()]}
-</tbody></table>\n);
+    $content .= qq(<table><thead><tr><th>Source</th><th>Mapmaster</th><th>Description</th><th>Capabilities</th></tr></thead><tbody>@{[map {
+      my $mm = $_->mapmaster();
+      $mm    = $mm?qq(<a href="$mm">$mm</a>):'-';
+      sprintf q(<tr><td><a href="%s://%s:%s%s/das/%s">%5$s</a></td><td>%s</td><td>%s</td><td>%s</td></tr>)."\n",
+              $config->response_protocol(),
+              $config->response_hostname(),
+              $config->response_port(),
+              $config->response_baseuri(),
+              $_->dsn(),
+              $mm,
+              $_->description(),
+              $_->das_capabilities() || '-';
+} sort { lc $a->dsn cmp lc $b->dsn } grep { defined $_ } $config->adaptors()]}</tbody></table>\n);
   } else {
     $content .= qq(<br /><b>No adaptors configured.</b>\n);
   }
 
   $content .= '<ul>';
-  for my $module ('Bio::Das::ProServer',
-		  'Bio::Das::ProServer::SourceAdaptor',
-		  'Bio::Das::ProServer::SourceHydra',
+  for my $module ((map { 'Bio::Das::'.$_ }                                      sort keys %Bio::Das::),
 		  (map { 'Bio::Das::ProServer::'.$_ }                           sort keys %Bio::Das::ProServer::),
+		  (map { 'Bio::Das::ProServer::Authenticator::'.$_ }            sort keys %Bio::Das::ProServer::Authenticator::),
 		  (map { 'Bio::Das::ProServer::SourceAdaptor::'.$_ }            sort keys %Bio::Das::ProServer::SourceAdaptor::),
 		  (map { 'Bio::Das::ProServer::SourceAdaptor::Transport::'.$_ } sort keys %Bio::Das::ProServer::SourceAdaptor::Transport::),
 		  (map { 'Bio::Das::ProServer::SourceHydra::'.$_ }              sort keys %Bio::Das::ProServer::SourceHydra::),
@@ -758,8 +805,8 @@ Bioinformatics 2007; <a href="http://bioinformatics.oxfordjournals.org/cgi/conte
 
     my $cpkg  = substr $module, 0, -2;
     my $str   = $cpkg->VERSION;
-    my $vers  = $str?"v$str":'unknown version';
-    $content .= qq(<li>$cpkg $vers</li>\n);
+    $str || next;
+    $content .= qq(<li>$cpkg v$str</li>\n);
   }
 
   $content .= qq(
@@ -770,7 +817,7 @@ Bioinformatics 2007; <a href="http://bioinformatics.oxfordjournals.org/cgi/conte
 </html>\n);
 
   $response->content($content);
-  return;
+  return $response;
 }
 
 sub build_das_response {
@@ -781,48 +828,49 @@ sub build_das_response {
   #########
   # Handle DAS responses here
   #
-  my $response     = HTTP::Response->new(200);
-  $response->header('X-DAS-Server' => $config->server_version);
-  $response->header('X-DAS-Status' => 200);
-  $response->content_type('text/xml');
+  my $response;
   my $uri          = $request->uri();
-  my ($dsn, $call) = $uri =~ m|/das1?(?:/([^/\?\#]+))(?:/([^/\?\#]+))?|mx;
+  my ($dsn, $call) = $uri =~ m{/das1?(?:/([^/\?\#]+))(?:/([^/\?\#]+))?}mx;
   $dsn           ||= q();
 
   if($dsn && !$call) {
     $call = 'homepage';
   }
 
-  if($dsn eq 'dsn.xsl') {
-    response_xsl($heap, $request, $response, 'dsn.xsl');
-    
+  if($dsn eq 'dsn.xsl') { ## no critic
+    $response = response_xsl($heap, $request, 'dsn.xsl');
+
   } elsif($dsn eq 'sources.xsl' || $call eq 'sources.xsl') {
-    response_xsl($heap, $request, $response, 'sources.xsl');
-    
+    $response = response_xsl($heap, $request, 'sources.xsl');
+
   } elsif($dsn && $config->knows($dsn)) {
-    response_general($heap, $request, $response, $dsn, $call);
-    
+    $response = response_general($heap, $request, $dsn, $call);
+
   } elsif($dsn eq 'sources') {
-    response_sources($heap, $request, $response, $call);
-    
+    $response = response_sources($heap, $request, $call);
+
   } elsif($dsn eq 'dsn') {
-    response_dsn($heap, $request, $response);
-    
+    $response = response_dsn($heap, $request);
+
   } elsif(!$dsn) {
-    response_homepage($heap, $request, $response);
-    
+    $response = response_homepage($heap, $request);
+
   } else {
+    $response = HTTP::Response->new(200);
     $response->content_type('text/plain');
     $response->header('X-DAS-Status' => 401);
     $response->content("Bad data source (data source unknown: $dsn)\nuri=@{[$uri||q()]}, dsn=@{[$dsn||q()]}, call=@{[$call||q()]}");
   }
   
   $response->content_length(length $response->content);
-
   #########
   # Add custom X-DAS headers
   #
-  $response->header('X-DAS-Version'      => $config->das_version);
+  $response->header('X-DAS-Version' => $config->das_version);
+  $response->header('X-DAS-Server'  => $config->server_version);
+  if (!$response->header('X-DAS-Status')) {
+    $response->header('X-DAS-Status'  => $response->code());
+  }
 
   if($dsn && $config->knows($dsn) && (my $adaptor = $config->adaptor($dsn))) {
     eval {
@@ -850,10 +898,10 @@ sub build_das_response {
 
   if($heap->{'method'} &&
      $heap->{'method'} eq 'cgi') {
-    print {*STDERR} $logline, "\n";
+    __PACKAGE__->log($logline);
 
   } else {
-    print $logline, "\n";
+    print $logline, "\n" or croak $OS_ERROR;
   }
 
   return $response;
@@ -863,11 +911,12 @@ sub build_das_response {
 ### which also closes the socket.
 
 sub client_got_error {
-  my ( $heap, $operation, $errnum, $errstr ) = @_[ HEAP, ARG0, ARG1, ARG2 ];
+  my @args = @_;
+  my ( $heap, $operation, $errnum, $errstr ) = @args[ HEAP, ARG0, ARG1, ARG2 ];
   DEBUG and
-    carp( "Client handler $PID/", $_[SESSION]->ID,
+    carp( "Client handler $PID/", $args[SESSION]->ID,
 	  " got $operation error $errnum: $errstr\n",
-	  "Client handler $PID/", $_[SESSION]->ID, " is shutting down.\n"
+	  "Client handler $PID/", $args[SESSION]->ID, " is shutting down.\n"
 	);
   return delete $heap->{client};
 }
@@ -876,11 +925,12 @@ sub client_got_error {
 ### done with the client connection, so stop the ReadWrite wheel.
 
 sub client_flushed_request {
-  my $heap = $_[HEAP];
+  my @args = @_;
+  my $heap = $args[HEAP];
   DEBUG and
-    carp( "Client handler $PID/", $_[SESSION]->ID,
+    carp( "Client handler $PID/", $args[SESSION]->ID,
 	  " flushed its response.\n",
-	  "Client handler $PID/", $_[SESSION]->ID, " is shutting down.\n"
+	  "Client handler $PID/", $args[SESSION]->ID, " is shutting down.\n"
 	);
   return delete $heap->{client};
 }
@@ -889,11 +939,11 @@ sub client_flushed_request {
 
 sub make_pidfile {
   my ($self, $pidfile) = @_;
-  my ($spidfile) = $pidfile =~ /([a-zA-Z0-9\.\/_\-]+)/mx;
-  print {*STDERR} qq(Writing pidfile $spidfile\n);
+  my ($spidfile)       = $pidfile =~ /([a-zA-Z0-9\.\/_\-]+)/mx;
+  __PACKAGE__->log(qq(Writing pidfile $spidfile));
   $self->{'pidfile'} = $pidfile;
   open my $fh, '>', $spidfile or croak "Cannot create pid file: $ERRNO\n";
-  print {$fh} "$PID\n";
+  print {$fh} "$PID\n" or croak $OS_ERROR;
   close $fh or carp "Error closing pid file: $ERRNO";
   return $PID;
 }
@@ -908,34 +958,33 @@ sub remove_pidfile {
   return;
 }
 
+sub log { ## no critic
+  my ($self, @args) = @_;
+  print {*STDERR} (strftime '[%Y-%m-%d %H:%M:%S] ', localtime), @args, "\n" or croak $OS_ERROR;
+  return;
+}
+
 __END__
 
 =head1 NAME
 
-  Bio::Das::ProServer
+Bio::Das::ProServer
 
-=head1 AUTHOR
+=head1 VERSION
 
-Roger Pettett <rmp@sanger.ac.uk>.
+$LastChangedRevision: 457 $
 
-=head1 USAGE
+=head1 SYNOPSIS
 
-  eg/proserver
+  eg/proserver -help
 
 =head1 DESCRIPTION
 
   ProServer is a server implementation of the DAS protocol.
+  http://biodas.org/
 
   ProServer is based on example preforking POEserver at
   http://poe.perl.org/?POE_Cookbook/Web_Server_With_Forking
-
-=head1 REQUIRED ARGUMENTS
-
-  None
-
-=head1 OPTIONS
-
-  See -h
 
 =head1 DIAGNOSTICS
 
@@ -944,28 +993,106 @@ Roger Pettett <rmp@sanger.ac.uk>.
 
   Otherwise stdout logs to proserver-hostname.log and stderr to proserver-hostname.err
 
-=head1 EXIT STATUS
-
-=head1 CONFIGURATION
+=head1 CONFIGURATION AND ENVIRONMENT
 
   See eg/proserver.ini
 
+=head1 SUBROUTINES/METHODS
+
+=head2 run
+
+=head2 DEBUG
+
+=head2 TESTING_CHURN
+
+=head2 server_spawn
+
+=head2 server_start
+
+=head2 server_stop
+
+=head2 server_got_error
+
+=head2 server_do_fork
+
+=head2 server_got_sig_hup
+
+=head2 server_got_sig_int
+
+=head2 server_got_sig_chld
+
+=head2 server_got_connection
+
+=head2 client_start
+
+=head2 client_stop
+
+=head2 client_got_request
+
+=head2 response_xsl
+
+=head2 response_general
+
+=head2 response_dsn
+
+=head2 response_sources
+
+=head2 response_homepage
+
+=head2 build_das_response
+
+=head2 client_got_error
+
+=head2 client_flushed_request
+
+=head2 make_pidfile
+
+=head2 remove_pidfile
+
+=head2 log
+
 =head1 DEPENDENCIES
 
-  See Makefile.PL
+Bio::Das::ProServer::Config
+CGI :cgi
+HTTP::Request
+HTTP::Response
+Compress::Zlib
+Getopt::Long
+POE
+POE::Filter::HTTPD
+POE::Wheel::ReadWrite
+POE::Wheel::SocketFactory
+POSIX setsid strftime
+File::Spec
+Sys::Hostname
+Bio::Das::ProServer::SourceAdaptor
+Bio::Das::ProServer::SourceHydra
+Socket
+English
+Carp
 
 =head1 INCOMPATIBILITIES
 
 =head1 BUGS AND LIMITATIONS
 
+=head1 AUTHOR
+
+$Author: Roger Pettett$
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2007 GRL (The Sanger Institute)
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.  See DISCLAIMER.txt for
-disclaimers of warranty.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
-

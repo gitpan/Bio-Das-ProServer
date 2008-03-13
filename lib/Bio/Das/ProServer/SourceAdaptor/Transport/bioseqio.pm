@@ -1,12 +1,12 @@
 #########
 # Author:        Andreas Kahari, andreas.kahari@ebi.ac.uk
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       ?
-# Last Modified: $Date: 2007/11/20 20:12:21 $
-# Id:            $Id: bioseqio.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bioseqio.pm,v $
-# $HeadURL$
-# 
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Id:            $Id: bioseqio.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bioseqio.pm,v $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bioseqio.pm $
+#
 package Bio::Das::ProServer::SourceAdaptor::Transport::bioseqio;
 use strict;
 use warnings;
@@ -16,7 +16,7 @@ use Bio::DB::Flat;
 use Carp;
 use English qw(-no_match_vars);
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my $self = shift;
@@ -48,7 +48,7 @@ sub init {
 }
 
 sub query {
-  my $self = shift;
+  my ($self, $query) = @_;
 
   if (defined $self->{_data} &&
       $self->{_data}->display_name eq $query) {
@@ -56,10 +56,10 @@ sub query {
   }
 
   if (defined $self->config->{index}) {
-    return $self->_query_indexed(@_);
+    return $self->_query_indexed($query);
   }
 
-  return $self->_query_sequentially(@_);
+  return $self->_query_sequentially($query);
 }
 
 #########
@@ -74,14 +74,12 @@ sub _query_sequentially {
   my $fname  = $self->{filename} || $self->config->{filename};
   my $format = $self->{format}   || $self->config->{format};
 
-    open my $fh, q(<), $fname or croak "Can't open '$fname' for reading: $ERRNO";
+  $self->{_data} = Bio::Seq->new( -display_id => 'notfound' );
 
   my $seqio = Bio::SeqIO->new(
-			      -fh     => $fh,
-			      -format => $format
+			      -file   => $fname,
+			      -format => $format,
 			     );
-
-  $self->{_data} = new Bio::Seq( -display_id => 'notfound' );
 
   while (defined (my $seq = $seqio->next_seq())) {
     if ($seq->display_name eq $query) {
@@ -89,8 +87,6 @@ sub _query_sequentially {
       last;
     }
   }
-
-  close $fh or carp "Error closing file: $ERRNO";
 
   return $self->{_data};
 }
@@ -127,7 +123,7 @@ supports.
 
 =head1 VERSION
 
-$Revision: 2.70 $
+$Revision: 453 $
 
 =head1 SYNOPSIS
 

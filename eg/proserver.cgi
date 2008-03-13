@@ -1,9 +1,9 @@
 #!/usr/local/bin/perl
 #########
 # Author:        rmp
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       2003-05-22
-# Last Modified: $Date: 2007/11/20 20:12:20 $
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
 # Source:        $Source $
 # Id:            $Id $
 #
@@ -13,12 +13,13 @@
 # so, as is, this might be best run inside FastCGI
 #
 package proserver;
+use lib qw(../blib/lib ../lib);
 use Bio::Das::ProServer;
 use strict;
 use warnings;
 use Carp;
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 main();
 0;
@@ -36,7 +37,7 @@ sub main {
   }
 
   my $config   = Bio::Das::ProServer::Config->new({'inifile' => $cfgfile,});
-  my $heap     = {'method' => 'cgi','self' => {'config' => $config,},};
+  my $heap     = {'method' => 'cgi','self' => {'config' => $config,'logformat'=>$config->logformat()},};
   my $request  = HTTP::Request->new( 'GET', $ENV{'REQUEST_URI'}||q() );
   my $response = Bio::Das::ProServer::build_das_response($heap, $request);
 

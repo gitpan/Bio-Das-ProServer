@@ -1,0 +1,374 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <title>ProServer Tutorial</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+  <style type="text/css">
+body {
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 0.9em;
+}
+th {
+  font-weight: normal;
+  font-style: italic;
+}
+table {
+  text-align: left;
+}
+div.code {
+  background-color: rgb(220, 220, 220);
+  border: 1px dotted;
+  padding: 5px;
+}
+  </style>
+</head>
+
+<body>
+
+<h1 style="text-align: center;">ProServer Tutorial</h1>
+
+<p>Andy Jenkinson, EMBL-EBI, 26th February 2008</p>
+
+<p>Mailing list: <a href="http://lists.sanger.ac.uk/mailman/listinfo/proserver-users">http://lists.sanger.ac.uk/mailman/listinfo/proserver-users</a>.</p>
+
+<h2>Overview</h2>
+
+<p>
+  This document is intended to be a quick guide to setting up ProServer to work
+  with a custom set of data such as you may have. The example uses data from a
+  tab-separated GFF file containing a small number of UniProt features. The file
+  is available from <a href="http://www.sanger.ac.uk/Software/analysis/proserver/sample_uniprot.gff"/>here</a>.
+  However, the tutorial may be equally useful for those posessing data in other
+  forms such as relational databases.
+</p>
+
+<p>
+  The tutorial assumes you are familiar with Perl and are operating on a Linux
+  platform.
+</p>
+
+<h2><a name="architecture">Basic Architecture</a></h2>
+
+<p>
+  ProServer is a standalone server, meaning you do not need to run a separate
+  web server such as Apache. It handles all of the communications, query parsing
+  and XML output functions, leaving you to adapt your data to the DAS protocol.
+  This is done by creating a subclass of the
+  <em>Bio::Das::ProServer::SourceAdaptor</em> module.
+</p>
+
+<p>
+  The contract of a SourceAdaptor is to provide the data for a DAS query in a
+  data structure that the ProServer core can understand. This is done by
+  implementing a single method for each DAS command. For example, a DAS source
+  that is to respond to the 'features' command implements the 'build_features'
+  method, which returns an array of hashes. Each hash represents a single
+  feature.
+</p>
+
+<p>
+  ProServer includes various <em>transport</em> modules that exist to make
+  accessing your data easier by reducing the boilerplate code you need to write.
+  For example, the <em>dbi</em> transport for relational databases handles all
+  database connections, statements, results sets etc. Transports also exist for
+  flat files, SRS, the BioPerl and Ensembl APIs, etc.
+</p>
+
+<h2><a name="running">Running ProServer</a></h2>
+
+<p>
+  Before starting to write code, you should know how to run and test it. The
+  ProServer distribution contains a Perl script called 'proserver' that you
+  should use to run proserver. It is in the 'eg' directory. During development,
+  you should run this script with the '-x' option. This prevents the process
+  from forking and directs log output to your terminal rather than to file. Try
+  running the script in your terminal:
+</p>
+<div class="code">
+<pre>
+eg/proserver -x -c eg/proserver.ini
+</pre>
+</div>
+
+<p>
+  You should see the server start with some information about its (default)
+  configuration. If not, you should be able to diagnose the problem. Commonly
+  errors arise from:
+</p>
+<ul>
+  <li>
+    the <strong>Perl interpreter</strong> being installed somewhere other than
+    /usr/local/bin/perl. Edit the script with the correct location (you can find
+    it using the 'which' UNIX command).
+  </li>
+  <li>
+    the <strong>ProServer libraries</strong> cannot be found. Build ProServer
+    as documented in the README file, and run the script from the root proserver
+    directory.
+  </li>
+</ul>
+
+<p>
+  ProServer uses an INI file to configure itself, which you specified using the
+  '-c' command-line option. This INI file defines the port number the server
+  should listen on, the root directory to look for static content and details of
+  the DAS sources it is serving. You will write your own INI file, but for now
+  take a quick look at the example proserver.ini. There are some comments
+  describing the various options.
+</p>
+
+<p>
+  Each section of the INI file is denoted by square brackets. Server options
+  such as port number are in the [general] section. All other sections are
+  treated as DAS sources that the server hosts, each representing an individual
+  source of data. Though each server can host several sources, you will define
+  only one. Create a new file 'eg/tutorial.ini' with this content:
+</p>
+<div class="code">
+<pre>
+[mytutorial]
+state        = on
+adaptor      = tutorial
+</pre>
+</div>
+<p>
+  This file configures ProServer with a DAS source called 'mytutorial' using the
+  'Bio::Das::ProServer::SourceAdaptor::tutorial' adaptor, and turns it on. Now
+  start ProServer with this file instead of the example one:
+</p>
+<div class="code">
+<pre>
+eg/proserver -x -c eg/tutorial.ini
+</pre>
+</div>
+
+<p>
+  By default, ProServer listens for HTTP requests on port 9000. Open a web
+  browser to the URL "http://localhost:9000/das/sources". This runs the
+  'sources' server command, which returns an XML document listing the DAS
+  sources the server is hosting.
+</p>
+<p>
+  Modern web broswers will automatically apply ProServer's XSL stylesheets to
+  transform the XML into a more human readable HTML format. If you get some sort
+  of error at this point, it is probably because ProServer can't find its
+  default stylesheets. <strong>Make sure you are running ProServer from its root
+  directory.</strong>
+</p>
+<p>
+  To see the XML itself, use the 'view source' function of your browser. Though
+  your 'mytutorial' source should be listed, you will see that it is not. Check
+  your terminal to find out why. You will see that ProServer attempted to build
+  a Bio::Das::ProServer::SourceAdaptor::tutorial object, but errored. Of course,
+  no such module exists because you haven't written it yet.
+</p>
+
+<h2><a name="code">Writing a SourceAdaptor</a></h2>
+
+<p>
+  In its most basic form, a SourceAdaptor is a single module extending from the
+  Bio::Das::ProServer::SourceAdaptor package with two methods. Start by creating
+  a new file with the following skeleton content:
+</p>
+<div class="code">
+<pre>
+package Bio::Das::ProServer::SourceAdaptor::tutorial; # package names must take this form
+use strict;
+use base qw(Bio::Das::ProServer::SourceAdaptor); # modules must extend from this
+
+# Set metadata such as the commands supported by this source.
+sub init {
+  my ($self) = @_;
+  $self->{'capabilities'} = { 'features' => '1.0' }; # Implement the features command
+}
+
+# Gather the features annotated in a given segment of sequence.
+sub build_features {
+  my ($self, $args) = @_;
+  my $segment = $args->{'segment'}; # The query segment ID
+  my $start   = $args->{'start'};   # The query start position (optional)
+  my $end     = $args->{'end'};     # The query end position (optional)
+  my @features = ();
+  # do work...
+  return @features;
+}
+
+1;
+</pre>
+</div>
+
+<p>
+  Save this file as <em>lib/Bio/Das/ProServer/SourceAdaptor/tutorial.pm</em>.
+  Now try running the server again. Whenever you make changes to code
+  <strong>Make sure you recreate the ProServer Makefile first</strong> to
+  include the additional file, and re-make the installation:
+</p>
+<div class="code">
+<pre>
+perl Makefile.PL
+make
+eg/proserver -x -c eg/tutorial.ini
+</pre>
+</div>
+
+<p>
+  Now your source should appear in the list. The table has columns for extra
+  details such as the description and coordinate system of the DAS source. We
+  will add these later.
+</p>
+<p>
+  Now we shall expand our 'tutorial' SourceAdaptor to serve our features from a
+  GFF file. To do this, the adaptor should return an array of simple hash
+  structures. The POD documentation for the build_features method in
+  Bio::Das::ProServer::SourceAdaptor contains full details of the format these
+  hash structures can take. There is some flexibility here, but our features
+  will look like this:
+</p>
+<div class="code">
+<pre>
+{
+ 'start'  => $feature_start,
+ 'end'    => $feature_end,
+ 'id'     => $feature_id,        # A unique ID for the feature
+ 'type'   => $feature_type,      # e.g. 'exon', 'snp'
+ 'method' => $annotation_method, # e.g. 'similarity'
+ 'score'  => $annotation_score,  # e.g. '96.5'
+}
+</pre>
+</div>
+
+<p>
+  Take a look at the
+  <a href="http://www.sanger.ac.uk/Software/analysis/proserver/sample_uniprot.gff">
+  GFF file</a>, which contains some features taken from the
+  UniProt DAS source. GFF (Generic Feature Format) files are tab-separated files
+  with standard columns. See the specification at
+  <a href="http://www.sanger.ac.uk/Software/formats/GFF/GFF_Spec.shtml">
+    http://www.sanger.ac.uk/Software/formats/GFF/GFF_Spec.shtml
+  </a>
+  for details.
+</p>
+<p>
+  Expand the <em>build_features</em> method of your <em>tutorial</em> adaptor to
+  do the following:
+</p>
+<ol>
+  <li>Open the file for reading</li>
+  <li>Iterate over each line</li>
+  <li>Build a DAS feature structure for features associated overlap with the query protein
+  <li>Return an array of feature structures</li>
+</ol>
+
+<p>
+  Test your adaptor by checking that ProServer responds appropriately to a
+  request for features within the UniProt protein P15056 (BRAF_HUMAN):
+</p>
+<pre>
+  http://localhost:9000/das/mytutorial/features?segment=P15056
+</pre>
+<p>
+  Once you have finished, your adaptor should look something like this:
+</p>
+<div class="code">
+<pre>
+package Bio::Das::ProServer::SourceAdaptor::tutorial; # package names must take this form
+use strict;
+use base qw(Bio::Das::ProServer::SourceAdaptor); # modules must extend from this
+
+# Set metadata such as the commands supported by this source.
+sub init {
+  my ($self) = @_;
+  $self->{'capabilities'} = { 'features' => '1.0' }; # Implement the features command
+}
+
+# Gather the features annotated in a given segment of sequence.
+sub build_features {
+  my ($self, $args) = @_;
+  my $segment = $args->{'segment'}; # The query segment ID
+  my $start   = $args->{'start'};   # The query start position (optional)
+  my $end     = $args->{'end'};     # The query end position (optional)
+  my @features = ();
+  # do work...
+  
+  open FH, '<', '/tmp/uniprot.gff' or die "Unable to open data file";
+  while (defined (my $line = &lt;FH&gt;)) {
+    chomp $line;
+    my ($f_seg, $method, $type, $f_start, $f_end, $score, $strand, $phase, $f_id) = split /\t/, $line;
+    
+    if ($f_seg eq $segment && (!$start || !$end) || ($f_start <= $end && $f_end >= $start)) {
+      $f_id =~ s/[^=]+=//;
+      
+      my $feature = {
+        'id'     => $f_id,
+        'start'  => $f_start,
+        'end'    => $f_end,
+        'method' => $method,
+        'score'  => $score,
+        'type'   => $type,
+      };
+      
+      push @features, $feature;
+    }
+    
+  }
+  close FH;
+  
+  return @features;
+}
+
+1;
+</pre>
+</div>
+
+<p>
+  You now have your DAS source up and running. However, your source is of more
+  use if it describes itself a little better. You can fill in some of the
+  metadata properties (shown in the <em>sources</em> command) in different ways
+  - in the init method, the INI file or by implementing the relevant method in
+  your SourceAdaptor. It is easiest to define them in the INI file:
+</p>
+<div class="code">
+<pre>
+[mytutorial]
+state        = on
+adaptor      = tutorial
+title        = Tutorial Source
+description  = Some demonstration features taken from UniProt
+coordinates  = UniProt,Protein Sequence => P15056
+dsncreated   = 2007-02-26
+maintainer   = user@domain.com
+doc_href     = http://beta.uniprot.org/uniprot/P15056
+</pre>
+</div>
+
+<p>
+  Once you have filled in these optional properties, start your server again.
+  But this time, allow the server to fork so that it is running as a
+  <i>daemon</i> process. This is done by omitting the '-x' command-line flag.
+</p>
+
+<h2>Further Tasks</h2>
+
+<p>
+  Modify your source to make use of the <em>file</em> Transport. See the POD
+  documentation for <em>Bio::Das::ProServer::SourceAdaptor::Transport::file</em>
+  for details.
+</p>
+
+<p>
+  There are several other SourceAdaptor methods that may be useful to implement.
+  For example, the <em>segment_version</em> method makes your source indicate
+  the version of the segment that it is annotating. This is useful for clients
+  to verify that annotations are based on the same entity. Note that not all
+  coordinate systems have versioned entities - for example, genomic assemblies
+  are versioned as a whole rather than per-entity. The <em>known_segments</em>
+  and <em>length</em> methods, if implemented, allow ProServer to automatically
+  offer the <em>entry_points</em> command, and also filter requests for unknown
+  or out-of-range segments.
+</p>
+
+<p>
+  Of course, to provide this information you would need to store the versions and
+  lengths of all the sequences you annotate, which is worth bearing in mind if you
+  are planning to set up your own DAS source.
+</p>

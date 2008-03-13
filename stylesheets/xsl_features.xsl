@@ -36,7 +36,7 @@ function hideColumn(c){var t=document.getElementById('data');var trs=t.getElemen
     <xsl:for-each select="FEATURE">
       <xsl:sort select="@id"/>
       <tr>
-        <td><xsl:value-of select="@id"/></td>
+        <td><xsl:value-of select="@label"/></td>
         <td><xsl:value-of select="../@id"/></td>
         <td><xsl:value-of select="START"/></td>
         <td><xsl:value-of select="END"/></td>

@@ -2,10 +2,10 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2007/11/20 20:12:21 $ $Author: rmp $
-# Id:            $Id: SourceHydra.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra.pm,v $
-# $HeadURL$
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
+# Id:            $Id: SourceHydra.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra.pm,v $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra.pm $
 #
 # Dynamic SourceAdaptor broker
 #
@@ -16,7 +16,7 @@ use Bio::Das::ProServer::SourceAdaptor;
 use English qw(-no_match_vars);
 use Carp;
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub new {
   my ($class, $defs) = @_;
@@ -31,7 +31,7 @@ sub new {
   return $self;
 }
 
-sub init { }
+sub init {return;}
 
 sub transport {
   my $self = shift;
@@ -61,7 +61,7 @@ sub config {
   return $self->{'config'};
 }
 
-sub sources {}
+sub sources {return;}
 
 1;
 

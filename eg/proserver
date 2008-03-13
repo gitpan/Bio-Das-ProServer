@@ -2,12 +2,12 @@
 #########
 # ProServer DAS Server
 # Author:        rmp
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       2003-05-22
-# Last Modified: $Date: 2007/11/20 20:12:20 $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/eg/proserver,v $
-# Id:            $Id: proserver,v 2.70 2007/11/20 20:12:20 rmp Exp $
-# $HeadURL$
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/eg/proserver,v $
+# Id:            $Id: proserver 453 2008-03-12 14:50:11Z andyjenkinson $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/eg/proserver $
 #
 package proserver;
 use lib qw(./blib/lib ../blib/lib . ..);
@@ -15,7 +15,7 @@ use Bio::Das::ProServer;
 use strict;
 use warnings;
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = q(2.8);#do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 Bio::Das::ProServer->run();
 0;

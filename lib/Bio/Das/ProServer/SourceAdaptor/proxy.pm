@@ -1,13 +1,10 @@
 #########
 # Author:        dj3
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       2005-10-21
-# Last Modified: $Date: 2007/11/20 20:12:21 $
-# Id:            $Id: proxy.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/proxy.pm,v $
-#
-# Passes through all requests to another das server
-# Intended to be inherited from by proxies which do more interesting things
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Id:            $Id: proxy.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/proxy.pm,v $
 #
 package Bio::Das::ProServer::SourceAdaptor::proxy;
 use strict;
@@ -17,32 +14,95 @@ use LWP::UserAgent;
 use Bio::Das::Lite;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 2.70 $ =~ /\d+/g); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
-sub init {
-  my $self                = shift;
-  $self->{'capabilities'} = {
-			     'features'   => '1.0',
-			     'stylesheet' => '1.0',
-			    };
+sub capabilities {
+  return {
+	  features   => '1.0',
+	  stylesheet => '1.0',
+	 };
 }
 
 sub das_stylesheet {
   my $self = shift;
-  return LWP::UserAgent->new->request(HTTP::Request->new('GET', $self->config->{'sourcedsn'}.'/stylesheet'))->content;
+  return LWP::UserAgent->new->request(HTTP::Request->new('GET', $self->config->{sourcedsn}.'/stylesheet'))->content;
 }
 
 sub build_features {
   my ($self, $opts) = @_;
-  my $seg     = $opts->{'segment'};
-  my $start   = $opts->{'start'};
-  my $end     = $opts->{'end'};
-  my $das     = Bio::Das::Lite->new({
-				     'dsn' => $self->config->{'sourcedsn'},
-				    });
-  my @results=();
-  $das->features((exists(${$opts}{'start'})?"$seg:$start,$end":$seg), sub { my $fr = shift; push @results, $fr if $fr->{feature_id}});
+  my $seg   = $opts->{segment};
+  my $start = $opts->{start};
+  my $end   = $opts->{end};
+  my $das   = Bio::Das::Lite->new($self->config->{sourcedsn});
+  my @results;
+  $das->features((exists $opts->{start})?"$seg:$start,$end":$seg,
+                 sub {
+                   my $fr = shift;
+                   if($fr->{feature_id}) {
+		     push @results, $fr;
+		   }
+                 });
   return @results;
 }
 
 1;
+__END__
+
+=head1 NAME
+
+Bio::Das::ProServer::SourceAdaptor::proxy
+
+=head1 VERSION
+
+$LastChangedRevision: 453 $
+
+=head1 SYNOPSIS
+
+Passes through all requests to another das server.
+Intended to be inherited from by proxies which do more interesting things
+
+=head1 DESCRIPTION
+
+=head1 SUBROUTINES/METHODS
+
+=head2 capabilities
+
+=head2 das_stylesheet
+
+=head2 build_features
+
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+=head1 DEPENDENCIES
+
+HTTP::Request
+LWP::UserAgent
+Bio::Das::Lite
+Bio::Das::ProServer::SourceAdaptor
+
+=head1 INCOMPATIBILITIES
+
+=head1 BUGS AND LIMITATIONS
+
+=head1 AUTHOR
+
+$Author: Roger M Pettett$
+
+=head1 LICENSE AND COPYRIGHT
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut

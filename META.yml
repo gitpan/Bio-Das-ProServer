@@ -1,29 +1,39 @@
 --- #YAML:1.0
 name:                Bio-Das-ProServer
-version:             2.070
+version:             2.8
 abstract:            ~
 license:             ~
-generated_by:        ExtUtils::MakeMaker version 6.32
+author:              
+    - Roger M Pettett <rmp@sanger.ac.uk>
+generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
-    CGI:                           
-    Compress::Zlib:                
-    Config::IniFiles:              
-    File::Spec:                    
-    Getopt::Long:                  
-    HTML::Entities:                
-    HTTP::Date:                    
-    HTTP::Request:                 
-    HTTP::Response:                
-    POE:                           
-    POE::Filter::HTTPD:            
-    POE::Wheel::ReadWrite:         
-    POE::Wheel::SocketFactory:     
-    POSIX:                         
-    Socket:                        
-    Sys::Hostname:                 
+    Bio::Das::Lite:                1.051
+    Bio::DB::Flat:                 1.0050021
+    Bio::EnsEMBL::DBSQL::DBAdaptor: 0
+    Bio::EnsEMBL::Registry:        0
+    Bio::Pfam::Structure::Chainset: 0
+    Bio::SeqIO:                    1.0050021
+    Cache::FileCache:              1.05
+    CGI:                           3.33
+    Compress::Zlib:                2.008
+    Config::IniFiles:              2.38
+    DBI:                           1.601
+    File::Spec:                    3.2501
+    Getopt::Long:                  2.37
+    HTML::Entities:                1.35
+    HTTP::Date:                    1.47
+    HTTP::Request:                 1.4
+    HTTP::Response:                1.53
+    LWP::UserAgent:                2.033
+    Net::IP:                       1.25
+    POE:                           0.9999
+    POE::Filter::HTTPD:            1.2188
+    POE::Wheel::ReadWrite:         1.2199
+    POE::Wheel::SocketFactory:     1.2194
+    POSIX:                         1.09
+    Socket:                        1.78
+    Sys::Hostname:                 1.11
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
-    version: 1.2
-author:
-    - Roger M Pettett <rmp@sanger.ac.uk>
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3

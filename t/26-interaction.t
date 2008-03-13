@@ -1,9 +1,7 @@
 use Test::More tests => 1;
 my $sa = SA::InteractionStub->new();
-my $expected_response = q(<INTERACTOR id="001" shortLabel="Interacting protein one" dbSource="FooDB" dbAccessionId="Prot001" dbCoordSys="Foo,Protein Sequence" dbVersion="42"><SEQUENCE>MILWSPSTCSFFWHWCLIAVSVLSSRSKESLRLSWSSDESSASSSSRICPLSNSKS</SEQUENCE></INTERACTOR><INTERACTOR id="002" shortLabel="Interacting protein two" dbSource="FooDB" dbAccessionId="Prot002" dbCoordSys="Foo,Protein Sequence" dbVersion="42"><DETAIL property="description" value="Small protein"/><SEQUENCE>MGVPCLVWCFAVLLCVWGALCAAEDDYGEDDYEGFSSQ</SEQUENCE></INTERACTOR><INTERACTION name="Cuddle interaction" dbSource="CuteDB" dbAccessionId="001-002" dbVersion="3.2"><PARTICIPANT id="001"><DETAIL property="region" value="donor"><RANGE start="4" end="8"/></DETAIL></PARTICIPANT><PARTICIPANT id="002"><DETAIL property="region" value="acceptor"><RANGE start="12" end="14"/></DETAIL></PARTICIPANT></INTERACTION>);
+my $expected_response = q(<INTERACTOR intId="001" shortLabel="Interacting protein one" dbSource="FooDB" dbAccessionId="Prot001" dbCoordSys="Foo,Protein Sequence" dbVersion="42"><SEQUENCE>MILWSPSTCSFFWHWCLIAVSVLSSRSKESLRLSWSSDESSASSSSRICPLSNSKS</SEQUENCE></INTERACTOR><INTERACTOR intId="002" shortLabel="Interacting protein two" dbSource="FooDB" dbAccessionId="Prot002" dbCoordSys="Foo,Protein Sequence" dbVersion="42"><DETAIL property="description" value="Small protein"/><SEQUENCE>MGVPCLVWCFAVLLCVWGALCAAEDDYGEDDYEGFSSQ</SEQUENCE></INTERACTOR><INTERACTION name="Cuddle interaction" dbSource="CuteDB" dbAccessionId="001-002" dbVersion="3.2"><PARTICIPANT intId="001"><DETAIL property="region" value="donor"><RANGE start="4" end="8"/></DETAIL></PARTICIPANT><PARTICIPANT intId="002"><DETAIL property="region" value="acceptor"><RANGE start="12" end="14"/></DETAIL></PARTICIPANT></INTERACTION>);
 
-#open(my $o1, ">out1"); print $o1 $expected_response; close($o1);
-#open(my $o2, ">out2"); print $o2 $sa->das_alignment->({'query'=>'PF08001'}); close($o2);
 my $response = $sa->das_interaction({
 				   'interactors' => ['test'],
 				  });

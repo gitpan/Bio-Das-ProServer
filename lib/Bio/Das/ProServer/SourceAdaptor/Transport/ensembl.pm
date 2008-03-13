@@ -1,12 +1,21 @@
+#########
+# Author:        aj
+# Maintainer:    $Author: andyjenkinson $
+# Created:       2006
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Id:            $Id: ensembl.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source$
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/ensembl.pm $
+#
 package Bio::Das::ProServer::SourceAdaptor::Transport::ensembl;
-
 use strict;
+use warnings;
 use Carp;
+use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::DBSQL::DBAdaptor;
-use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 
-our $VERSION  = do { my @r = (q$Revision: 2.70 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
 
 sub init {
   my ($self) = @_;
@@ -14,6 +23,7 @@ sub init {
   $self->{'_group'}   = $self->config->{'group'};
   $self->_apply_override;
   $self->_load_registry;
+  return;
 }
 
 sub _load_registry {
@@ -23,30 +33,35 @@ sub _load_registry {
     -user => 'anonymous',
     -verbose => $self->{'debug'} );
   Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
+  return;
 }
 
 sub _apply_override {
   my ($self) = @_;
   my $dbname = $self->config->{'dbname'};
+
   if ($dbname) {
     $self->{'debug'} && carp "Overriding database with $dbname\n";
-    my ($species, $group) = $dbname =~ m/([a-z_]+)_([a-z]+)_\d+/;
+    my ($species, $group) = $dbname =~ m/([a-z_]+)_([a-z]+)_\d+/mx;
     $species || croak "Unknown database to override: $dbname";
-    $species = 'multi' if ($species  eq 'ensembl');
+    if ($species  eq 'ensembl') {
+      $species = 'multi';
+    }
     $self->{'_species'} = $species;
     $self->{'_group'}   = $group;
-    
+
     # Creating a new connection will add it to the registry.
     my $dba = Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-      -host    => $self->config->{'host'}     || "localhost",
-      -port    => $self->config->{'port'}     || "3306",
-      -user    => $self->config->{'username'} || "ensro",
+      -host    => $self->config->{'host'}     || 'localhost',
+      -port    => $self->config->{'port'}     || '3306',
+      -user    => $self->config->{'username'} || 'ensro',
       -pass    => $self->config->{'password'},
       -dbname  => $dbname,
       -species => $species,
       -group   => $group,
     );
   }
+  return;
 }
 
 sub adaptor {
@@ -68,7 +83,7 @@ sub slice_adaptor {
   return $self->adaptor($species, $group)->get_SliceAdaptor();
 }
 
-sub chromosome_by_region {
+sub chromosome_by_region { ## no critic
   my ($self, $chr, $start, $end, $species, $group) = @_;
   return $self->slice_adaptor($species, $group)->fetch_by_region('chromosome', $chr, $start, $end);
 }
@@ -96,22 +111,22 @@ sub version {
 sub last_modified {
   my ($self) = @_;
   my $dbc = $self->adaptor()->dbc();
-  my $sth = $dbc->prepare("SHOW TABLE STATUS");
-  $sth->execute;
-  my $server_text = [sort { $b cmp $a }
+  my $sth = $dbc->prepare(q(SHOW TABLE STATUS));
+  $sth->execute();
+  my $server_text = [sort { $b cmp $a } ## no critic
                      keys %{ $sth->fetchall_hashref('Update_time') }
                     ]->[0]; # server local time
-  $sth->finish;
-  $sth = $dbc->prepare("select UNIX_TIMESTAMP(?) as 'unix'");
+  $sth->finish();
+  $sth = $dbc->prepare(q(SELECT UNIX_TIMESTAMP(?) as 'unix'));
   $sth->execute($server_text); # sec since epoch
   my $server_unix = $sth->fetchrow_arrayref()->[0];
-  $sth->finish;
-  return $server_unix;  
+  $sth->finish();
+  return $server_unix;
 }
 
 sub disconnect {
   my $self = shift;
-  Bio::EnsEMBL::Registry->disconnect_all;
+  Bio::EnsEMBL::Registry->disconnect_all();
   $self->{'debug'} and carp "$self performed disconnect\n";
   return;
 }
@@ -121,11 +136,11 @@ __END__
 
 =head1 NAME
 
-Bio::Das::ProServer::SourceAdaptor::Transport::ensembl_registry
+Bio::Das::ProServer::SourceAdaptor::Transport::ensembl
 
 =head1 VERSION
 
-$Revision: 2.70 $
+$LastChangedRevision: 453 $
 
 =head1 SYNOPSIS
 
@@ -139,20 +154,16 @@ and can be used in a species specific or cross-species manner. The main
 advantage of using this Transport is that the registry automatically provides
 access to the latest data available to the installed API.
 
-=head1 AUTHOR
+=head1 SUBROUTINES/METHODS
 
-Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
-
-=head1 METHODS
-
-=head2 init : Post-construction initialisation.
+=head2 init - Post-construction initialisation.
 
   $oTransport->init();
   
   Loads the registry from the Ensembl database, and applies a custom database
   override if specified.
 
-=head2 adaptor : Gets an Ensembl adaptor.
+=head2 adaptor - Gets an Ensembl adaptor.
 
   $oAdaptor = $oTransport->adaptor();
   $oAdaptor = $oTransport->adaptor('human', 'core');
@@ -163,7 +174,7 @@ Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
   Returns:
     L<Bio::EnsEMBL::DBSQL::DBAdaptor>
 
-=head2 slice_adaptor : Gets an Ensembl slice adaptor.
+=head2 slice_adaptor - Gets an Ensembl slice adaptor.
   
   $oAdaptor = $oTransport->slice_adaptor();
   $oAdaptor = $oTransport->slice_adaptor('human', 'core');
@@ -174,7 +185,7 @@ Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
   Returns:
     L<Bio::EnsEMBL::DBSQL::SliceAdaptor>
 
-=head2 gene_adaptor : Gets an Ensembl gene adaptor.
+=head2 gene_adaptor - Gets an Ensembl gene adaptor.
   
   $oAdaptor = $oTransport->gene_adaptor();
   $oAdaptor = $oTransport->gene_adaptor('human', 'core');
@@ -185,7 +196,7 @@ Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
   Returns:
     L<Bio::EnsEMBL::DBSQL::GeneAdaptor>
 
-=head2 chromosome_by_region : Gets a chromosome slice.
+=head2 chromosome_by_region - Gets a chromosome slice.
 
   $oSlice = $oTransport->chromosome_by_region('X');
   $oSlice = $oTransport->chromosome_by_region('X', 123453, 132424);
@@ -200,7 +211,7 @@ Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
   Returns:
     L<Bio::EnsEMBL::Slice>
 
-=head2 chromosomes : Gets all chromosomes.
+=head2 chromosomes - Gets all chromosomes.
 
   $aSlices = $oTransport->chromosomes();
   $aSlices = $oTransport->chromosomes('human', 'core');
@@ -211,7 +222,7 @@ Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
   Returns:
     listref of L<Bio::EnsEMBL::Slice> objects
 
-=head2 gene_by_id : Gets a gene.
+=head2 gene_by_id - Gets a gene.
 
   $oGene = $oTransport->gene_by_id('ENSG00000139618'); # BRCA2
   $oGene = $oTransport->gene_by_id('ENSG00000139618', 'human', 'core');
@@ -223,7 +234,7 @@ Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
   Returns:
     L<Bio::EnsEMBL::Gene>
 
-=head2 genes : Gets all genes.
+=head2 genes - Gets all genes.
 
   $aGenes = $oTransport->genes();
   $aGenes = $oTransport->genes('human', 'core');
@@ -234,15 +245,15 @@ Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
   Returns:
     listref of L<Bio::EnsEMBL::Gene> objects
 
-=head2 version : Gets the Ensembl API's release number.
+=head2 version - Gets the Ensembl API's release number.
 
   $sVersion = $oTransport->version();
   
-=head2 last_modified : Gets a last modified date from the database.
+=head2 last_modified - Gets a last modified date from the database.
 
   $sVersion = $oTransport->version();
 
-=head2 disconnect : ProServer hook to disconnect all connected databases.
+=head2 disconnect - ProServer hook to disconnect all connected databases.
 
   $oTransport->disconnect();
 
@@ -261,6 +272,10 @@ Configured as part of each source's ProServer 2 INI file.
     username (defaults to ensro)
     password
 
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
 =head1 DEPENDENCIES
 
 =over
@@ -275,13 +290,6 @@ Configured as part of each source's ProServer 2 INI file.
 
 =back
 
-=head1 REFERENCES
-
-=over
-
-=item L<http://www.ensembl.org/info/software/Pdoc/ensembl/> Ensembl API
-
-=back
 
 =head1 INCOMPATIBILITIES
 
@@ -291,8 +299,18 @@ None reported
 
 None reported
 
+=head1 REFERENCES
+
+=over
+
+=item L<http://www.ensembl.org/info/software/Pdoc/ensembl/> Ensembl API
+
+=back
+
+=head1 AUTHOR
+
+Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
+
 =head1 LICENSE AND COPYRIGHT
 
 Copyright (c) 2007 EMBL-EBI
-
-=cut

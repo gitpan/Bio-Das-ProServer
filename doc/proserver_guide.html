@@ -3,7 +3,24 @@
 <head>
   <title>ProServer Guide</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-  <link rel="stylesheet" type="text/css" href="proserver_guide.css" >
+  <style type="text/css">
+body {
+  font-family: Verdana,Arial,Helvetica,sans-serif;
+  font-size: 0.9em;
+}
+th {
+  font-weight: normal;
+  font-style: italic;
+}
+table {
+  text-align: left;
+}
+div.code {
+  background-color: rgb(220, 220, 220);
+  border: 1px dotted;
+  padding: 5px;
+}
+  </style>
 </head>
 
 <body>
@@ -42,6 +59,7 @@
   <li>
     <a href="#implementing">Implementing a DAS Source</a>
     <ol>
+      <li><a href="#implementing_code">Code Structure</a></li>
       <li><a href="#implementing_ini">INI Format</a></li>
       <li><a href="#implementing_transports">Transports</a></li>
       <li><a href="#implementing_hydras">Hydras</a></li>
@@ -105,7 +123,7 @@
 
 <h3><a name="features_extensions">DAS Extensions</a></h3>
 
-<p>ProServer v2.7 is a server implementation of the DAS/1.53E specification. This is an extended version of the current 1.53 DAS version. The 1.53 specification is published on the <a href="http://www.biodas.org/documents/spec.html">BioDAS</a> website, and the 1.53E extensions are published at the <a href="http://www.dasregistry.org">DAS Registry</a>.</p>
+<p>ProServer is a server implementation of the DAS/1.53E specification. This is an extended version of the current 1.53 DAS version. The 1.53 specification is published on the <a href="http://www.biodas.org/documents/spec.html">BioDAS</a> website, and the 1.53E extensions are published at the <a href="http://www.dasregistry.org">DAS Registry</a>.</p>
 
 <p>In brief, the 1.53E extensions comprise:</p>
 <ul>
@@ -125,19 +143,18 @@
 
 <h2><a name="install">Installing ProServer</a></h2>
 
-<p>ProServer is hosted at the <a href="http://www.sanger.ac.uk/Software/analysis/proserver/">Wellcome Trust Sanger Institute</a>, and is also available for download from <a href="http://www.cpan.org">CPAN</a>.</p>
+<p>The ProServer code is hosted at <a href="http://sourceforge.net/projects/proserver/">SourceForge</a>, and periodic releases are also available for download from <a href="http://search.cpan.org/~rpettett/">CPAN</a>.</p>
 
 <h3><a name="install_download">Downloading</a></h3>
 
-<p>Check out the code from the Sanger CVS server using the "cvsuser" account. The password is "CVSUSER" (without the quotes):</p>
+<p>Check out the code from SourceForge's Subversion server:</p>
 <div class="code">
 <pre>
-  [bash] cvs -d :pserver:cvsuser@cvs.sanger.ac.uk:/cvsroot/Bio-Das-ProServer login
-  [bash] cvs -d :pserver:cvsuser@cvs.sanger.ac.uk:/cvsroot/Bio-Das-ProServer checkout Bio-Das-ProServer
+svn checkout https://proserver.svn.sourceforge.net/svnroot/proserver/trunk Bio-Das-Proserver
 </pre>
 </div>
 
-<p>ProServer is also distributed as a package via CPAN. It is available for download at the <a href="http://www.cpan.org">website</a> or using the CPAN command-line utility.
+<p>ProServer is also distributed as a package via CPAN. It is available for download at the <a href="http://search.cpan.org/~rpettett/">website</a> or using the CPAN command-line utility.
 
 <h3><a name="install_build">Building</a></h3>
 
@@ -145,17 +162,17 @@
 
 <div class="code">
 <pre>
-  cd Bio-Das-ProServer
-  perl Makefile.PL
-  make
-  make test
+cd Bio-Das-ProServer
+perl Makefile.PL
+make
+make test
 </pre>
 </div>
 
 <p>You may optionally install the ProServer modules into your Perl distribution:</p>
 <div class="code">
 <pre>
-  make install
+make install
 </pre>
 </div>
 
@@ -168,11 +185,11 @@
 <p>ProServer is distributed with an example command-line executable in the <em>eg</em> directory:</p>
 <div class="code">
 <pre>
-  eg/proserver --help
+eg/proserver --help
 </pre>
 </div>
 
-<p>The default proserver.ini file contains details of the configuration options the server understands. Also see the <a href="#implementing_ini">INI Format</a> section for details of configuring DAS sources.</p>
+<p>There is a default proserver.ini file containing details of the configuration options the server understands. Also see the <a href="#implementing_ini">INI Format</a> section for details of configuring DAS sources.</p>
 
 <p>An example CGI script is also provided in the <em>eg</em> directory.</p>
 
@@ -192,7 +209,7 @@
 
 <p>You probably want to expose features of some form, but could you also define a stylesheet to govern the display in clients such as Ensembl or SPICE? If your reference co-ordinate system is unique or not widely used you should provide a reference source offering sequences and entry points, but could you offer mapping alignments with segments from another co-ordinate system?</p>
 
-<p>It is also very useful for your DAS source to be capable of informing clients of the valid entry points you source can annotate, or the types of features. This is especially true for DAS sources with numerous features or many types of features.</p>
+<p>It is also very useful for your DAS source to be capable of informing clients of the valid entry points your source can annotate, or the types of features. This is especially true for DAS sources with numerous features or many types of features.</p>
 
 <h3><a name="designing_usage">Intended Usage</a></h3>
 
@@ -211,13 +228,41 @@
 
 <h2><a name="implementing">Implementing a DAS Source</a></h2>
 
-<p>This section is a developers' guide to implementing a DAS source, intended as a companion to ProServer's POD documentation.  It is assumed that you are somewhat familiar with the concept and basic architecture of DAS, which you can read about on the <a href="http://www.biodas.org">BioDAS website</a>. ProServer also supports the 1.53E extensions as described at the <a href="http://www.dasregistry.org">DAS Registry</a>. Writing a custom DAS source requires intermediate object-oriented Perl programming ability.</p>
+<p>This section is a developers' guide to implementing a DAS source, intended as a companion to ProServer's POD documentation. It is assumed that you are somewhat familiar with the concept and basic architecture of DAS, which you can read about on the <a href="http://www.biodas.org">BioDAS website</a>. ProServer also supports the 1.53E extensions as described at the <a href="http://www.dasregistry.org">DAS Registry</a>. Writing a custom DAS source requires intermediate object-oriented Perl programming ability.</p>
 
 <p>ProServer is designed to be a lightweight DAS server that is simple to set up extend. Each server can host one or more DAS sources, with each source (or DSN) being represented by a single <em>SourceAdaptor</em> Perl object and INI configuration. Implementing a DAS source in ProServer therefore entails providing a subclass of the <i>Bio::Das::ProServer::SourceAdaptor</i> package and INI to configure it.</p>
 
+<h3><a name="implementing_code">Code Structure</a></h3>
+
+<p>
+  A ProServer installation essentially has three components: the core server, an
+  INI configuration file and one or more SourceAdaptor instances.
+</p>
+
+<p>
+  Whilst the core server handles client communications, command processing and
+  building XML responses, it is the job of a SourceAdaptor to translate any
+  specifics of the data into a simple unified data structure. ProServer is
+  distributed with several example SourceAdaptors, one of which you may be able
+  use with your data. If not, it is a simple matter to create your own.
+</p>
+
+<p>
+  The INI file is used to configure both the server as a whole (e.g. the port
+  number to listen on) and each DAS source (e.g. the database to connect to).
+  Here, each DAS source is an <em>instance of</em> a SourceAdaptor module. It is
+  therefore possible to have more than one DAS source using the same
+  SourceAdaptor code.
+</p>
+
 <h3><a name="implementing_ini">INI Format</a></h3>
 
-<p>ProServer takes its configuration from a standard INI file, specified at startup. The file is divided into sections: one 'general' section for server-specific options, and one section per DAS source. The various server-specific options are described in the example <i>proserver.ini</i> file. The server processes each other section as follows:</p>
+<p>
+  ProServer takes its configuration from a standard INI file, specified at
+  startup. The file is divided into sections: one 'general' section for
+  server-specific options, and one section per DAS source. The various
+  server-specific options are described in the example <i>proserver.ini</i>
+  file. The server processes each other section as follows:</p>
 
 <table>
 <tr><th scope="col">Property</th><th scope="col">Example</th><th scope="col">Function</th></tr>
@@ -227,22 +272,25 @@
 <tr><td>transport</td><td>transport = dbi</td><td>The <a href="#implementing_transports">Transport</a> subclass that will be built for the source.</td></tr>
 <tr><td>autodisconnect</td><td>autodisconnect = 1800</td><td>Specifies that the <a href="#implementing_transports">Transport</a> should clean up after itself following a command. Can be 'yes', or a specified number of seconds.</td></tr>
 <tr><td>hydra</td><td>hydra = dbi</td><td>Specifies a 'multi-headed' <a href="#implementing_hydras">Hydra</a> source. A single definition can generate multiple sources.</td></tr>
-<tr><td>parent</td><td>parent  = simple_mouse</td><td>Specifies that a source should inherit properties from another source. Only undefined propertiesare inherited. Chained and reciprocal inheritance is permitted.</td></tr>
+<tr><td>parent</td><td>parent  = simple_mouse</td><td>Specifies that a source should inherit properties from another source. Only undefined properties are inherited. Chained and reciprocal inheritance is permitted.</td></tr>
 </table>
 
-<p>You may also specify additional custom properties: these are passed into the SourceAdaptor object stack.</p>
+<p>
+  You may also specify additional custom properties: these are passed into the
+  SourceAdaptor and Transport object stack.
+</p>
 
 <h3><a name="implementing_transports">Transports</a></h3>
 
-<p>Each SourceAdaptor may be configured with zero or more <i>transports</i>. A transport is designed to handle data access implementation, reducing the need to write boilerplate code. ProServer is supplied with several <i>Bio::Das::ProServer::SourceAdaptor::Transport</i> implementations, allowing easy access to data sources including, for example, relational databases, flat files and the Ensembl API.</p>
+<p>Each DAS source may be configured with zero or more <i>transports</i>. A transport is designed to handle data access implementation, reducing the need to write boilerplate code. ProServer is supplied with several <i>Bio::Das::ProServer::SourceAdaptor::Transport</i> implementations, allowing easy access to data sources including, for example, relational databases, flat files and the Ensembl API.</p>
 
 <p>Transports are passed the same INI properties as SourceAdaptors, allowing them to be configured in the same way. For example, the <em>DBI</em> transport requires the 'dbname' parameter. See individual transports' POD documentation for details. Below is an example that uses the DBI transport to handle the tedious aspects of querying a relational database.</p>
 
 <div class="code">
 <pre>
-  # Generic features stored in an SQL table
-  my $features = $self->transport->query('select * from features where segment = ? and end >= ? and start <= ?',
-                                         $segment, $start, $end);
+# Generic features stored in an SQL table
+my $features = $self->transport->query('select * from features where segment = ? and end >= ? and start <= ?',
+                                       $segment, $start, $end);
 </pre>
 </div>
 
@@ -250,16 +298,16 @@
 
 <div class="code">
 <pre>
-  [foobar]
-  state         = on
-  adaptor       = doubledb
-  transport     = dbi
-  dbuser        = anonymous
-  dbname        = foodb
-  bar.dbname    = bardb
+[foobar]
+state         = on
+adaptor       = doubledb
+transport     = dbi
+dbuser        = anonymous
+dbname        = foodb
+bar.dbname    = bardb
 
-  my $foos = $self->transport()->query($sql, @args);      # connects to 'foodb'
-  my $bars = $self->transport('bar')->query($sql, @args); # connects to 'bardb'
+my $foos = $self->transport()->query($sql, @args);      # connects to 'foodb'
+my $bars = $self->transport('bar')->query($sql, @args); # connects to 'bardb'
 </pre>
 </div>
 
@@ -401,26 +449,27 @@
 <tr><td>maintainer</td><td>email</td><td>Identifies a point of contact (sources command)</td><td>method; ini</td><td>The server maintainer</td></tr>
 <tr><td>dsncreated</td><td>date</td><td>Source date (sources command, HTTP headers)</td><td>method; stack; ini</td><td>The 'last modified' date of the <a href="#implementing_transports">Transport</a> (if supported) or epoch</td></tr>
 <tr><td>dsnversion</td><td>number</td><td>Source version (dsn command)</td><td>method; stack; ini</td><td>1.0</td></tr>
+<tr><td>strict_boundaries</td><td>boolean</td><td>If set, out-of-range segments will be filtered. Relies on length method.</td><td>ini</td><td>The server setting</td></tr>
 <tr><td>mapmaster</td><td>URL</td><td>Reference source (dsn command)</td><td>method; ini</td><td>-</td></tr>
 </table>
 
 <p>Co-ordinates can be specified in the INI file using the format:</p>
 <div class="code">
 <pre>
-  coordinates = NCBI_36,Chromosome,Homo sapiens => X:10000000,10111111 ; Ensembl,Gene_ID,Homo sapiens => ENSG00000000001
+coordinates = NCBI_36,Chromosome,Homo sapiens => X:10000000,10111111 ; Ensembl,Gene_ID,Homo sapiens => ENSG00000000001
 </pre>
 </div>
 <p>Or in code using:</p>
 <div class="code">
 <pre>
-  sub init {
-    my $self = shift;
-    $self->{'coordinates'} = {
-      'NCBI_36,Chromosome,Homo sapiens'                      => 'X:10000000,10111111',
-      'ensembl,gene_ID,homo sapiens'                         => 'ENSG00000000001',
-      'http://www.dasregistry.org/dasregistry/coordsys/CS_DS6' => 'BRAF_HUMAN'
-    };
-  }
+sub init {
+  my $self = shift;
+  $self->{'coordinates'} = {
+    'NCBI_36,Chromosome,Homo sapiens'                      => 'X:10000000,10111111',
+    'ensembl,gene_ID,homo sapiens'                         => 'ENSG00000000001',
+    'http://www.dasregistry.org/dasregistry/coordsys/CS_DS6' => 'BRAF_HUMAN'
+  };
+}
 </pre>
 </div>
 <p>Here, the key is either the URI or description of the co-ordinate system (see the included registry coordinates XML file for details). It is case insensitive. The value is a segment range that can be used to test the source. See the <a href="http://www.dasregistry.org">DAS Registry</a> documentation for more details of co-ordinate systems.</p>
@@ -437,9 +486,9 @@
 
 <hr>
 
-<h2><a name="updating">Updating to DAS/1.53E</a></h2>
+<h2><a name="updating">Updating from previous versions</a></h2>
 
-<p>If you have already developed DAS sources, you may wish to update them to support the 'sources' command, which provides for more meaningful descriptions of the services that a DAS source offers. Updating your source is a simple matter of providing some metadata: see the <a href="#implementing_metadata">Metadata</a> section of the guide for details of how this is done. You will probably want to add the following:
+<p>If you have already developed DAS sources, you may wish to update them to support the DAS/1.53E 'sources' command, which provides for more meaningful descriptions of the services that a DAS source offers. Updating your source is a simple matter of providing some metadata: see the <a href="#implementing_metadata">Metadata</a> section of the guide for details of how this is done. You will probably want to add the following:
 
 <ul>
 <li>title</li>
@@ -450,6 +499,8 @@
 <li>dsncreated (mysql and file transports provide a default implementation)</li>
 </ul>
 
+<p>As of version 2.7 ProServer makes use of external data files. You may need to set the "serverroot" property in order for the server to find them. See also the "styleshome" and "coordshome" properties in the example INI file.</p>
+
 <hr>
 
 <h2><a name="further">Further Information</a></h2>
@@ -459,10 +510,10 @@
   <li><a href="http://www.biodas.org">http://www.biodas.org</a></li>
   <li><a href="http://www.biodas.org/documents/spec.html">http://www.biodas.org/documents/spec.html</a></li>
   <li><a href="http://www.dasregistry.org">http://www.dasregistry.org</a></li>
-  <li><a href="http://www.ensembl.org/info/data/external_data/das/index.html">http://www.ensembl.org/info/data/external_data/das/index.html</a></li>
+  <li><a href="http://www.ensembl.org/info/using/external_data/das/index.html">http://www.ensembl.org/info/using/external_data/das/index.html</a></li>
 </ul>
 
-<p>Bug reports <i>et cetera</i> should be directed to <a href="mailto:roger.pettett@sanger.ac.uk">roger.pettett@sanger.ac.uk</a> or <a href="andy.jenkinson@ebi.ac.uk">andy.jenkinson@ebi.ac.uk</a>.</p>
+<p>Questions, bug reports, feature requests <i>et cetera</i> should be directed to the <a href="http://lists.sanger.ac.uk/mailman/listinfo/proserver-users">mailing list</a>.</p>
 
 </body>
 </html>

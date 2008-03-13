@@ -1,11 +1,23 @@
+#########
+# Author:        aj
+# Maintainer:    aj
+# Created:       2007
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Id:            $Id: simple_interaction.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source$
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple_interaction.pm $
+#
 package Bio::Das::ProServer::SourceAdaptor::simple_interaction;
-
 use strict;
+use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-sub init {
-  my $self = shift;
-  $self->{'capabilities'}{'interaction'} = '1.0';
+our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+
+sub capabilities {
+  return {
+	  interaction => '1.0',
+	 };
 }
 
 sub build_interaction {
@@ -13,93 +25,121 @@ sub build_interaction {
   
   my %interactors = ();
   
-  my $regex = '(\w*,)*'.join ('(,\w*)*', sort { $a cmp $b } @{ $opts->{'interactors'} }).'(,\w*)*';
-  my $rows = $self->transport->query("field0 like $regex");
-  my @interactions = ();
-  INTERACTION: for my $row (@$rows) {
+  my $regex = '(\w*,)*'.(join '(,\w*)*', sort { $a cmp $b } @{ $opts->{interactors} }).'(,\w*)*';
+  my $rows  = $self->transport->query("field0 like $regex");
+  my @interactions;
+
+  INTERACTION: for my $row (@{$rows}) {
     
-    my @participants = split /,/, shift @$row;
+    my @participants = split /,/mx, shift @{$row};
     
     my $interaction = $self->_build_interaction($row);
-    my %details = map { $_->{'property'} => $_->{'value'} } @{$interaction->{'details'}};
-    
+    my %details    = map { $_->{property} => $_->{value} } @{$interaction->{details}};
+
+    #########
     # Filter for interactions with requested details
-    while (my ($key, $val) = each %{ $opts->{'details'} }) {
-      exists $details{$key} || next INTERACTION;
+    #
+    while (my ($key, $val) = each %{ $opts->{details} }) {
+      if(!exists $details{$key}) {
+	next INTERACTION;
+      }
       !defined $val || $val eq $details{$key} || next INTERACTION;
     }
     
     for my $participant (@participants) {
       my $interactor_row = $self->transport('interactors')->query("field0 = $participant")->[0];
       $interactors{$participant} ||= $self->_build_interactor($interactor_row);
-      push @{ $interaction->{'participants'} }, {
-        'id' => $participant,
-      };
+      push @{ $interaction->{participants} }, {
+					       id => $participant,
+					      };
     }
     
     push @interactions, $interaction;
   }
   
   return {
-    'interactors'  => [values %interactors],
-    'interactions' => \@interactions,
-  };
+	  interactors  => [values %interactors],
+	  interactions => \@interactions,
+	 };
 }
 
 sub _build_interaction {
   my ($self, $row) = @_;
   
-  my %interaction = ();
+  my $interaction = {};
   for (qw(label dbSource dbSourceCvId dbVersion dbAccession)) {
-    $interaction{$_} = shift @$row;
+    $interaction->{$_} = shift @{$row};
   }
   
-  while (@$row) {
-    my %details = ();
+  while (@{$row}) {
+    my $details = {};
     for (qw(property value propertyCvId valueCvId)) {
-      $details{$_} = shift @$row;
+      $details->{$_} = shift @{$row};
     }
-    push @{ $interaction{'details'} }, \%details;
+    push @{ $interaction->{details} }, $details;
   }
   
-  return \%interaction;
+  return $interaction;
 }
-  
+
 sub _build_interactor {
   my ($self, $row) = @_;
   
-  my %interactor = ();
+  my $interactor = {};
   for (qw(id label dbSource dbSourceCvId dbVersion dbAccession dbCoordSys sequence)) {
-    $interactor{$_} = shift @$row;
+    $interactor->{$_} = shift @{$row};
   }
   
-  while (@$row) {
-    my %details = ();
+  while (@{$row}) {
+    my $details = {};
     for (qw(property value propertyCvId valueCvId start end startStatus endStatus startStatusCvId endStatusCvId)) {
-      $details{$_} = shift @$row;
+      $details->{$_} = shift @{$row};
     }
-    push @{ $interactor{'details'} }, \%details;
+    push @{ $interactor->{details} }, $details;
   }
   
-  return \%interactor;
+  return $interactor;
 }
 
 1;
+
 __END__
 
 =head1 NAME
 
-  Bio::Das::ProServer::SourceAdaptor::simple_interaction
+Bio::Das::ProServer::SourceAdaptor::simple_interaction
 
-=head1 AUTHOR
+=head1 VERSION
 
-  Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
+$LastChangedRevision: 453 $
+
+=head1 SYNOPSIS
+
+  Interactions involving 001:
+  <host>/das/<source>/interaction?interactor=001
+  
+  Interactions between 001 and 002
+  <host>/das/<source>/interaction?interactor=001;interactor=002
+  
+  Interactions with some form of evidence:
+  <host>/das/<source>/interaction?interactor=001;detail=property:evidence
+  
+  Interactions of a specific type:
+  <host>/das/<source>/interaction?interactor=001;detail=property:type,value:foo
 
 =head1 DESCRIPTION
 
   Serves up interaction DAS responses, using a file-based transport.
 
-=head1 CONFIGURATION
+=head1 SUBROUTINES/METHODS
+
+=head2 capabilities
+
+=head2 build_interaction
+
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION AND ENVIRONMENT
 
   [simple_interaction]
   adaptor               = simple_interaction
@@ -117,19 +157,7 @@ __END__
   --interactions.txt--
   interactor,interactor,..(sorted)	label	dbSource	dbSourceCvId	dbVersion	dbAccession	property	value	propertyCvId	valueCvId
 
-=head1 USAGE
 
-  Interactions involving 001:
-  <host>/das/<source>/interaction?interactor=001
-  
-  Interactions between 001 and 002
-  <host>/das/<source>/interaction?interactor=001;interactor=002
-  
-  Interactions with some form of evidence:
-  <host>/das/<source>/interaction?interactor=001;detail=property:evidence
-  
-  Interactions of a specific type:
-  <host>/das/<source>/interaction?interactor=001;detail=property:type,value:foo
 
 =head1 DEPENDENCIES
 
@@ -146,6 +174,10 @@ None reported
 =head1 BUGS AND LIMITATIONS
 
 None reported
+
+=head1 AUTHOR
+
+  Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
 
 =head1 LICENSE AND COPYRIGHT
 

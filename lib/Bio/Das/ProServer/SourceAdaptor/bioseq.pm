@@ -1,27 +1,28 @@
 #########
 # Author:        Andreas Kahari, andreas.kahari@ebi.ac.uk
-# Maintainer:    $Author: rmp $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       ?
-# Last Modified: $Date: 2007/11/20 20:12:21 $
-# Id:            $Id: bioseq.pm,v 2.70 2007/11/20 20:12:21 rmp Exp $
-# Source:        $Source: /cvsroot/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm,v $
-# $HeadURL$
-# 
+# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Id:            $Id: bioseq.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm,v $
+# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm $
+#
 package Bio::Das::ProServer::SourceAdaptor::bioseq;
 use strict;
 use warnings;
-
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-sub init {
-  my $self = shift;
-  $self->{capabilities} = {
-			   'features'  => '1.0',
-			   'dna'       => '1.0'
-			  };
+our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+
+sub capabilities {
+  my $ref = {
+	     features => '1.0',
+	     dna      => '1.0'
+	    };
+  return $ref;
 }
 
-sub length {
+sub length { ## no critic
   my ($self, $id) = @_;
   my $seq = $self->transport->query($id);
 
@@ -44,13 +45,13 @@ sub build_features {
     push @features, {
 		     type   => $feature->primary_tag(),
 		     start  => $feature->start(),
-		     end    => $feature->end(),
-		     method => $feature->source_tag(),
-		     id	    => $feature->display_name() ||
-		               sprintf q(%s/%s:%d,%d),
-				       $seq->display_name(), $feature->primary_tag(),
-				       $feature->start(), $feature->end(),
-		     ori    => $feature->strand(),
+	             end    => $feature->end(),
+                     method => $feature->source_tag(),
+                     id     => $feature->display_name() ||
+                               sprintf q(%s/%s:%d,%d),
+                                       $seq->display_name(), $feature->primary_tag(),
+                                       $feature->start(), $feature->end(),
+                     ori    => $feature->strand(),
 		    };
   }
 
@@ -77,25 +78,37 @@ __END__
 
 =head1 NAME
 
-Bio::Das::ProServer::SourceAdaptor::bioseq - A ProServer source
-adaptor for converting Bio::Seq objects into DAS features.  See also
-"Transport/bioseqio.pm".
+Bio::Das::ProServer::SourceAdaptor::bioseq
 
 =head1 VERSION
 
-$Revision: 2.70 $
+$LastChangedRevision: 453 $
 
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
 
+Bio::Das::ProServer::SourceAdaptor::bioseq - A ProServer source
+adaptor for converting Bio::Seq objects into DAS features.  See also
+"Transport/bioseqio.pm".
+
 =head1 SUBROUTINES/METHODS
+
+=head2 capabilities
+
+=head2 length
+
+=head2 build_features
+
+=head2 sequence
 
 =head1 DIAGNOSTICS
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
 =head1 DEPENDENCIES
+
+ Bio::Das::ProServer::SourceAdaptor
 
 =head1 INCOMPATIBILITIES
 
@@ -106,3 +119,18 @@ $Revision: 2.70 $
 Andreas Kahari, andreas.kahari@ebi.ac.uk
 
 =head1 LICENSE AND COPYRIGHT
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut
