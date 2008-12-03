@@ -1,12 +1,14 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-20
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# Id:            $Id: http.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
+# Id:            $Id: http.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator/http.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator/http.pm $
 #
 # Authenticator implementation using a remote authority to control access.
+#
+## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
 #
 package Bio::Das::ProServer::Authenticator::http;
 
@@ -18,58 +20,78 @@ use Cache::FileCache;
 use Bio::Das::ProServer::Config;
 use base qw(Bio::Das::ProServer::Authenticator);
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 453 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 549 $ =~ /\d+/mxg); $v; };
 
 sub parse_token {
   my ($self, $params) = @_;
   my $token;
-  # Look in a cookie
+
   if (defined $self->{'config'}{'authcookie'}) {
+    #########
+    # Look in a cookie
+    #
     my $k = $self->{'config'}{'authcookie'};
     ($token) = $params->{'request'}->header('cookie') =~ m/$k=([^;]*)/mx;
     $self->{'debug'} && carp "Authenticator parsed token in cookie: $token";
-  }
-  # Look in a cgi param
-  elsif (defined $self->{'config'}{'authparam'}) {
+
+  } elsif (defined $self->{'config'}{'authparam'}) {
+    #########
+    # Look in a cgi param
+    #
     $token = $params->{'cgi'}->param($self->{'config'}{'authparam'});
     $self->{'debug'} && carp "Authenticator parsed token in param: $token";
-  }
-  # Look in a specified header (default to 'Authorization')
-  else {
+
+  } else {
+    #########
+    # Look in a specified header (default to 'Authorization')
+    #
     $token = $params->{'request'}->header($self->{'config'}{'authheader'}||'Authorization');
     $self->{'debug'} && carp "Authenticator parsed token in header: $token";
   }
+
   return $token;
 }
 
 sub authenticate {
   my ($self, $params) = @_;
-  
+
   my $token = $self->parse_token($params);
-  $token || return $self->deny($params);
+  if(!$token) {
+    return $self->deny($params);
+  }
+
   my $auth_response = $self->_cache()->get($token);
+
   if (defined $auth_response) {
     $self->{'debug'} && carp q(Authenticator found result in cache);
+
   } else {
     my $url = $self->{'config'}{'authurl'};
-    $url =~ s/%token/$token/mxg;
+    $url    =~ s/%token/$token/mxg;
     $self->{'debug'} && carp qq(Authenticator issuing remote authentication request to $url);
     $auth_response = $self->_agent()->get($url);
+
     if ($auth_response->code() != 500) {
-      $self->_cache()->set($token, $auth_response);
+      eval {
+	$self->_cache()->set($token, $auth_response);
+      } or do {
+	carp qq[Failed to cache $token response];
+      };
     }
   }
-  
+
   if ($auth_response->code() == 200) {
     return $self->allow($params);
-  } else {
-    $self->{'debug'} && carp q(Authenticator denied request);
-    return $auth_response;
+
   }
+
+  $self->{'debug'} && carp q(Authenticator denied request);
+  return $auth_response;
 }
 
 sub _cache {
   my $self = shift;
+
   if (!defined $self->{'_cache'}) {
     $self->{'_cache'} = Cache::FileCache->new({
       'namespace'           => sprintf('%s_auth_cache', $self->{'dsn'}||'unknown'),
@@ -77,13 +99,16 @@ sub _cache {
       'auto_purge_interval' => 10*60, # 10 minutes
       'auto_purge_on_set'   => 1,
     });
+
     $self->{'_cache'}->clear();
   }
+
   return $self->{'_cache'};
 }
 
 sub _agent {
   my $self = shift;
+
   if (!defined $self->{'_agent'}) {
     $self->{'_agent'} = LWP::UserAgent->new(
       env_proxy  => 1,
@@ -92,6 +117,7 @@ sub _agent {
       agent      => Bio::Das::ProServer::Config::server_version(),
     );
   }
+
   return $self->{'_agent'};
 }
 
@@ -105,7 +131,7 @@ requests to a remote authority
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 549 $
 
 =head1 SYNOPSIS
 

@@ -2,18 +2,24 @@
 # Author:        jws
 # Maintainer:    jws, dj3
 # Created:       2005-04-19
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# Id:            $Id: grouped_db.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
+# Id:            $Id: grouped_db.pm 548 2008-12-03 23:14:25Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm,v $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm $
 # Builds DAS features from ProServer mysql database
 # schema at eof
+#
+## no critic (ValuesAndExpressions::ProhibitImplicitNewlines)
+#
 package Bio::Das::ProServer::SourceAdaptor::grouped_db;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
+use Readonly;
 
-our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+
+Readonly::Scalar our $SHORT_SEG_LEN => 4;
 
 sub capabilities {
   return {
@@ -31,7 +37,7 @@ sub build_features {
   my $end     = $opts->{end};
   my $shortsegnamehack = (defined $self->config->{'shortsegnamehack'})?$self->config->{'shortsegnamehack'}:1; #e.g. 1 (default) or 0
 
-  if($shortsegnamehack && (CORE::length($seg) > 4)) {
+  if($shortsegnamehack && (CORE::length($seg) > $SHORT_SEG_LEN)) {
     return;
   }
 
@@ -43,10 +49,10 @@ sub build_features {
     $qbounds = qq(AND start <= $end AND end >= $start);
   }
 
-  my $query   = qq(SELECT * FROM feature, fgroup
-                   WHERE  segment          = ? $qbounds
-                   AND    feature.group_id = fgroup.group_id
-                   ORDER BY start);
+  my $query = qq(SELECT * FROM feature, fgroup
+                 WHERE  segment          = ? $qbounds
+                 AND    feature.group_id = fgroup.group_id
+                 ORDER BY start);
   my @results;
 
   for ( @{$self->transport->query($query, $seg)} ) {
@@ -160,7 +166,7 @@ sub segment_version {
 #		link_text	varchar(30)
 #		note		text
 #		
-#	group
+#	fgroup
 #		group_id	varchar(30)
 #		label		varchar(30)
 #		type		varchar(30)
@@ -180,7 +186,7 @@ Bio::Das::ProServer::SourceAdaptor::grouped_db
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 548 $
 
 =head1 SYNOPSIS
 

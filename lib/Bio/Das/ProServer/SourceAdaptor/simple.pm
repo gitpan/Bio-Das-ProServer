@@ -2,9 +2,11 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-10-28
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# $Id: simple.pm 453 2008-03-12 14:50:11Z andyjenkinson $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple.pm $
+# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
+# $Id: simple.pm 549 2008-12-03 23:35:54Z zerojinx $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple.pm $
+#
+## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
 #
 package Bio::Das::ProServer::SourceAdaptor::simple;
 use strict;
@@ -12,7 +14,7 @@ use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 use Carp;
 
-our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
 
 sub capabilities {
   my $ref = {
@@ -71,7 +73,7 @@ Bio::Das::ProServer::SourceAdaptor::simple
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 549 $
 
 =head1 SYNOPSIS
 

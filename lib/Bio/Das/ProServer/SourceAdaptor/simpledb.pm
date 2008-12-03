@@ -2,16 +2,16 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
-# $Id: simpledb.pm 453 2008-03-12 14:50:11Z andyjenkinson $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simpledb.pm $
+# Last Modified: $Date: 2008-09-21 19:23:26 +0100 (Sun, 21 Sep 2008) $
+# $Id: simpledb.pm 524 2008-09-21 18:23:26Z andyjenkinson $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simpledb.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::simpledb;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my ($v) = (q$Revision: 524 $ =~ /\d+/mxg); $v; };
 
 sub capabilities {
   return {
@@ -75,7 +75,7 @@ Bio::Das::ProServer::SourceAdaptor::simpledb - Builds simple DAS features from a
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 524 $
 
 =head1 SYNOPSIS
 

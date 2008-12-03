@@ -1,18 +1,20 @@
 #########
 # Author:        jws, dj3
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2005-04-19
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
-# Id:            $Id: all_in_group.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $
+# Id:            $Id: all_in_group.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm,v $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::all_in_group;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
+use Readonly;
 
-our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
+Readonly::Scalar our $SHORT_SEG_LEN => 4;
 
 sub capabilities {
   return {
@@ -29,14 +31,14 @@ sub build_features {
   my $dbh     = $self->transport->dbh();
   my $shortsegnamehack = (defined $self->config->{shortsegnamehack})?$self->config->{shortsegnamehack}:1; #e.g. 1 (default) or 0
 
-  if($shortsegnamehack and (CORE::length($seg) > 4)) {#(speedup?) only handle chromosomes or haplotypes
+  if($shortsegnamehack and (CORE::length($seg) > $SHORT_SEG_LEN)) {# speedup - only handle chromosomes or haplotypes
     return;
   }
 
   # To include group members that are outside the range of the request, first
   # pull back the groups that are within the range, and then retrieve all the
   # features in those groups.
-  
+
   my $qbounds = q();
 
   if(defined $start && defined $end) {
@@ -59,7 +61,7 @@ sub build_features {
                        AND    feature.group_id = fgroup.group_id
                        ORDER BY start);
   my @results;
-  
+
   for ( @{$self->transport->query($query, $seg)} ) {
     my $fstart = $_->{start};
     my $fend   = $_->{end};
@@ -110,9 +112,9 @@ sub build_features {
 
 # SCHEMA
 # Generic MySQL schema to hold DAS feature data for ProServer
-#	
+#
 #	feature
-#		id		varchar(30)	
+#		id		varchar(30)
 #		label		varchar(30)
 #		segment		varchar(30)
 #		start		int(11)
@@ -130,18 +132,18 @@ sub build_features {
 #		link_url	varchar(255)
 #		link_text	varchar(30)
 #		note		text
-#		
-#	group
+#
+#	fgroup
 #		group_id	varchar(30)
 #		group_label	varchar(30)
 #		group_type	varchar(30)
 #		group_note	text
 #		group_link_url	varchar(255)
 #		group_link_text	varchar(30)
-#	
+#
 #	Note that spec allows multiple groups, targets, and links per feature,
 #	but these aren't implemented here.
-#	
+#
 
 __END__
 
@@ -151,7 +153,7 @@ Bio::Das::ProServer::SourceAdaptor::all_in_group
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 549 $
 
 =head1 SYNOPSIS
 
@@ -179,7 +181,17 @@ $LastChangedRevision: 453 $
 
 =head1 DEPENDENCIES
 
- Bio::Das::ProServer::SourceAdaptor
+=over
+
+=item Bio::Das::ProServer::SourceAdaptor
+
+=item strict
+
+=item warnings
+
+=item base
+
+=back
 
 =head1 INCOMPATIBILITIES
 

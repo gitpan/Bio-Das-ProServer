@@ -2,16 +2,19 @@
 # Author:        jws
 # Maintainer:    jws
 # Created:       2005-04-20
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
-# $Id: styletest.pm 453 2008-03-12 14:50:11Z andyjenkinson $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/styletest.pm $
+# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $
+# $Id: styletest.pm 548 2008-12-03 23:14:25Z zerojinx $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/styletest.pm $
+#
+# lots of magic numbers in this package:
+## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
 #
 package Bio::Das::ProServer::SourceAdaptor::styletest;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
 
 sub capabilities {
   return {
@@ -186,7 +189,7 @@ Bio::Das::ProServer::SourceAdaptor::styletest
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 548 $
 
 =head1 SYNOPSIS
 

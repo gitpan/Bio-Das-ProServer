@@ -1,11 +1,13 @@
+Build.PL
 Changes
 coordinates/registry_coordinates.xml
 doc/CHANGES_2.7.txt
 doc/pod2html
 doc/proserver_guide.html
-doc/proserver_guide.pdf
 doc/proserver_tutorial.html
+eg/data/example.bed
 eg/data/mysimple.txt
+eg/bed.ini
 eg/proserver
 eg/proserver.cgi
 eg/proserver.ini
@@ -15,6 +17,7 @@ lib/Bio/Das/ProServer/Authenticator.pm
 lib/Bio/Das/ProServer/Config.pm
 lib/Bio/Das/ProServer.pm
 lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm
+lib/Bio/Das/ProServer/SourceAdaptor/bed12.pm
 lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm
 lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm
 lib/Bio/Das/ProServer/SourceAdaptor.pm
@@ -25,6 +28,7 @@ lib/Bio/Das/ProServer/SourceAdaptor/simple_interaction.pm
 lib/Bio/Das/ProServer/SourceAdaptor/simple.pm
 lib/Bio/Das/ProServer/SourceAdaptor/simple_volmap.pm
 lib/Bio/Das/ProServer/SourceAdaptor/styletest.pm
+lib/Bio/Das/ProServer/SourceAdaptor/Transport/bed12.pm
 lib/Bio/Das/ProServer/SourceAdaptor/Transport/bioseqio.pm
 lib/Bio/Das/ProServer/SourceAdaptor/Transport/csv.pm
 lib/Bio/Das/ProServer/SourceAdaptor/Transport/dbi.pm
@@ -36,11 +40,13 @@ lib/Bio/Das/ProServer/SourceAdaptor/Transport/oracle.pm
 lib/Bio/Das/ProServer/SourceAdaptor/Transport/sif.pm
 lib/Bio/Das/ProServer/SourceAdaptor/Transport/wgetz.pm
 lib/Bio/Das/ProServer/SourceHydra/dbi.pm
+lib/Bio/Das/ProServer/SourceHydra/sql.pm
 lib/Bio/Das/ProServer/SourceHydra.pm
 MANIFEST
 README
 stylesheets/xsl_dsn.xsl
 stylesheets/xsl_features.xsl
+stylesheets/xsl_sequence.xsl
 stylesheets/xsl_sources.xsl
 t/00-pod.t
 t/05-config.t
@@ -52,6 +58,8 @@ t/11-transport-oracle.t
 t/11-transport-sif.t
 t/15-escaping.t
 t/16-targets.t
+t/21-features.t
+t/21-features-versions.t
 t/25-alignment.t
 t/26-interaction.t
 t/27-volmap.t
@@ -67,4 +75,4 @@ t/dummy/Bio/SeqIO.pm
 t/dummy/Cache/FileCache.pm
 t/dummy/Net/IP.pm
 Makefile.PL
-META.yml                                 Module meta-data (added by MakeMaker)
+META.yml

@@ -163,11 +163,13 @@ svn checkout https://proserver.svn.sourceforge.net/svnroot/proserver/trunk Bio-D
 <div class="code">
 <pre>
 cd Bio-Das-ProServer
-perl Makefile.PL
-make
-make test
+perl Build.PL
+./Build
+./Build test
 </pre>
 </div>
+
+<p>You may receive warnings about missing dependencies. Only some of these are absolutely required for the core server - see the README file for details of these.</p>
 
 <p>You may optionally install the ProServer modules into your Perl distribution:</p>
 <div class="code">
@@ -425,38 +427,51 @@ my $bars = $self->transport('bar')->query($sql, @args); # connects to 'bardb'
 
 <h3><a name="implementing_metadata">Metadata</a></h3>
 
-<p>Each DAS source should provide information about itself that helps clients to determine what kind of data it offers. In true TMTOWTDI Perl spirit, ProServer provides several ways to provide the metadata, either in code or via INI properties. Note that the 'capabilities' property is <em>required</em>.</p>
+<p>
+  Each DAS source should provide information about itself that helps clients to
+  determine what kind of data it offers. In true TMTOWTDI Perl spirit, ProServer
+  provides several ways to provide the metadata, either in code or via INI
+  properties. In order of precedence:
+</p>
 
 <ol>
 <li>Overriding the relevant method. See the <i>Bio::Das::ProServer::SourceAdaptor</i> POD documentation for details.</li>
-<li>Specifying a config property.</li>
 <li>Setting a variable in the object stack (using the 'init' method).</li>
+<li>Specifying a config property (no code change required).</li>
 <li>Nothing: the default value (if any) is used.</li>
 </ol>
 
-<p>Below is a list of metadata properties you should provide for your source:</p>
+<p>
+  Below is a list of metadata properties you should provide for your source.
+  Note that the 'capabilities' property is <em>required</em>.
+</p>
 
 <table>
-<tr><th scope="col">Property</th><th>Type</th><th scope="col">Purpose</th><th scope="col">Order of preference</th><th scope="col">Default</th></tr>
-<tr><td>capabilities</td><td>hashref</td><td>Commands and options offered (sources command)</td><td>method; stack</td><td>-</td></tr>
-<tr><td>coordinates</td><td>hashref</td><td>Co-ordinate systems and test ranges (sources command)</td><td>method; stack; ini</td><td>-</td></tr>
-<tr><td>properties</td><td>hashref</td><td>Custom tags (sources command)</td><td>method; stack</td><td>-</td></tr>
-<tr><td>title</td><td>text</td><td>Human readable name (sources command)</td><td>method; ini</td><td>The source name (DSN)</td></tr>
-<tr><td>description</td><td>text</td><td>Human readable description (sources/dsn command)</td><td>method; ini</td><td>The title</td></tr>
-<tr><td>doc_href</td><td>URL</td><td>Location of documentation/homepage (sources command)</td><td>method; ini</td><td>A default ProServer homepage.</td></tr>
-<tr><td>source_uri</td><td>text</td><td>Used to group sources (sources command)</td><td>method; ini</td><td>The source name (DSN)</td></tr>
-<tr><td>version_uri</td><td>text</td><td>Used to group sources (sources command)</td><td>method; ini</td><td>The source URI</td></tr>
-<tr><td>maintainer</td><td>email</td><td>Identifies a point of contact (sources command)</td><td>method; ini</td><td>The server maintainer</td></tr>
-<tr><td>dsncreated</td><td>date</td><td>Source date (sources command, HTTP headers)</td><td>method; stack; ini</td><td>The 'last modified' date of the <a href="#implementing_transports">Transport</a> (if supported) or epoch</td></tr>
-<tr><td>dsnversion</td><td>number</td><td>Source version (dsn command)</td><td>method; stack; ini</td><td>1.0</td></tr>
-<tr><td>strict_boundaries</td><td>boolean</td><td>If set, out-of-range segments will be filtered. Relies on length method.</td><td>ini</td><td>The server setting</td></tr>
-<tr><td>mapmaster</td><td>URL</td><td>Reference source (dsn command)</td><td>method; ini</td><td>-</td></tr>
+<tr>
+  <th scope="col">Property</th>
+  <th scope="col">Type</th>
+  <th scope="col">Purpose</th>
+  <th scope="col">Default</th>
+</tr>
+<tr><td>capabilities</td><td>hashref</td><td>Commands and options offered (sources command)</td><td>-</td></tr>
+<tr><td>coordinates</td><td>hashref</td><td>Co-ordinate systems and test ranges (sources command)</td><td>-</td></tr>
+<tr><td>properties</td><td>hashref</td><td>Custom tags (sources command)</td><td>-</td></tr>
+<tr><td>title</td><td>text</td><td>Human readable name (sources/dsn command)</td><td>The source name (DSN)</td></tr>
+<tr><td>description</td><td>text</td><td>Human readable description (sources/dsn command)</td><td>The title</td></tr>
+<tr><td>doc_href</td><td>URL</td><td>Location of documentation/homepage (sources command)</td><td>A default ProServer homepage.</td></tr>
+<tr><td>source_uri</td><td>text</td><td>Used to group sources (sources command)</td><td>The version URI</td></tr>
+<tr><td>version_uri</td><td>text</td><td>Uniquely identifies a source (sources command)</td><td>The source name (DSN)</td></tr>
+<tr><td>maintainer</td><td>email</td><td>Identifies a point of contact (sources command)</td><td>The server maintainer</td></tr>
+<tr><td>dsncreated</td><td>date</td><td>Source date (sources command, HTTP headers)</td><td>The 'last modified' date of the <a href="#implementing_hydras">Hydra</a> or <a href="#implementing_transports">Transport</a> (if supported) or epoch</td></tr>
+<tr><td>dsnversion</td><td>number</td><td>Source version (dsn command)</td><td>1.0</td></tr>
+<tr><td>strict_boundaries</td><td>boolean</td><td>If set, out-of-range segments will be filtered. Relies on length method.</td><td>The server setting</td></tr>
+<tr><td>mapmaster</td><td>URL</td><td>Reference source (dsn command)</td><td>-</td></tr>
 </table>
 
 <p>Co-ordinates can be specified in the INI file using the format:</p>
 <div class="code">
 <pre>
-coordinates = NCBI_36,Chromosome,Homo sapiens => X:10000000,10111111 ; Ensembl,Gene_ID,Homo sapiens => ENSG00000000001
+coordinates = NCBI_36,Chromosome,Homo sapiens -> X:10000000,10111111 ; Ensembl,Gene_ID,Homo sapiens -> ENSG00000000001
 </pre>
 </div>
 <p>Or in code using:</p>

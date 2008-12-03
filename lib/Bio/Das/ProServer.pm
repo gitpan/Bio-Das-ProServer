@@ -1,13 +1,16 @@
 #########
 # ProServer DAS Server
 # Author:        rmp
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2003-05-22
-# Last Modified: $Date: 2008-03-12 17:27:42 +0000 (Wed, 12 Mar 2008) $
+# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $
 # Source:        $Source $
 # Id:            $Id $
 #
-
+## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
+## no critic (ValuesAndExpressions::ProhibitImplicitNewlines)
+## no critic (Subroutines::ProhibitExcessComplexity)
+#
 package Bio::Das::ProServer;
 use warnings;
 use strict;
@@ -29,13 +32,14 @@ use Bio::Das::ProServer::SourceHydra;
 use Socket;
 use English qw(-no_match_vars);
 use Carp;
+use Readonly;
 
 our $DEBUG          = 0;
-our $VERSION        = do { my @r = (q$Revision: 457 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
-our $GZIP_THRESHOLD = 10_000;
+our $VERSION        = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
+Readonly::Scalar our $GZIP_THRESHOLD => 10_000;
 $ENV{'PATH'}        = '/bin:/usr/bin:/usr/local/bin';
 our $COORDINATES    = undef;
-our $WRAPPERS       = {
+Readonly::Scalar our $WRAPPERS => {
 		       'sources'      => {
 					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<?xml-stylesheet type="text/xsl" href="sources.xsl"?>\n<SOURCES>\n),
 					  'close' => qq(</SOURCES>\n),
@@ -49,11 +53,11 @@ our $WRAPPERS       = {
 					  'close' => qq(  </GFF>\n</DASGFF>\n),
 					 },
 		       'dna'          => {
-					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<!DOCTYPE DASDNA SYSTEM "http://www.biodas.org/dtd/dasdna.dtd">\n<DASDNA>\n),
+					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<?xml-stylesheet type="text/xsl" href="sequence.xsl"?>\n<!DOCTYPE DASDNA SYSTEM "http://www.biodas.org/dtd/dasdna.dtd">\n<DASDNA>\n),
 					  'close' => qq(</DASDNA>\n),
 					 },
 		       'sequence'     => {
-					  'open'  => qq(<!DOCTYPE DASSEQUENCE SYSTEM "http://www.biodas.org/dtd/dassequence.dtd">\n<DASSEQUENCE>\n),
+					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<?xml-stylesheet type="text/xsl" href="sequence.xsl"?>\n<!DOCTYPE DASSEQUENCE SYSTEM "http://www.biodas.org/dtd/dassequence.dtd">\n<DASSEQUENCE>\n),
 					  'close' => qq(</DASSEQUENCE>\n),
 					 },
 		       'types'        => {
@@ -97,7 +101,7 @@ sub run {
                             qw(debug
                                version
                                port=i
-                               h|help|usage
+                               help|h|usage
                                hostname=s
                                inifile|config|c=s
                                pidfile=s
@@ -195,12 +199,12 @@ EOT
         'taxid'       => my ($s)  = m/taxid\s*=\s*"(.*?)"/mx,
       };
     }
-    
+
     $class->log(q(Loaded ).((scalar keys %coords)/2)." co-ordinate systems from $coordfile");
     %all_coords = (%all_coords, %coords);
   }
   $COORDINATES = \%all_coords;
-  
+
   if(!$opts->{'X'} && fork) {
     $class->log(q(Parent process detached...));
     return;
@@ -213,7 +217,7 @@ EOT
 
   my $pidfile = $opts->{'pidfile'} || $config->pidfile() || sprintf '%s.%s.pid', $PROGRAM_NAME||'proserver', hostname() || 'localhost';
   $self->make_pidfile($pidfile);
-  
+
   my $logfile = $opts->{'logfile'} || $config->logfile();
   if (!defined $logfile) {
     my ($vol, $path) = File::Spec->splitpath($pidfile);
@@ -257,7 +261,7 @@ EOT
 
   # Spawn up to max server processes, and then run them.  Exit
   # when they are done.
-  
+
   $class->log(q(Proserver started));
 
   $self->server_spawn($config->maxclients());
@@ -265,8 +269,7 @@ EOT
   return;
 }
 
-sub DEBUG         { return $DEBUG; } # Enable a lot of runtime information.
-sub TESTING_CHURN { return 0; }                # Randomly shutdown children to test respawn.
+sub DEBUG { return $DEBUG; } # Enable a lot of runtime information.
 
 ### Spawn the main server.  This will run as the parent process.
 
@@ -283,7 +286,7 @@ sub server_spawn {
 				got_sig_int    => \&server_got_sig_int,
 				got_sig_chld   => \&server_got_sig_chld,
 				got_connection => \&server_got_connection,
-				
+
 				_child => sub { 0 },
 			      },
 			      heap => {
@@ -455,9 +458,23 @@ sub server_got_connection {
 
   POE::Session->create(
 		       inline_states =>
-		       { _start      => sub { my @args = @_; eval { client_start(@args); }; carp $EVAL_ERROR if($EVAL_ERROR); },
+		       { _start      => sub {
+			   my @args = @_;
+			   eval {
+			     client_start(@args);
+			   } or do {
+			     carp $EVAL_ERROR;
+			   };
+			 },
 			 _stop       => \&client_stop,
-			 got_request => sub { my @args = @_; eval { client_got_request(@args); }; carp $EVAL_ERROR if($EVAL_ERROR); },
+			 got_request => sub {
+			   my @args = @_;
+			   eval {
+			     client_got_request(@args);
+			   } or do {
+			     carp $EVAL_ERROR;
+			   };
+			 },
 			 got_flush   => \&client_flushed_request,
 			 got_error   => \&client_got_error,
 			 _parent     => sub { 0 },
@@ -470,9 +487,6 @@ sub server_got_connection {
 		       },
 		      );
 
-  if(TESTING_CHURN and $heap->{is_a_child} and ( rand() < 0.1 )) {
-    delete $heap->{server}
-  }
   return;
 }
 
@@ -533,13 +547,13 @@ sub response_xsl {
   my $config   = $heap->{'self'}->{'config'};
   my $response = HTTP::Response->new(200);
   $response->content_type('text/xsl');
-  $response->content($config->adaptor()->das_xsl({'call'=>$call}));
+  $response->content( _substitute( $heap, $config->adaptor()->das_xsl({'call'=>$call}) ) );
   return $response;
 }
 
 sub response_general {
   my ($heap, $request, $dsn, $call) = @_;
-  
+
   my $response;
   my $cgi;
   my $http_method = lc $request->method();
@@ -572,7 +586,7 @@ sub response_general {
       # If the authenticator returns a response, use it (exit the eval)
       defined $response && return;
     }
-      
+
   $response = HTTP::Response->new(200);
   my $method   = "das_$call";
   if(substr($call, -3, 3) eq 'xsl') {
@@ -583,13 +597,14 @@ sub response_general {
   } else {
     $response->content_type('text/xml');
   }
-    
+
   my $query   = {
 		 # Features command / shared:
 		 'segments'    => [$cgi->param('segment')],
 		 'features'    => [$cgi->param('feature_id')],
 		 'groups'      => [$cgi->param('group_id')],
 		 'maxbins'     => $cgi->param('maxbins') || undef,
+		 'types'       => [$cgi->param('type')],
 		 'call'        => $call,
 		 # Alignment command:
 		 'query'       => $cgi->param('query') || undef,
@@ -603,12 +618,13 @@ sub response_general {
 		 # Interaction command:
 		 'interactors' => [$cgi->param('interactor')],
 		 'details'     => [$cgi->param('detail')],
+		 'operation'   => $cgi->param('operation') || undef,
 		};
 
     if($adaptor->implements($call) ||
        $call   eq 'homepage'       ||
        $method eq 'das_xsl') {
-    
+
       my $use_gzip = 0;
       if($call   ne 'homepage' &&
          $call   ne 'dsn'      &&
@@ -625,16 +641,13 @@ sub response_general {
 
       my $head    = $WRAPPERS->{$call}->{'open'}  || q();
       my $foot    = $WRAPPERS->{$call}->{'close'} || q();
-      my $subst   = {
-		     'host'     => $config->response_hostname(),
-		     'port'     => $config->response_port()     || q(),
-		     'protocol' => $config->response_protocol() || 'http',
-		     'baseuri'  => $config->response_baseuri()  || q(),
-		     'dsn'      => $dsn,
-		    };
-      $head       =~ s/\%([a-z]+)/$subst->{$1}/smgxi;
+      my $body    = $adaptor->$method($query);
+      $head = _substitute($heap, $head, $dsn);
+      if ($method eq 'das_xsl' || $call eq 'homepage') {
+	$body = _substitute($heap, $body, $dsn);
+      }
       $response->last_modified($adaptor->dsncreated_unix);
-      my $content = $head.$adaptor->$method($query).$foot;
+      my $content = $head.$body.$foot;
 
       if($use_gzip && (length $content > $GZIP_THRESHOLD)) {
 	if(DEBUG) {
@@ -669,15 +682,15 @@ sub response_general {
       $response->header('X-DAS-Status' => 501);
       $response->content(qq(Unimplemented command for $dsn: @{[$call||q()]}));
     }
-  };
 
-  if($EVAL_ERROR) {
+  } or do {
     carp $EVAL_ERROR;
+
     $response = HTTP::Response->new(500);
     $response->content_type('text/plain');
     $response->header('X-DAS-Status' => 500);
     $response->content("Bad data source $dsn (error processing command: $call)");
-  }
+  };
 
   return $response;
 }
@@ -706,7 +719,7 @@ sub response_sources {
     ($call eq 'homepage' || $call eq $_->dsn || $call eq $_->source_uri || $call eq $_->version_uri) &&
     ($data{$_->source_uri}{$_->version_uri} = $_);
   } $config->adaptors();
-  
+
   my $resp = $WRAPPERS->{'sources'}->{'open'};
   while (my ($s_uri, $s_data) = each %data) {
     my @versions = keys %{$s_data};
@@ -720,14 +733,13 @@ sub response_sources {
                                                            'skip_open'  => $i > 0,
                                                            'skip_close' => $i+1 < scalar @versions,
                                                           });
-      };
-      if ($EVAL_ERROR) {
+      } or do {
         carp "Error generating source data for '$versions[$i]':\n$EVAL_ERROR\n";
-      }
+      };
     }
   }
   $resp .= $WRAPPERS->{'sources'}->{'close'};
-  
+
   my $response = HTTP::Response->new(200);
   $response->content_type('text/xml');
   $response->content($resp);
@@ -861,7 +873,7 @@ sub build_das_response {
     $response->header('X-DAS-Status' => 401);
     $response->content("Bad data source (data source unknown: $dsn)\nuri=@{[$uri||q()]}, dsn=@{[$dsn||q()]}, call=@{[$call||q()]}");
   }
-  
+
   $response->content_length(length $response->content);
   #########
   # Add custom X-DAS headers
@@ -876,10 +888,11 @@ sub build_das_response {
     eval {
       $response->header('X-DAS-Capabilities' => $adaptor->das_capabilities()||q());
       $adaptor->cleanup();
+    } or do {
+      carp $EVAL_ERROR;
     };
-    $EVAL_ERROR && carp $EVAL_ERROR;
-  }
-  else {
+
+  } else {
     $response->header('X-DAS-Capabilities' => q(dsn/1.0; sources/1.0));
   }
   #
@@ -905,6 +918,22 @@ sub build_das_response {
   }
 
   return $response;
+}
+
+# Does keyword substitution for response URLs
+sub _substitute {
+  my ($heap, $text, $dsn) = @_;
+  
+  my $config  = $heap->{'self'}->{'config'};
+  my $subst   = {
+     'host'     => $config->response_hostname(),
+     'port'     => $config->response_port()     || q(),
+     'protocol' => $config->response_protocol() || 'http',
+     'baseuri'  => $config->response_baseuri()  || q(),
+     'dsn'      => $dsn || q(),
+    };
+  $text =~ s/\%([a-z]+)/$subst->{$1}/smgxi;
+  return $text;
 }
 
 ### The client handler received an error.  Stop the ReadWrite wheel,
@@ -972,7 +1001,7 @@ Bio::Das::ProServer
 
 =head1 VERSION
 
-$LastChangedRevision: 457 $
+$LastChangedRevision: 549 $
 
 =head1 SYNOPSIS
 
@@ -1002,8 +1031,6 @@ $LastChangedRevision: 457 $
 =head2 run
 
 =head2 DEBUG
-
-=head2 TESTING_CHURN
 
 =head2 server_spawn
 

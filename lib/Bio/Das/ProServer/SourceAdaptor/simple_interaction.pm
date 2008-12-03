@@ -2,17 +2,17 @@
 # Author:        aj
 # Maintainer:    aj
 # Created:       2007
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
-# Id:            $Id: simple_interaction.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $
+# Id:            $Id: simple_interaction.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple_interaction.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple_interaction.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::simple_interaction;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
 
 sub capabilities {
   return {
@@ -22,17 +22,24 @@ sub capabilities {
 
 sub build_interaction {
   my ($self, $opts) = @_;
-  
+
   my %interactors = ();
-  
-  my $regex = '(\w*,)*'.(join '(,\w*)*', sort { $a cmp $b } @{ $opts->{interactors} }).'(,\w*)*';
+
+  my $regex;
+  if ($opts->{'operation'} eq 'union') {
+    $regex = join q[|], map {sprintf q[(\w*,)*%s(,\w*)*], $_} @{ $opts->{interactors} };
+
+  } else {
+    $regex = q[(\w*,)*].(join q[(,\w*)*], sort { $a cmp $b } @{ $opts->{interactors} }).q[(,\w*)*];
+  }
+
   my $rows  = $self->transport->query("field0 like $regex");
   my @interactions;
 
   INTERACTION: for my $row (@{$rows}) {
-    
+
     my @participants = split /,/mx, shift @{$row};
-    
+
     my $interaction = $self->_build_interaction($row);
     my %details    = map { $_->{property} => $_->{value} } @{$interaction->{details}};
 
@@ -45,7 +52,7 @@ sub build_interaction {
       }
       !defined $val || $val eq $details{$key} || next INTERACTION;
     }
-    
+
     for my $participant (@participants) {
       my $interactor_row = $self->transport('interactors')->query("field0 = $participant")->[0];
       $interactors{$participant} ||= $self->_build_interactor($interactor_row);
@@ -53,10 +60,10 @@ sub build_interaction {
 					       id => $participant,
 					      };
     }
-    
+
     push @interactions, $interaction;
   }
-  
+
   return {
 	  interactors  => [values %interactors],
 	  interactions => \@interactions,
@@ -65,12 +72,12 @@ sub build_interaction {
 
 sub _build_interaction {
   my ($self, $row) = @_;
-  
+
   my $interaction = {};
   for (qw(label dbSource dbSourceCvId dbVersion dbAccession)) {
     $interaction->{$_} = shift @{$row};
   }
-  
+
   while (@{$row}) {
     my $details = {};
     for (qw(property value propertyCvId valueCvId)) {
@@ -78,26 +85,28 @@ sub _build_interaction {
     }
     push @{ $interaction->{details} }, $details;
   }
-  
+
   return $interaction;
 }
 
 sub _build_interactor {
   my ($self, $row) = @_;
-  
+
   my $interactor = {};
   for (qw(id label dbSource dbSourceCvId dbVersion dbAccession dbCoordSys sequence)) {
     $interactor->{$_} = shift @{$row};
   }
-  
+
   while (@{$row}) {
     my $details = {};
-    for (qw(property value propertyCvId valueCvId start end startStatus endStatus startStatusCvId endStatusCvId)) {
+    for (qw(property value propertyCvId valueCvId
+            start end startStatus endStatus
+            startStatusCvId endStatusCvId)) {
       $details->{$_} = shift @{$row};
     }
     push @{ $interactor->{details} }, $details;
   }
-  
+
   return $interactor;
 }
 
@@ -111,7 +120,7 @@ Bio::Das::ProServer::SourceAdaptor::simple_interaction
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 549 $
 
 =head1 SYNOPSIS
 

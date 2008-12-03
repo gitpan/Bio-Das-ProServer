@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-01
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $xuthor$
-# Id:            $Id: sif.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 21:06:41 +0000 (Wed, 03 Dec 2008) $ $xuthor$
+# Id:            $Id: sif.pm 544 2008-12-03 21:06:41Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/sif.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/sif.pm $
 #
 # Transport implementation for Simple Interaction Format files.
 #
@@ -15,19 +15,70 @@ use warnings;
 use Carp;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::file);
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 453 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 544 $ =~ /\d+/mxg); $v; };
 
 # Access to the transport is via this method (see POD)
 sub query {
-  my ($self, $q1, $q2, $q3) = @_;
-  $q1 || return []; # No query
-  if (ref $q1 && ref $q1 eq 'ARRAY') {
-    ($q1, $q2, $q3) = @{$q1};
+  my ($self, $args) = @_;
+  my $operation =    $args->{'operation'} || 'intersection';
+  my @queries   = @{ $args->{'interactors'} || [] };
+
+  # Find interactions matching the query interactors
+  my $interactions = $operation eq 'union' || @queries < 2
+                     ? $self->_search_any(@queries)
+                     : $self->_search_all(@queries);
+
+  if(!scalar keys %{$interactions}) {
+    return {
+	    interactions => [],
+	    interactors  => [],
+	   };
   }
-  $q3 && return []; # SIF has only binary interactions
+
+  # Add data from edge attribute files
+  $self->_add_interaction_attributes($interactions);
+
+  my @interactions = ();
+  my $interactors = {};
+
+  for my $interaction (values %{$interactions}) {
+
+    #########
+    # Check the interaction passes the filters...
+    #
+    if ($self->_filter_details( $interaction, $args->{'details'} )) {
+      #########
+      # If so, add it to the final list...
+      #
+      push @interactions, $interaction;
+
+      #########
+      # ...and add the participants to the list of interactors
+      #
+      for my $participant (@{ $interaction->{'participants'} }) {
+        $interactors->{$participant->{'id'}} ||= {%{ $participant }}; # clone
+      }
+    }
+  }
+
+  #########
+  # Add data from node attribute files
+  #
+  $self->_add_interactor_attributes($interactors);
+
+  return {
+          interactors  => [ values %{$interactors} ],
+          interactions => \@interactions,
+         };
+}
+
+sub _search_all {
+  my ($self, $q1, $q2, $q3) = @_;
+  $q1 || return {}; # No query
+  $q3 && return {}; # SIF has only binary interactions
   my $fh    = $self->_fh();
   my $start = tell $fh;
-  my $interactors = {};
+  
   my $interactions = {};
 
   my $sep;
@@ -37,49 +88,61 @@ sub query {
     $sep ||= /\t/mx ? '\t' : '\s';  ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
 
     # If looking for 2 interactors, one -has- to be the source node
-    if ($q2) {
-      if (/^$q1$sep+([^$sep]+$sep+)+$q2($sep|\Z)/mx || /^$q2$sep+([^$sep]+$sep+)+$q1($sep|\Z)/mx) {
-        $self->_add_interaction($q1, $q2, $interactors, $interactions);
-        last;
-      }
+    if (/^$q1$sep+([^$sep]+$sep+)+$q2($sep|\Z)/mx || /^$q2$sep+([^$sep]+$sep+)+$q1($sep|\Z)/mx) {
+      $self->_add_interaction($q1, $q2, $interactions);
+      last;
     }
+  }
+
+  # Reset the filehandle to what it was previously (not necessarily the start..)
+  seek $fh, $start, 0;
+  return $interactions;
+}
+
+sub _search_any {
+  my ($self, @queries) = @_;
+  @queries || return {}; # No query
+  my $fh    = $self->_fh();
+  my $start = tell $fh;
+  my $interactions = {};
+
+  my $sep;
+  while(<$fh>) {
+    chomp;
+    # if the file contains tabs, tab is separator
+    $sep ||= /\t/mx ? '\t' : '\s';  ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
 
     # Different result depending on whether the 'hit' is the first node
-    else {
-      my ($source, undef, @targets) = split /$sep+/mx;
-      if ($source eq $q1) {
-        for my $t (@targets) {
-          $self->_add_interaction($q1, $t, $interactors, $interactions);
-        }
+    my ($source, undef, @targets) = split /$sep+/mx;
+
+    if (scalar grep {$source eq $_} @queries ) {
+      for my $t (@targets) {
+	$self->_add_interaction($source, $t, $interactions);
       }
-      elsif (scalar grep { /^$q1$/mx } @targets) {
-        $self->_add_interaction($source, $q1, $interactors, $interactions);
+
+    } else {
+      for my $t (@targets) {
+	if (scalar grep {$t eq $_} @queries ) {
+	  $self->_add_interaction($source, $t, $interactions);
+	}
       }
     }
   }
 
   # Reset the filehandle to what it was previously (not necessarily the start..)
   seek $fh, $start, 0;
-
-  $interactors  = [values %{$interactors}];
-  $interactions = [values %{$interactions}];
-  $self->_add_attributes($interactors, $interactions);
-
-  return {
-          'interactors'  => $interactors,  ## no critic
-          'interactions' => $interactions,
-         };
+  return $interactions;
 }
 
 sub _add_interaction {
-  my ($self, $x, $y, $interactors, $interactions) = @_;
+  my ($self, $x, $y, $interactions) = @_;
   # sort lexographically (interactions are unique)
   if (($x cmp $y) > 0) {
     ($x, $y) = ($y, $x);
   }
   $self->{'debug'} && carp "SIF transport found interaction $x-$y";
-  $interactors->{$x} ||= {'id'=>$x};
-  $interactors->{$y} ||= {'id'=>$y};
+  #$interactors->{$x} ||= {'id'=>$x};
+  #$interactors->{$y} ||= {'id'=>$y};
   $interactions->{"$x-$y"} ||= {
     'name'         => "$x-$y",
     'participants' => [{'id'=>$x},{'id'=>$y}],
@@ -87,33 +150,12 @@ sub _add_interaction {
   return;
 }
 
-sub _add_attributes {
-  my ($self, $interactors, $interactions) = @_;
+sub _add_interaction_attributes {
+  my ($self, $interactions) = @_;
 
-  my @interactor_files  = grep {$_->{'type'} eq 'interactor'}  $self->_att_fh();
   my @interaction_files = grep {$_->{'type'} eq 'interaction'} $self->_att_fh();
 
-  for my $interactor (@{$interactors}) {
-    for my $file (@interactor_files) {
-      my $fh = $file->{'fh'};
-      my $start = tell $fh;
-      while (<$fh>) {
-        chomp;
-        my ($id, $value) = split /\s*=\s*/mx;
-        if ($id eq $interactor->{'id'}) {
-          $self->{'debug'} && carp "SIF transport found $file->{property} property for interactor $id";
-          push @{ $interactor->{'details'} }, {
-            'property' =>$file->{'property'},
-            'value'    =>$value,
-          };
-          last;
-        }
-      }
-      seek $fh, $start, 0;
-    }
-  }
-
-  for my $interaction (@{$interactions}) {
+  for my $interaction (values %{$interactions}) {
     for my $file (@interaction_files) {
       my $fh = $file->{'fh'};
       my $sep = $file->{'sep'};
@@ -129,6 +171,34 @@ sub _add_attributes {
           push @{ $interaction->{'details'} }, {
             'property' => $file->{'property'},
             'value'    => $value,
+          };
+          last;
+        }
+      }
+      seek $fh, $start, 0;
+    }
+  }
+
+  return;
+}
+
+sub _add_interactor_attributes {
+  my ($self, $interactors) = @_;
+
+  my @interactor_files  = grep {$_->{'type'} eq 'interactor'}  $self->_att_fh();
+
+  for my $interactor (values %{$interactors}) {
+    for my $file (@interactor_files) {
+      my $fh = $file->{'fh'};
+      my $start = tell $fh;
+      while (<$fh>) {
+        chomp;
+        my ($id, $value) = split /\s*=\s*/mx;
+        if ($id eq $interactor->{'id'}) {
+          $self->{'debug'} && carp "SIF transport found $file->{property} property for interactor $id";
+          push @{ $interactor->{'details'} }, {
+            'property' =>$file->{'property'},
+            'value'    =>$value,
           };
           last;
         }
@@ -161,6 +231,25 @@ sub _att_fh {
   return wantarray ? @{ $self->{'fh_att'} } : $self->{'fh_att'};
 }
 
+sub _filter_details {
+  my ($self, $test, $details) = @_;
+  TEST: for my $key ( keys %{ $details || {} }) {
+    for my $detail (@{ $test->{'details'} || [] }) {
+      # The object does have this property...
+      if ($detail->{'property'} eq $key) {
+        my $val = $details->{$key};
+        if (!defined $val || $detail->{'value'} eq $val) {
+          # And it's the correct value
+          next TEST;
+        }
+        return 0;
+      }
+    }
+    return 0;
+  }
+  return 1;
+}
+
 sub DESTROY {
   my $self = shift;
   my @filehandles = ($self->{'fh'}, map {$_->{'fh'}} @{ $self->{'fh_att'}||[] });
@@ -179,7 +268,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::sif
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 544 $
 
 =head1 SYNOPSIS
 

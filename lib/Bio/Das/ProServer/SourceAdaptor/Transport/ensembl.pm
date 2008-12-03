@@ -2,20 +2,19 @@
 # Author:        aj
 # Maintainer:    $Author: andyjenkinson $
 # Created:       2006
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
-# Id:            $Id: ensembl.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-10-17 16:51:57 +0100 (Fri, 17 Oct 2008) $
+# Id:            $Id: ensembl.pm 535 2008-10-17 15:51:57Z andyjenkinson $
 # Source:        $Source$
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/ensembl.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/ensembl.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::ensembl;
 use strict;
 use warnings;
 use Carp;
-use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use Bio::EnsEMBL::Registry;
-use Bio::EnsEMBL::DBSQL::DBAdaptor;
+use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 
-our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my ($v) = (q$Revision: 535 $ =~ /\d+/mxg); $v; };
 
 sub init {
   my ($self) = @_;
@@ -28,10 +27,12 @@ sub init {
 
 sub _load_registry {
   my ($self) = @_;
-  Bio::EnsEMBL::Registry->load_registry_from_db(
-    -host => 'ensembldb.ensembl.org',
-    -user => 'anonymous',
-    -verbose => $self->{'debug'} );
+  if (!$self->config->{'skip_registry'}) {
+    Bio::EnsEMBL::Registry->load_registry_from_db(
+      -host => 'ensembldb.ensembl.org',
+      -user => 'anonymous',
+      -verbose => $self->{'debug'} );
+  }
   Bio::EnsEMBL::Registry->set_disconnect_when_inactive();
   return;
 }
@@ -41,24 +42,54 @@ sub _apply_override {
   my $dbname = $self->config->{'dbname'};
 
   if ($dbname) {
-    $self->{'debug'} && carp "Overriding database with $dbname\n";
+
     my ($species, $group) = $dbname =~ m/([a-z_]+)_([a-z]+)_\d+/mx;
-    $species || croak "Unknown database to override: $dbname";
     if ($species  eq 'ensembl') {
       $species = 'multi';
     }
-    $self->{'_species'} = $species;
-    $self->{'_group'}   = $group;
+    $self->{'_species'} ||= $species;
+    $self->{'_group'}   ||= $group;
 
+    if (!$self->{'_species'} || !$self->{'_group'}) {
+      croak "Unable to parse database species and group: $dbname";
+    }
+
+    $self->{'debug'} && carp sprintf "Overriding database with %s (%s,%s)\n",
+                                     $dbname, $self->{'_species'}, $self->{'_group'};
+
+    # This is a map from group names to Ensembl DB adaptors.
+    # Taken from Bio::EnsEMBL::Registry
+    my %group2adaptor = (
+      'blast'   => 'Bio::EnsEMBL::External::BlastAdaptor',
+      'compara' => 'Bio::EnsEMBL::Compara::DBSQL::DBAdaptor',
+      'core'    => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+      'estgene' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+      'funcgen' => 'Bio::EnsEMBL::Funcgen::DBSQL::DBAdaptor',
+      'haplotype' =>
+        'Bio::EnsEMBL::ExternalData::Haplotype::DBAdaptor',
+      'hive' => 'Bio::EnsEMBL::Hive::DBSQL::DBAdaptor',
+      'lite' => 'Bio::EnsEMBL::Lite::DBAdaptor',
+      'otherfeatures' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+      'pipeline' =>
+        'Bio::EnsEMBL::Pipeline::DBSQL::DBAdaptor',
+      'snp' =>
+        'Bio::EnsEMBL::ExternalData::SNPSQL::DBAdaptor',
+      'variation' =>
+        'Bio::EnsEMBL::Variation::DBSQL::DBAdaptor',
+      'vega' => 'Bio::EnsEMBL::DBSQL::DBAdaptor',
+    );
+
+    my $adaptorclass = $group2adaptor{ $self->{'_group'} } || croak 'Unknown database group: '.$self->{'_group'};
     # Creating a new connection will add it to the registry.
-    my $dba = Bio::EnsEMBL::DBSQL::DBAdaptor->new(
+    require $adaptorclass;
+    $adaptorclass->new(
       -host    => $self->config->{'host'}     || 'localhost',
       -port    => $self->config->{'port'}     || '3306',
       -user    => $self->config->{'username'} || 'ensro',
       -pass    => $self->config->{'password'},
       -dbname  => $dbname,
-      -species => $species,
-      -group   => $group,
+      -species => $self->{'_species'},
+      -group   => $self->{'_group'},
     );
   }
   return;
@@ -140,7 +171,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::ensembl
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 535 $
 
 =head1 SYNOPSIS
 
@@ -261,16 +292,21 @@ access to the latest data available to the installed API.
 
 Configured as part of each source's ProServer 2 INI file.
 
-  The 'default database' is configured using these properties:
-    species  (defaults to human)
-    group    (defaults to core)
-
-  A specific database may be overridden using these properties:
+  The transport will automatically load database connection settings from
+  the Ensembl Registry at ensembldb.ensembl.org. To skip this, set the
+  'skip_registry' INI property.
+  
+  A specific database may also be overridden using these INI properties:
     dbname
     host     (defaults to localhost)
     port     (defaults to 3306)
     username (defaults to ensro)
     password
+
+  The 'default database' used in the transport's data access methods may be
+  configured using these INI properties:
+    species  (defaults to human)
+    group    (defaults to core)
 
 =head1 DIAGNOSTICS
 
@@ -284,12 +320,11 @@ Configured as part of each source's ProServer 2 INI file.
 
 =item L<Bio::Das::ProServer::SourceAdaptor::Transport::generic>
 
-=item L<Bio::EnsEMBL::Registry>
+=item Ensembl core API
 
-=item L<Bio::EnsEMBL::DBSQL::DBAdaptor>
+=item Additional Ensembl APIs if used
 
 =back
-
 
 =head1 INCOMPATIBILITIES
 

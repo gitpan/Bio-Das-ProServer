@@ -2,16 +2,16 @@
 # Author:        rmp
 # Maintainer:    $Author: andyjenkinson $
 # Created:       2003-05-22
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
+# Last Modified: $Date: 2008-09-21 20:05:54 +0100 (Sun, 21 Sep 2008) $
 # Source:        $Source $
 # Id:            $Id $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/generic.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/generic.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::generic;
 use strict;
 use warnings;
 
-our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my ($v) = (q$Revision: 528 $ =~ /\d+/mxg); $v; };
 
 sub new {
   my ($class, $defs) = @_;
@@ -54,7 +54,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::generic - A generic transport lay
 
 =head1 VERSION
 
-$Revision: 453 $
+$Revision: 528 $
 
 =head1 SYNOPSIS
 

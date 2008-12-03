@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use File::Spec;
 use Data::Dumper;
-use Test::More tests => 14;
+use Test::More tests => 20;
 
 my @filenames = &setup_files();
 
@@ -12,8 +12,8 @@ my $t = Bio::Das::ProServer::SourceAdaptor::Transport::sif->new({
 });
 isa_ok($t, 'Bio::Das::ProServer::SourceAdaptor::Transport::sif');
 can_ok($t, qw(query last_modified DESTROY));
-
-my $struct = $t->query('nodeA');
+#--------------------------------
+my $struct = $t->query({'interactors'=>['nodeA']});
 &sort_struct;
 my $expected = {
   'interactors'  => [{'id'=>'nodeA'},{'id'=>'nodeB'}],
@@ -22,8 +22,8 @@ my $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'single-line binary (source node)') || diag(Dumper($struct));
-
-$struct = $t->query('nodeB');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeB']});
 &sort_struct;
 $expected = {
   'interactors'  => [{'id'=>'nodeA'},{'id'=>'nodeB'}],
@@ -32,8 +32,8 @@ $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'single-line binary (target node)') || diag(Dumper($struct));
-
-$struct = $t->query('nodeC');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeC']});
 &sort_struct;
 $expected = {
   'interactors'  => [{'id'=>'nodeC'},{'id'=>'nodeD'},{'id'=>'nodeE'}],
@@ -43,8 +43,8 @@ $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'single-line multiple-targets (source node)') || diag(Dumper($struct));
-
-$struct = $t->query('nodeD');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeD']});
 &sort_struct;
 $expected = {
   'interactors'  => [{'id'=>'nodeC'},{'id'=>'nodeD'}],
@@ -53,8 +53,8 @@ $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'single-line multiple-targets (target node)') || diag(Dumper($struct));
-
-$struct = $t->query('nodeE');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeE']});
 &sort_struct;
 $expected = {
   'interactors'  => [{'id'=>'nodeC'},{'id'=>'nodeE'},{'id'=>'nodeF'},{'id'=>'nodeG'}],
@@ -65,8 +65,8 @@ $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'combining multiple lines') || diag(Dumper($struct));
-
-$struct = $t->query('nodeH');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeH']});
 &sort_struct;
 $expected = {
   'interactors'  => [{'id'=>'nodeH'},{'id'=>'nodeI'}],
@@ -75,15 +75,15 @@ $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'duplicated interactions') || diag(Dumper($struct));
-
-$struct = $t->query('nodeA','nodeC');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeA','nodeC']});
 $expected = {
   'interactors'  => [],
   'interactions' => [],
 };
 is_deeply($struct, $expected, 'non-existing intersection') || diag(Dumper($struct));
-
-$struct = $t->query('nodeE','nodeG');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeE','nodeG']});
 &sort_struct;
 $expected = {
   'interactors'  => [{'id'=>'nodeE'},{'id'=>'nodeG'}],
@@ -91,9 +91,31 @@ $expected = {
                      {'name'=>'nodeE-nodeG','participants'=>[{'id'=>'nodeE'},{'id'=>'nodeG'}]},
                     ],
 };
-is_deeply($struct, $expected, 'multiple-target intersection') || diag(Dumper($struct));
-
-$struct = $t->query('nodeK');
+is_deeply($struct, $expected, 'multiple-target implied intersection') || diag(Dumper($struct));
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeE','nodeG'], 'operation'=>'intersection'});
+&sort_struct;
+$expected = {
+  'interactors'  => [{'id'=>'nodeE'},{'id'=>'nodeG'}],
+  'interactions' => [
+                     {'name'=>'nodeE-nodeG','participants'=>[{'id'=>'nodeE'},{'id'=>'nodeG'}]},
+                    ],
+};
+is_deeply($struct, $expected, 'multiple-target explicit intersection') || diag(Dumper($struct));
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeC','nodeK'], 'operation'=>'union'});
+&sort_struct;
+$expected = {
+  'interactors'  => [{'id'=>'nodeC'},{'id'=>'nodeD'},{'id'=>'nodeE'},{'id'=>'nodeJ'},{'id'=>'nodeK'}],
+  'interactions' => [
+                     {'name'=>'nodeC-nodeD','participants'=>[{'id'=>'nodeC'},{'id'=>'nodeD'}]},
+                     {'name'=>'nodeC-nodeE','participants'=>[{'id'=>'nodeC'},{'id'=>'nodeE'}]},
+                     {'name'=>'nodeJ-nodeK','participants'=>[{'id'=>'nodeJ'},{'id'=>'nodeK'}]},
+                    ],
+};
+is_deeply($struct, $expected, 'multiple-target union') || diag(Dumper($struct));
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeK']});
 &sort_struct;
 $expected = {
   'interactors'  => [{'id'=>'nodeJ'},{'id'=>'nodeK'}],
@@ -102,8 +124,8 @@ $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'similar node names') || diag(Dumper($struct));
-
-$struct = $t->query('nodeN','nodeO');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeN','nodeO']});
 &sort_struct;
 $expected = {
   'interactors'  => [
@@ -115,8 +137,8 @@ $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'interactor attributes') || diag(Dumper($struct));
-
-$struct = $t->query('nodeQ');
+#--------------------------------
+$struct = $t->query({'interactors'=>['nodeQ']});
 &sort_struct;
 $expected = {
   'interactors'  => [{'id'=>'nodeP'},{'id'=>'nodeQ'},{'id'=>'nodeR'}],
@@ -134,7 +156,68 @@ $expected = {
                     ],
 };
 is_deeply($struct, $expected, 'interaction attributes') || diag(Dumper($struct));
-
+#--------------------------------
+$struct = $t->query({
+                     'interactors' => ['nodeQ'],
+                     'details'     => { 'IntScore' => undef },
+                    });
+&sort_struct;
+$expected = {
+  'interactors'  => [{'id'=>'nodeP'},{'id'=>'nodeQ'},{'id'=>'nodeR'}],
+  'interactions' => [
+                     {
+                      'name'        =>'nodeP-nodeQ',
+                      'participants'=>[{'id'=>'nodeP'},{'id'=>'nodeQ'}],
+                      'details'     =>[{'property'=>'IntScore','value'=>'0.1'}],
+                     },
+                     {
+                      'name'        =>'nodeQ-nodeR',
+                      'participants'=>[{'id'=>'nodeQ'},{'id'=>'nodeR'}],
+                      'details'     =>[{'property'=>'IntScore','value'=>'0.2'}],
+                     },
+                    ],
+};
+is_deeply($struct, $expected, 'interaction has attribute') || diag(Dumper($struct));
+#--------------------------------
+$struct = $t->query({
+                     'interactors' => ['nodeQ'],
+                     'details'     => { 'AnswerToEverything' => undef },
+                    });
+&sort_struct;
+$expected = {
+  'interactors'  => [],
+  'interactions' => [],
+};
+is_deeply($struct, $expected, 'interaction does not have attribute') || diag(Dumper($struct));
+#--------------------------------
+$struct = $t->query({
+                     'interactors' => ['nodeQ'],
+                     'details'     => { 'IntScore' => '0.1' },
+                    });
+&sort_struct;
+$expected = {
+  'interactors'  => [{'id'=>'nodeP'},{'id'=>'nodeQ'}],
+  'interactions' => [
+                     {
+                      'name'        =>'nodeP-nodeQ',
+                      'participants'=>[{'id'=>'nodeP'},{'id'=>'nodeQ'}],
+                      'details'     =>[{'property'=>'IntScore','value'=>'0.1'}],
+                     },
+                    ],
+};
+is_deeply($struct, $expected, 'interaction has attribute value') || diag(Dumper($struct));
+#--------------------------------
+$struct = $t->query({
+                     'interactors' =>['nodeQ'],
+                     'details'     =>{ 'IntScore'=>'0.3' },
+                    });
+&sort_struct;
+$expected = {
+  'interactors'  => [],
+  'interactions' => [],
+};
+is_deeply($struct, $expected, 'interaction does not have attribute value') || diag(Dumper($struct));
+#--------------------------------
 unlink @filenames;
 
 sub sort_struct {

@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-20
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# Id:            $Id: Authenticator.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
+# Id:            $Id: Authenticator.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator.pm $
 #
 # Stub Authenticator for controlling access.
 #
@@ -15,7 +15,7 @@ use warnings;
 use Carp;
 use HTTP::Response;
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 453 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 549 $ =~ /\d+/mxg); $v; };
 
 sub new {
   my ($class, $self) = @_;
@@ -36,7 +36,7 @@ sub authenticate {
 sub deny {
   my ($self, $params) = @_;
   $self->{'debug'} && carp 'Authenticator denied request';
-  my $response = HTTP::Response->new(403);
+  my $response = HTTP::Response->new('403');
   $response->content_type('text/plain');
   $response->content(sprintf q(Forbidden: authentication failed for '%s' command on '%s'),
                              $params->{'call'}||'unknown',
@@ -59,7 +59,7 @@ Bio::Das::ProServer::Authenticator - authenticates DAS requests
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 549 $
 
 =head1 SYNOPSIS
 

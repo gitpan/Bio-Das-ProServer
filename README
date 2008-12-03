@@ -20,9 +20,12 @@ INSTALLATION
 
 To install this module type the following:
 
-   perl Makefile.PL
-   make
-   make test
+   perl Build.PL
+   ./Build
+   ./Build test
+
+You may receive warnings about missing dependencies, note that only
+some of these are required (see DEPENDENCIES section).
 
 RUNNING
 

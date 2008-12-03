@@ -3,9 +3,9 @@
 # Maintainer:    rmp
 # Created:       2003-05-20
 # Last Modified: 2003-05-27
-# $Id: file.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# $Id: file.pm 528 2008-09-21 19:05:54Z andyjenkinson $
 # $Source$
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/file.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/file.pm $
 #
 # Transport layer for file-based storage (slow)
 #
@@ -17,7 +17,7 @@ use File::stat;
 use English qw(-no_match_vars);
 use Carp;
 
-our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my ($v) = (q$Revision: 528 $ =~ /\d+/mxg); $v; };
 
 sub _fh {
   my $self = shift;
@@ -91,7 +91,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::file
 
 =head1 VERSION
 
-$Revision: 453 $
+$Revision: 528 $
 
 =head1 SYNOPSIS
 

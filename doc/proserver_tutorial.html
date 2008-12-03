@@ -200,13 +200,13 @@ sub build_features {
 <p>
   Save this file as <em>lib/Bio/Das/ProServer/SourceAdaptor/tutorial.pm</em>.
   Now try running the server again. Whenever you make changes to code
-  <strong>Make sure you recreate the ProServer Makefile first</strong> to
-  include the additional file, and re-make the installation:
+  <strong>Make sure you rebuild ProServer first</strong> to
+  include the additional file:
 </p>
 <div class="code">
 <pre>
-perl Makefile.PL
-make
+perl Build.PL
+./Build
 eg/proserver -x -c eg/tutorial.ini
 </pre>
 </div>
@@ -334,7 +334,7 @@ state        = on
 adaptor      = tutorial
 title        = Tutorial Source
 description  = Some demonstration features taken from UniProt
-coordinates  = UniProt,Protein Sequence => P15056
+coordinates  = UniProt,Protein Sequence -> P15056
 dsncreated   = 2007-02-26
 maintainer   = user@domain.com
 doc_href     = http://beta.uniprot.org/uniprot/P15056

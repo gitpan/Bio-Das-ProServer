@@ -2,10 +2,10 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# Id:            $Id: SourceHydra.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
+# Id:            $Id: SourceHydra.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra.pm,v $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra.pm $
 #
 # Dynamic SourceAdaptor broker
 #
@@ -16,7 +16,7 @@ use Bio::Das::ProServer::SourceAdaptor;
 use English qw(-no_match_vars);
 use Carp;
 
-our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
 
 sub new {
   my ($class, $defs) = @_;
@@ -39,17 +39,16 @@ sub transport {
   if(!exists $self->{'_transport'} && $self->config->{'transport'}) {
 
     my $transport = 'Bio::Das::ProServer::SourceAdaptor::Transport::'.$self->config->{'transport'};
-    eval "require $transport"; ## no critic (BuiltinFunctions::ProhibitStringyEval)
-
-    if($EVAL_ERROR) {
+    eval "require $transport" or do { ## no critic (BuiltinFunctions::ProhibitStringyEval)
       carp $EVAL_ERROR;
+      return;
+    };
 
-    } else {
-      $self->{'_transport'} = $transport->new({
-					       'config' => $self->config(),
-					      });
-    }
+    $self->{'_transport'} = $transport->new({
+					     config => $self->config(),
+					    });
   }
+
   return $self->{'_transport'};
 }
 
@@ -73,7 +72,7 @@ Bio::Das::ProServer::SourceHydra - A runtime factory for B::D::P::SourceAdaptors
 
 =head1 VERSION
 
-$Revision $
+$Revision: 549 $
 
 =head1 SYNOPSIS
 

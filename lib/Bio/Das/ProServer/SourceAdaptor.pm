@@ -2,10 +2,10 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-05-20
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# Id:            $Id: SourceAdaptor.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
+# Id:            $Id: SourceAdaptor.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor.pm,v $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor.pm $
 #
 # Generic SourceAdaptor. Generates XML and manages callouts for DAS functions
 #
@@ -18,7 +18,7 @@ use English qw(-no_match_vars);
 use Carp;
 use File::Spec;
 
-our $VERSION  = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION  = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
 
 sub new {
   my ($class, $defs) = @_;
@@ -73,37 +73,42 @@ sub length { return 0; } ## no critic (Subroutines::ProhibitBuiltinHomonyms)
 
 sub source_uri {
   my $self = shift;
-  return $self->config->{'source_uri'} || $self->dsn;
+  return $self->{'source_uri'} || $self->config->{'source_uri'} || $self->version_uri;
 }
 
 sub version_uri {
   my $self = shift;
-  return $self->config->{'version_uri'} || $self->source_uri;
+  return $self->{'version_uri'} || $self->config->{'version_uri'} || $self->dsn;
 }
 
 sub title {
   my $self = shift;
-  return $self->config->{'title'} || $self->source_uri;
+  return $self->{'title'} || $self->config->{'title'} || $self->dsn;
 }
 
 sub maintainer {
   my $self = shift;
-  return $self->config->{'maintainer'} || q();
+  return $self->{'maintainer'} || $self->config->{'maintainer'} || q();
 }
 
 sub mapmaster {
   my $self = shift;
-  return $self->config->{'mapmaster'};
+  return $self->{'mapmaster'} || $self->config->{'mapmaster'};
 }
 
 sub description {
   my $self = shift;
-  return $self->config->{'description'} || $self->title;
+  return $self->{'description'} || $self->config->{'description'} || $self->title;
 }
 
 sub doc_href {
   my $self = shift;
-  return $self->config->{'doc_href'};
+  return $self->{'doc_href'} || $self->config->{'doc_href'};
+}
+
+sub strict_boundaries {
+  my $self = shift;
+  return $self->{'strict_boundaries'} || $self->config->{'strict_boundaries'};
 }
 
 sub known_segments {return;}
@@ -126,10 +131,12 @@ sub dsncreated {
   my $self = shift;
   my $datetime = $self->{dsncreated} || $self->config->{dsncreated};
 
-  if (!$datetime &&
-      defined $self->transport &&
-      $self->transport->can('last_modified')) {
-    $datetime = $self->transport->last_modified;
+  if (!$datetime) {
+    if (defined $self->hydra && $self->hydra->can('last_modified')) {
+      $datetime = $self->hydra->last_modified;
+    } elsif (defined $self->transport && $self->transport->can('last_modified')) {
+      $datetime = $self->transport->last_modified;
+    }
   }
 
   return $datetime || 0; # epoch
@@ -138,20 +145,25 @@ sub dsncreated {
 sub coordinates {
   my $self = shift;
 
-  if (!exists $self->{coordinates}) {
-    my @coords = (split /\s*[;\|]\s*/mx, $self->config->{'coordinates'} || q());
-    my $coords = {map { split (/\s*[=-]>\s*/mx, $_, 2) } @coords}; ## no critic
-    $self->{coordinates} = $coords;
+  if (!exists $self->{'coordinates'}) {
+    my @pairs = (split /\s*[;\|]\s*/mx, $self->config->{'coordinates'} || q());
+    my $hash = {map { split (/\s*[=-]>\s*/mx, $_, 2) } @pairs}; ## no critic
+    $self->{'coordinates'} = $hash;
   }
 
-  return $self->{coordinates};
+  return $self->{'coordinates'};
 }
 
 sub coordinates_full {
   my $self = shift;
   my @coords = ();
   while (my ($key, $test_range) = each %{ $self->coordinates() }) {
-    my %coord = %{ $Bio::Das::ProServer::COORDINATES->{lc $key}||{'description'=>$key,'uri'=>$key} }; ## no critic
+    my $coord = $Bio::Das::ProServer::COORDINATES->{lc $key};
+    if (!$coord) {
+      print {*STDERR} $self->dsn . " has unknown coordinate system: $key" or croak $ERRNO;
+      next;
+    }
+    my %coord = %{ $coord };
     $coord{'test_range'} = $test_range;
     push @coords, \%coord;
   }
@@ -161,11 +173,25 @@ sub coordinates_full {
 
 sub capabilities {
   my $self = shift;
+
+  if (!exists $self->{'capabilities'}) {
+    my @pairs = (split /\s*[;\|]\s*/mx, $self->config->{'capabilities'} || q());
+    my $hash = {map { split (/\s*[=-]>\s*/mx, $_, 2) } @pairs}; ## no critic
+    $self->{'capabilities'} = $hash;
+  }
+
   return $self->{'capabilities'};
 }
 
 sub properties {
   my $self = shift;
+
+  if (!exists $self->{'properties'}) {
+    my @pairs = (split /\s*[;\|]\s*/mx, $self->config->{'properties'} || q());
+    my $hash = {map { split (/\s*[=-]>\s*/mx, $_, 2) } @pairs}; ## no critic
+    $self->{'properties'} = $hash;
+  }
+
   return $self->{'properties'} || {};
 }
 
@@ -174,6 +200,30 @@ sub start { return 1; }
 sub end {
   my ($self, @args) = @_;
   return $self->length(@args);
+}
+
+sub server_url {
+  my $self = shift;
+  my $host      = $self->{'hostname'};
+  my $protocol  = $self->{'protocol'}  || 'http';
+  my $port      = $self->{'port'}  || q();
+  if ($port && ($protocol eq 'http' && $port ne '80') || ($protocol eq 'https' && $port ne '443') ) {
+    $port = ":$port";
+  } else {
+    $port = q();
+  }
+  my $baseuri   = $self->{'baseuri'}   || q();
+  return "$protocol://$host$port$baseuri";
+}
+
+sub source_url {
+  my $self = shift;
+  return $self->server_url().q(/das/).$self->dsn();
+}
+
+sub hydra {
+  my $self = shift;
+  return $self->config()->{'_hydra'};
 }
 
 sub transport {
@@ -196,7 +246,7 @@ sub transport {
      defined $config->{'transport'}) {
     my $transport = 'Bio::Das::ProServer::SourceAdaptor::Transport::'.$config->{'transport'};
 
-    eval "require $transport"; ## no critic(TestingAndDebugging::ProhibitNoStrict BuiltinFunctions::ProhibitStringyEval)
+    eval "require $transport" or do { }; ## no critic(TestingAndDebugging::ProhibitNoStrict BuiltinFunctions::ProhibitStringyEval)
     my $require_error = $EVAL_ERROR;
     eval {
       $self->{_transport}->{$transport_name} = $transport->new({
@@ -204,13 +254,14 @@ sub transport {
 								config => $config,
 								debug  => $self->{debug},
 							       });
+    } or do {
+      carp $EVAL_ERROR;
     };
+
     # Require doesn't necessarily have to succeed, but if there was a problem loading the transport it should be reported.
     if($require_error && !$self->{_transport}->{$transport_name}) {
       carp $require_error;
     }
-
-    $EVAL_ERROR and carp $EVAL_ERROR;
   }
   return $self->{'_transport'}->{$transport_name};
 }
@@ -263,7 +314,7 @@ sub authenticator {
   if (defined $config->{'authenticator'} && !exists $self->{'_auth'}) {
     $self->{'debug'} && carp "Building authenticator for $self->{'dsn'}";
     my $auth = 'Bio::Das::ProServer::Authenticator::'.$config->{'authenticator'};
-    eval "require $auth"; ## no critic(TestingAndDebugging::ProhibitNoStrict BuiltinFunctions::ProhibitStringyEval)
+    eval "require $auth" or do { }; ## no critic(BuiltinFunctions::ProhibitStringyEval)
     my $require_error = $EVAL_ERROR;
     eval {
       $self->{'_auth'} = $auth->new({
@@ -271,12 +322,13 @@ sub authenticator {
                                      'config' => $config,
                                      'debug'  => $self->{'debug'},
                                     });
+    } or do {
+      # Require doesn't necessarily have to succeed, but if there was a problem loading the object it is fatal.
+      if ($require_error && !$self->{'_auth'}) {
+	croak $require_error;
+      }
+      croak $EVAL_ERROR;
     };
-    # Require doesn't necessarily have to succeed, but if there was a problem loading the object it is fatal.
-    if ($require_error && !$self->{'_auth'}) {
-      croak $require_error;
-    }
-    $EVAL_ERROR and croak $EVAL_ERROR;
   }
 
   return $self->{'_auth'};
@@ -290,7 +342,7 @@ sub das_dsn {
   my $content   = sprintf q(<DSN><SOURCE id="%s" version="%s">%s</SOURCE>%s<DESCRIPTION>%s</DESCRIPTION></DSN>),
                           $self->dsn(),
 			  $self->dsnversion(),
-			  $self->dsn(),
+			  $self->title(),
 			  $mapmaster,
 			  $self->description();
 
@@ -541,12 +593,15 @@ sub das_features {
   $self->_encode($opts);
   $self->init_segments($opts->{'segments'});
 
+  my $segver = { };
+
   #########
   # features on segments
   #
   for my $seg (@{$opts->{'segments'}}) {
     my ($seg, $coords) = split /:/mx, $seg;
     my ($start, $end)  = split /,/mx, $coords || q();
+    $seg ||= q();
 
     #########
     # If the requested segment is known to be not available it is an unknown or error segment.
@@ -563,40 +618,48 @@ sub das_features {
     #########
     # If the request is known to be out of range it is an error segment.
     #
-    if($self->config->{strict_boundaries}) {
+    if($self->strict_boundaries()) {
       if ( ($start && $segstart && $start < $segstart) || ($end && $segend && $end > $segend ) ) {
         $response .= $self->error_segment($seg, $start, $end);
         next;
       }
     }
+    
+    my @features = $self->build_features({
+                                          'segment' => $seg,
+                                          'start'   => $start,
+                                          'end'     => $end,
+                                          'types'   => $opts->{'types'},   # array
+                                          'maxbins' => $opts->{'maxbins'}, # scalar
+                                         });
 
-    # The actual sequence positions we are querying for.
-    my $actstart        = $start || $segstart || q();
-    my $actend          = $end   || $segend   || q();
-    my $segment_version = $self->segment_version($seg) || q(1.0);
-    $response          .= qq(<SEGMENT id="$seg" version="$segment_version" start="$actstart" stop="$actend">);
-
-    for my $feature ($self->build_features({
-					    'segment' => $seg,
-					    'start'   => $start,
-					    'end'     => $end,
-                                            'maxbins' => $opts->{'maxbins'},
-					   })) {
-      $response .= $self->_gen_feature_das_response($feature, q(    ));
+    if (!exists $segver->{$seg}) {
+      $segver->{$seg} = (scalar @features ? $features[0]->{'segment_version'} : undef)
+                     || $self->segment_version($seg) || q(1.0);
     }
+
+    $response .= sprintf q(<SEGMENT id="%s" version="%s" start="%s" stop="%s">),
+                         $seg,
+                         $segver->{$seg},
+                         # The actual sequence positions we are querying for:
+                         $start || $segstart || q(),
+                         $end   || $segend   || q();
+
+    for my $feature (@features) {
+      $response .= $self->_gen_feature_das_response($feature);
+    }
+
     $response .= q(</SEGMENT>);
   }
 
   #########
   # features by specific id
   #
-  my $error_feature = 1;
-
   for my $fid (@{$opts->{'features'}}) {
 
     my @f = $self->build_features({
-				   'feature_id' => $fid,
-				  });
+                                   'feature_id' => $fid,
+                                  });
     if (!scalar @f) {
       $response .= $self->error_feature($fid);
       next;
@@ -604,11 +667,15 @@ sub das_features {
 
     for my $feature (@f) {
       my $seg      = $feature->{'segment'}         || q();
+      if (!exists $segver->{$seg}) {
+        $segver->{$seg} = $feature->{'segment_version'} || $self->segment_version($seg) || q(1.0);
+      }
+
       my $segstart = $feature->{'segment_start'}   || $feature->{'start'} || q();
       my $segend   = $feature->{'segment_end'}     || $feature->{'end'}   || q();
-      my $segver   = $feature->{'segment_version'} || q(1.0);
+      my $segver   = $segver->{$seg};
       $response   .= qq(<SEGMENT id="$seg" version="$segver" start="$segstart" stop="$segend">);
-      $response   .= $self->_gen_feature_das_response($feature, q(    ));
+      $response   .= $self->_gen_feature_das_response($feature);
       $response   .= q(</SEGMENT>);
     }
   }
@@ -623,7 +690,7 @@ sub das_features {
     $a->{'segment'} cmp $b->{'segment'}
 
   } map {
-    $self->build_features({'group_id' => $_})
+    $self->build_features({'group_id' => $_, 'types' => $opts->{'types'}, 'maxbins' => $opts->{'maxbins'}})
 
   } @{$opts->{'groups'}}) {
 
@@ -633,13 +700,13 @@ sub das_features {
       my $segend   = $feature->{'segment_end'}     || $feature->{'end'}   || q();
       my $segver   = $feature->{'segment_version'} || q(1.0);
       if($lastsegid) {
-	$response   .= q(</SEGMENT>);
+        $response   .= q(</SEGMENT>);
       }
       $response   .= qq(<SEGMENT id="$seg" version="$segver" start="$segstart" stop="$segend">);
 
       $lastsegid = $feature->{'segment'};
     }
-    $response .= gen_feature_das_response($feature, q(    ));
+    $response .= $self->_gen_feature_das_response($feature);
   }
 
   if($lastsegid) {
@@ -679,7 +746,7 @@ sub das_dna {
     #########
     # If the request is known to be out of range it is an error segment.
     #
-    if($self->config->{strict_boundaries}) {
+    if($self->strict_boundaries()) {
       if ( ($start && $segstart && $start < $segstart) || ($end && $segend && $end > $segend ) ) {
         $response .= $self->error_segment($seg, $start, $end);
         next;
@@ -732,7 +799,7 @@ sub das_sequence {
     #########
     # If the request is known to be out of range it is an error segment.
     #
-    if($self->config->{strict_boundaries}) {
+    if($self->strict_boundaries()) {
       if ( ($start && $segstart && $start < $segstart) || ($end && $segend && $end > $segend ) ) {
         $response .= $self->error_segment($seg, $start, $end);
         next;
@@ -789,7 +856,7 @@ sub das_types {
       #########
       # If the request is known to be out of range it is an error segment.
       #
-      if($self->config->{strict_boundaries}) {
+      if($self->strict_boundaries()) {
         if ( ($start && $segstart && $start < $segstart) || ($end && $segend && $end > $segend ) ) {
           $response .= $self->error_segment($seg, $start, $end);
           next;
@@ -923,13 +990,6 @@ sub das_sourcedata {
   # 2. the adaptor config
   # 3. global config
 
-  # These values are for the response URL
-  my $host      = $self->{'hostname'};
-  my $port      = $self->{'port'} ? q(:).$self->{'port'} : q();
-  my $protocol  = $self->{'protocol'}  || 'http';
-  my $baseuri   = $self->{'baseuri'}   || q();
-  my $base_href = "$protocol://$host$port$baseuri";
-
   # Opening tag for this source implementation (version)
   my $resp = sprintf q[<VERSION uri="%s" created="%s">], $self->version_uri(), $self->dsncreated_iso();
 
@@ -953,7 +1013,7 @@ sub das_sourcedata {
   my $caps = $self->capabilities();
   while (my ($cap, $ver) = each %{$caps}) {
     my $type      = 'das'.(int $ver);
-    my $query_uri = (exists $Bio::Das::ProServer::WRAPPERS->{$cap})? (sprintf q[ query_uri="%s/%s/%s/%s"], $base_href, $type, $self->dsn(), $cap): q();
+    my $query_uri = (exists $Bio::Das::ProServer::WRAPPERS->{$cap})? (sprintf q[ query_uri="%s/%s"], $self->source_url, $cap): q();
     $resp .= qq[<CAPABILITY type="$type:$cap"$query_uri />];
   }
 
@@ -975,7 +1035,7 @@ sub das_sourcedata {
     $resp = sprintf q[<SOURCE uri="%s" title="%s" doc_href="%s" description="%s"><MAINTAINER email="%s" />%s],
                     $self->source_uri(),
 		    $self->title(),
-		    $self->doc_href() || "$base_href'/das/".$self->dsn,
+		    $self->doc_href() || $self->source_url(),
 		    $self->description(),
 		    $self->maintainer(), $resp;
   }
@@ -1030,9 +1090,12 @@ sub _plain_response {
         local $RS = undef;
         $filedata = <$fh>;
         close $fh or croak $ERRNO;
+
+      } or do {
+	carp $EVAL_ERROR;
       };
-      $EVAL_ERROR and carp $EVAL_ERROR;
     }
+
     #########
     # Cache unless configured not to do so
     #
@@ -1355,6 +1418,7 @@ sub das_interaction {
   my ($self, $opts) = @_;
   $self->_encode($opts);
 
+  my $operation   = $opts->{'operation'} || 'intersection';
   my $interactors = $opts->{'interactors'};
   my $details = {};
   for (@{ $opts->{'details'} }) {
@@ -1369,6 +1433,7 @@ sub das_interaction {
   my $struct = $self->build_interaction({
                                          interactors => $interactors,
                                          details     => $details,
+                                         operation   => $operation,
                                         });
   $self->_encode($struct);
 
@@ -1571,7 +1636,9 @@ sub cleanup {
         eval {
           $transport->disconnect();
           $debug and print {*STDERR} qq(${self}::cleanup performed forced transport disconnect\n);
-        };
+        } or do {
+	};
+
       } elsif($self->config->{autodisconnect} =~ /(\d+)/mx) {
         my $now = time;
         if($now - $transport->init_time() > $1) {
@@ -1579,7 +1646,8 @@ sub cleanup {
             $transport->disconnect();
             $transport->init_time($now);
             $debug and print {*STDERR} qq(${self}::cleanup performed timed transport disconnect\n);
-          };
+          } or do {
+	  };
         }
       }
     }
@@ -1597,7 +1665,7 @@ Bio::Das::ProServer::SourceAdaptor - base class for sources
 
 =head1 VERSION
 
-$Revision: 453 $
+$Revision: 549 $
 
 =head1 SYNOPSIS
 
@@ -1684,17 +1752,23 @@ Andy Jenkinson <andy.jenkinson@ebi.ac.uk>
 
   my $email = $oSourceAdaptor->maintainer();
   
-  By default returns configuration 'maintainer' setting or an empty string
+  By default returns configuration 'maintainer' setting, server setting or an empty string
+
+=head2 strict_boundaries - Whether to return error segments for out-of-range queries
+
+  my $strict = $oSourceAdaptor->strict_boundaries(); # boolean
+  
+  By default returns configuration 'strict_boundaries' setting, server setting or nothing (false)
 
 =head2 build_features - (subclasses only) Fetch feature data
 
 This call is made by das_features(). It is passed one of:
 
- { 'segment'    => $, 'start' => $, 'end' => $ }
+ { 'segment'    => $, 'start' => $, 'end' => $, 'types' => [$,$,...], 'maxbins' => $ }
 
  { 'feature_id' => $ }
 
- { 'group_id'   => $ }
+ { 'group_id'   => $, 'types' => [$,$,...], 'maxbins' => $ }
 
  and is expected to return a reference to an array of hash references, i.e.
  [{},{}...{}]
@@ -1703,53 +1777,84 @@ Each hash returned represents a single feature and should contain a
 subset of the following keys and types. For scalar types (i.e. numbers
 and strings) refer to the specification on biodas.org.
 
- start                         => $
- end                           => $
- note                          => $ or [$,$,$...]
- id       || feature_id        => $ 
- label    || feature_label     => $
- type                          => $ 
- typetxt                       => $ 
- method                        => $ 
- method_label                  => $ 
- group_id || group             => $ or [{
-                                         grouplabel   => $,
-                                         grouptype    => $,
-                                         groupnote    => $,
-                                         grouplink    => $,
-                                         grouplinktxt => $,
-                                         note         => $ or [$,$,$...],
-                                         target       => [{
-                                                            id        => $,
-                                                            start     => $,
-                                                            stop      => $,
-                                                            targettxt => $,
-                                                           }],
-                                        },{}...]
- grouplabel                    => $
- grouptype                     => $
- groupnote                     => $
- grouplink                     => $
- grouplinktxt                  => $
- score                         => $
- ori                           => $
- phase                         => $
- link                          => $
- linktxt                       => $
+ segment                       => $               # segment ID (if not provided)
+ id       || feature_id        => $               # feature ID
+ label    || feature_label     => $               # feature text label
+ start                         => $               # feature start position
+ end                           => $               # feature end position
+ ori                           => $               # feature strand
+ phase                         => $               # feature phase
+ type                          => $               # feature type ID
+ typetxt                       => $               # feature type text label
+ typecategory || type_category => $               # feature type category
+ typesubparts                  => $               # feature has subparts
+ typesuperparts                => $               # feature has superparts
+ typereference                 => $               # feature is reference
+ method                        => $               # annotation method ID
+ method_label                  => $               # annotation method text label
+ score                         => $               # annotation score
+ note                          => $ or [$,$,$...] # feature text note
+ ##########################################################################
+ # For one or more links:
+ link                          => $ or [$,$,$...] # feature link href
+ linktxt                       => $ or [$,$,$...] # feature link label
+ # For hash-based links:
+ link                          => {
+                                   $ => $,        # href => label
+                                   ...
+                                  }
+ ###############################################################################
+ # For a single target:
+ target_id                     => $               # target ID
+ target_start                  => $               # target start position
+ target_stop                   => $               # target end position
+ targettxt                     => $               # target text label
+ # For multiple targets:
  target                        => scalar or [{
                                               id        => $,
                                               start     => $,
                                               stop      => $,
                                               targettxt => $,
                                              },{}...]
- target_id                     => $
- target_start                  => $
- target_stop                   => $
- targettxt                     => $
- typecategory || type_category => $
- typesubparts                  => $
- typesuperparts                => $
- typereference                 => $
+ ###############################################################################
+ # For a single group:
+ group_id                      => $               # feature group ID
+ grouplabel                    => $               # feature group text label
+ grouptype                     => $               # feature group type ID
+ groupnote                     => $               # feature group text note
+ grouplink                     => $               # feature group ID
+ grouplinktxt                  => $               # feature group ID
+ # For multiple groups:
+ group                         => [{
+                                    grouplabel   => $
+                                    grouptype    => $
+                                    groupnote    => $
+                                    grouplink    => $
+                                    grouplinktxt => $
+                                    note         => $ or [$,$,$...]
+                                    target       => [{
+                                                      id        => $
+                                                      start     => $
+                                                      stop      => $
+                                                      targettxt => $
+                                                     }],
+                                   }, {}...]
+
+=head2 sequence - (Subclasses only) fetch sequence/DNA data
+
+This call is made by das_sequence() or das_dna(). It is passed:
+
+ { 'segment'    => $, 'start' => $, 'end' => $ }
+
+It is expected to return a hash reference:
+
+ {
+  seq     => $,
+  version => $, # can also be specified with the segment_version method
+  moltype => $,
+ }
+
+For details of the data constraints refer to the specification on biodas.org.
 
 =head2 build_types - (Subclasses only) fetch type data
 
@@ -2082,6 +2187,18 @@ It is expected to return a hash reference for a single volume map:
   my $sEnd = $oSourceAdaptor->end('DYNA_CHICK');
   
   By default returns $self->length
+
+=head2 server_url - Get the URL for the server (not including the /das)
+
+  my $sUrl = $oSourceAdaptor->server_url();
+
+=head2 source_url - Get the full URL for the source
+
+  my $sUrl = $oSourceAdaptor->source_url();
+
+=head2 hydra - Get the relevant B::D::PS::SourceHydra::<...> configured for this adaptor, if there is one
+
+  my $oHydra = $oSourceAdaptor->hydra();
 
 =head2 transport - Build the relevant B::D::PS::SA::Transport::<...> configured for this adaptor
 

@@ -22,7 +22,7 @@ function hideColumn(c){var t=document.getElementById('data');var trs=t.getElemen
             <xsl:for-each select="/DASDSN/DSN">
               <xsl:sort select="@id"/>
                 <tr>
-                  <td><a><xsl:attribute name="href"><xsl:value-of select="SOURCE"/></xsl:attribute><xsl:value-of select="SOURCE"/></a></td>
+                  <td><a><xsl:attribute name="href"><xsl:value-of select="SOURCE"/>%protocol://%host:%port%baseuri/das/</xsl:attribute><xsl:value-of select="SOURCE"/></a></td>
                   <td><xsl:value-of select="SOURCE/@version"/></td>
                   <td><a><xsl:attribute name="href"><xsl:value-of select="MAPMASTER"/></xsl:attribute><xsl:value-of select="MAPMASTER"/></a></td>
                   <td><xsl:value-of select="DESCRIPTION"/></td>

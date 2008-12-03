@@ -2,9 +2,9 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-05-20
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
-# Id:            $Id: dbi.pm 453 2008-03-12 14:50:11Z andyjenkinson $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/dbi.pm $
+# Last Modified: $Date: 2008-12-03 21:14:05 +0000 (Wed, 03 Dec 2008) $
+# Id:            $Id: dbi.pm 546 2008-12-03 21:14:05Z zerojinx $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/dbi.pm $
 #
 # Transport layer for DBI
 #
@@ -15,8 +15,11 @@ use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use DBI;
 use Carp;
 use English qw(-no_match_vars);
+use Readonly;
 
-our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my ($v) = (q$Revision: 546 $ =~ /\d+/mxg); $v; };
+Readonly::Scalar our $CACHE_TIMEOUT => 30;
+Readonly::Scalar our $QUERY_TIMEOUT => 30;
 
 sub dbh {
   my $self     = shift;
@@ -37,11 +40,10 @@ sub dbh {
        !$self->{dbh}->ping()) {
       $self->{dbh} = DBI->connect_cached($dsn, $username, $password, {RaiseError => 1});
     }
-  };
 
-  if($EVAL_ERROR) {
-    croak "$dsn = $self->{dsb}\n$EVAL_ERROR";
-  }
+  } or do {
+    croak "$dsn = $self->{dsn}\n$EVAL_ERROR";
+  };
 
   return $self->{dbh};
 }
@@ -56,7 +58,7 @@ sub query {
   (@args and ref $args[0]) and $fetchall_arg = shift @args;
 
   $SIG{ALRM} = sub { croak 'timeout'; };
-  alarm 30;
+  alarm $QUERY_TIMEOUT;
   eval {
     $debug and carp "Preparing query...\n";
     my $sth;
@@ -72,12 +74,12 @@ sub query {
     $ref    = $sth->fetchall_arrayref($fetchall_arg);
     $debug and carp "Finishing...\n";
     $sth->finish();
-  };
-  alarm 0;
+    alarm 0;
 
-  if($EVAL_ERROR) {
+  } or do {
+    alarm 0;
     croak "Error running query: $EVAL_ERROR\nArgs were: @{[join q( ), @_]}\n";
-  }
+  };
 
   return $ref;
 }
@@ -107,12 +109,23 @@ sub last_modified {
     return;
   }
 
-  my $server_text = [sort { $b cmp $a } ## no critic
-                     map { $_->{Update_time} }
+  my $now      = time;
+  #########
+  # flush the timestamp cache *at most* once every $CACHE_TIMEOUT
+  # This may need signal triggering to have immediate support
+  #
+  if($now > ($self->{'_lastmodified_timestamp'} || 0)+$CACHE_TIMEOUT) {
+    $self->{'debug'} and carp qq(Flushing last-modified cache for $self->{'dsn'});
+    $self->{'_lastmodified_timestamp'} = $now;
+    my $server_text = [sort { $b cmp $a } ## no critic
+                     map { $_->{Update_time}||0 }
                      @{ $self->query(q(SHOW TABLE STATUS),{Update_time=>1}) }
                     ]->[0]; # server local time
-  my $server_unix = $self->query(q(SELECT UNIX_TIMESTAMP(?) as 'unix'), $server_text)->[0]{unix}; # sec since epoch
-  return $server_unix;
+    my $server_unix = $self->query(q(SELECT UNIX_TIMESTAMP(?) as 'unix'), $server_text)->[0]{unix}; # sec since epoch
+    $self->{'_lastmodified'} = $server_unix;
+  }
+
+  return $self->{'_lastmodified'};
 }
 
 sub DESTROY {
@@ -130,9 +143,13 @@ Bio::Das::ProServer::SourceAdaptor::Transport::dbi - A DBI transport layer (actu
 
 =head1 VERSION
 
+$Revision: 546 $
+
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
+
+Transport helper class for database access, acting as a wrapper for DBI.
 
 =head1 SUBROUTINES/METHODS
 
@@ -156,13 +173,35 @@ Bio::Das::ProServer::SourceAdaptor::Transport::dbi - A DBI transport layer (actu
 
 =head2 last_modified - machine time of last data change
 
+  Only knows how to do this for MySQL databases.
+
   $dbitransport->last_modified();
+
+  This method is only implemented for mysql databases.
 
 =head1 DIAGNOSTICS
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
+  [mysource]
+  transport      = dbi
+  driver         = dbdmodule (default: mysql)
+  dbhost         = myserver  (default: localhost)
+  dbport         = myport    (default: 3306)
+  dbuser         = me        (default: test)
+  dbpass         = password
+  dbname         = mydb
+  autodisconnect = yes|no|#
+
 =head1 DEPENDENCIES
+
+=over
+
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::generic>
+
+=item L<DBI>
+
+=back
 
 =head1 INCOMPATIBILITIES
 

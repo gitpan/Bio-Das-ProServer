@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-01
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# Id:            $Id: sif.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-10-30 22:02:35 +0000 (Thu, 30 Oct 2008) $ $Author: andyjenkinson $
+# Id:            $Id: sif.pm 537 2008-10-30 22:02:35Z andyjenkinson $
 # Source:        $Source$
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/sif.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/sif.pm $
 #
 # SourceAdaptor implementation for Simple Interaction Format files.
 #
@@ -14,7 +14,7 @@ use warnings;
 use Carp;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 453 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 537 $ =~ /\d+/mxg); $v; };
 
 sub capabilities {
   return { 'interaction' => '1.0' };
@@ -22,7 +22,7 @@ sub capabilities {
 
 sub build_interaction {
   my ($self, $args) = @_;
-  my $struct = $self->transport->query($args->{'interactors'});
+  my $struct = $self->transport->query($args);
 
   my $coord_sys = $self->coordinates_full()->[0]->{description};
   my @params = qw(dbSource dbSourceCvId dbVersion);
@@ -56,7 +56,7 @@ Bio::Das::ProServer::SourceAdaptor::sif
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 537 $
 
 =head1 SYNOPSIS
 

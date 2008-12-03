@@ -3,9 +3,9 @@
 # Maintainer:    rmp
 # Created:       2003-06-03
 # Last Modified: 2005-11-22
-# Id:            $Id: Config.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Id:            $Id: Config.pm 548 2008-12-03 23:14:25Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/Config.pm,v $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Config.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Config.pm $
 #
 # ProServer source/parser configuration
 #
@@ -21,8 +21,12 @@ use English qw(-no_match_vars);
 use Carp;
 use POSIX qw(strftime);
 use File::Spec;
+use Readonly;
 
-our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+
+Readonly::Scalar our $DEFAULT_MAXCLIENTS => 10;
+Readonly::Scalar our $DEFAULT_PORT => 9000;
 
 sub new {
   my ($class, $self)      = @_;
@@ -71,7 +75,7 @@ sub new {
     for my $s ($conf->Sections()) {
       next if ($s eq 'general');
       $self->_build_adaptor_config($conf, $s);
-      $self->log(qq(Configuring Adaptor $s ), $self->{'adaptors'}->{$s}->{'state'});
+      $self->log(qq(Configuring Adaptor $s ), $self->{'adaptors'}->{$s}->{'state'} || 'off');
     }
 
   } else {
@@ -81,8 +85,8 @@ sub new {
   #########
   # set defaults if unset
   #
-  $self->{'maxclients'} ||= 10;
-  $self->{'port'}       ||= 9000;
+  $self->{'maxclients'} ||= $DEFAULT_MAXCLIENTS;
+  $self->{'port'}       ||= $DEFAULT_PORT;
   $self->{'hostname'}   ||= hostname();
   $self->{'coordshome'} ||= ($self->{'serverroot'}?File::Spec->catdir($self->{'serverroot'}, 'coordinates'):'coordinates');
   $self->{'styleshome'} ||= ($self->{'serverroot'}?File::Spec->catdir($self->{'serverroot'}, 'stylesheets'):'stylesheets');
@@ -107,7 +111,11 @@ sub log { ## no critic
 
 sub _build_adaptor_config {
   my ($self, $conf, $s) = @_;
-  exists $self->{'adaptors'}->{$s} && return $self->{'adaptors'}->{$s};
+
+  if(exists $self->{'adaptors'}->{$s}) {
+    return $self->{'adaptors'}->{$s};
+  }
+
   for my $p ($conf->Parameters($s)) {
   	$p eq 'parent' && next;
 	my $v = $conf->val($s, $p);
@@ -210,7 +218,7 @@ sub adaptors {
 
   for my $dsn (grep { ($self->{'adaptors'}->{$_}->{'state'} || 'off') eq 'on'; } keys %{$self->{'adaptors'}}) {
     if($self->{'adaptors'}->{$dsn}->{'hydra'} ||
-       (substr $dsn, 0, 5) eq 'hydra') {
+       $dsn =~ /^hydra/smx) {
       #########
       # This can be very slow, but we can't cache the results in case new hydras are added
       #
@@ -254,6 +262,7 @@ sub adaptor {
         carp "Error requiring $adaptortype: $EVAL_ERROR";
         return;
       }
+
       eval {
         $self->{'adaptors'}->{$dsn}->{'obj'} = $adaptortype->new({
                                                                   'dsn'      => $dsn,
@@ -264,17 +273,16 @@ sub adaptor {
                                                                   'baseuri'  => $self->response_baseuri,
                                                                   'debug'    => $self->{'debug'},
                                                                  });
-      };
-      if($EVAL_ERROR) {
-        carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
+      } or do {
+	carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
         return;
-      }
+      };
     }
 
     return $self->{'adaptors'}->{$dsn}->{'obj'};
 
   } elsif($dsn &&
-	  ((substr $dsn, 0, 5) eq 'hydra' ||
+	  ($dsn =~ /^hydra/smx ||
 	   scalar grep {
 	     $dsn=~/^$_/mx &&
 	     $self->{'adaptors'}->{$_}->{'hydra'}
@@ -318,8 +326,8 @@ sub knows {
   # test hydra sources (slower)
   #
   for my $hydraname (grep {
-    $self->{'adaptors'}->{$_}->{'hydra'} ||
-      (substr $_, 0, 5) eq 'hydra'
+      $self->{'adaptors'}->{$_}->{'hydra'} ||
+      $_ =~ /^hydra/smx
     } keys %{$self->{'adaptors'}}) {
 
     if(!($self->{'adaptors'}->{$hydraname}->{'state'} &&
@@ -361,7 +369,7 @@ sub hydra_adaptor {
   #
   for my $hydraname (grep {
     $self->{'adaptors'}->{$_}->{'hydra'} ||
-    (substr $_, 0, 5) eq 'hydra'
+    $_ =~ /^hydra/smx
   } keys %{$self->{'adaptors'}}) {
 
     my $adaptor = $self->_hydra_adaptor($hydraname, $dsn);
@@ -413,15 +421,15 @@ sub _hydra_adaptor {
                             'baseuri'  => $self->response_baseuri,
                             'debug'    => $self->{'debug'},
                            });
-  };
-  if($EVAL_ERROR) {
+  } or do {
     carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
     return;
-  }
-  
+  };
+
   return $adaptor;
 }
 
+# Gets or builds the hydra object
 sub hydra {
   my ($self, $hydraname) = @_;
   $hydraname ||= q();
@@ -456,7 +464,7 @@ Bio::Das::ProServer::Config - configuration parsing and hooks
 
 =head1 VERSION
 
-$Revision: 453 $
+$Revision: 548 $
 
 =head1 SYNOPSIS
 
@@ -471,6 +479,7 @@ Configuration takes the following structure
   [general]
   interface         = *    # interface to bind to ('*' for all)
   port              = 9000 # port to listen on
+  ; response_* attributes for servers behind a reverse proxy:
   response_hostname =      # overriding hostname for responses
   response_port     =      # overriding port for responses
   response_protocol =      # overriding protocol (http/s) for responses

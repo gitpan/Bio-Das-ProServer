@@ -2,10 +2,10 @@
 # Author:        Andreas Kahari, andreas.kahari@ebi.ac.uk
 # Maintainer:    $Author: andyjenkinson $
 # Created:       ?
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
-# Id:            $Id: bioseqio.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-09-21 20:05:54 +0100 (Sun, 21 Sep 2008) $
+# Id:            $Id: bioseqio.pm 528 2008-09-21 19:05:54Z andyjenkinson $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bioseqio.pm,v $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bioseqio.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bioseqio.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::bioseqio;
 use strict;
@@ -16,7 +16,7 @@ use Bio::DB::Flat;
 use Carp;
 use English qw(-no_match_vars);
 
-our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my ($v) = (q$Revision: 528 $ =~ /\d+/mxg); $v; };
 
 sub init {
   my $self = shift;
@@ -123,7 +123,7 @@ supports.
 
 =head1 VERSION
 
-$Revision: 453 $
+$Revision: 528 $
 
 =head1 SYNOPSIS
 

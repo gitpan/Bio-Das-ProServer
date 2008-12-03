@@ -2,22 +2,23 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# Id:            $Id: dbi.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
+# Id:            $Id: dbi.pm 548 2008-12-03 23:14:25Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra/dbi.pm,v $
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra/dbi.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra/dbi.pm $
 #
 # DBI-driven sourceadaptor broker
 #
 package Bio::Das::ProServer::SourceHydra::dbi;
 use strict;
 use warnings;
-use base qw(Bio::Das::ProServer::SourceHydra);
 use English qw(-no_match_vars);
 use Carp;
+use base qw(Bio::Das::ProServer::SourceHydra);
+use Readonly;
 
-our $VERSION       = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
-our $CACHE_TIMEOUT = 30;
+our $VERSION = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+Readonly::Scalar our $CACHE_TIMEOUT => 30;
 
 #########
 # the purpose of this module:
@@ -56,15 +57,42 @@ sub sources {
 
       $sth->finish();
       $self->{'debug'} and carp qq(@{[scalar @{$self->{'_tables'}}]} tables found);
-    };
 
-    if($EVAL_ERROR) {
+    } or do {
       carp "Error scanning tables: $EVAL_ERROR";
       delete $self->{'_tables'};
-    }
+    };
   }
 
   return @{$self->{'_tables'} || []};
+}
+
+sub last_modified {
+  my $self = shift;
+
+  if($self->transport->dbh->{Driver}->{Name} ne 'mysql') {
+    return;
+  }
+
+  my $now      = time;
+  my $basename = $self->config->{'basename'};
+
+  #########
+  # flush the timestamp cache *at most* once every $CACHE_TIMEOUT
+  # This may need signal triggering to have immediate support
+  #
+  if($now > ($self->{'_lastmodified_timestamp'} || 0)+$CACHE_TIMEOUT) {
+    $self->{'debug'} and carp qq(Flushing last-modified cache for hydra $self->{'dsn'});
+    $self->{'_lastmodified_timestamp'} = $now;
+    my $server_text = [sort { $b cmp $a } ## no critic
+                     map { $_->{Update_time} }
+                     @{ $self->transport()->query(q(SHOW TABLE STATUS),{Update_time=>1}) }
+                    ]->[0]; # server local time
+    my $server_unix = $self->transport()->query(q(SELECT UNIX_TIMESTAMP(?) as 'unix'), $server_text)->[0]{unix}; # sec since epoch
+    $self->{'_lastmodified'} = $server_unix;
+  }
+
+  return $self->{'_lastmodified'};
 }
 
 1;
@@ -76,7 +104,7 @@ Bio::Das::ProServer::SourceHydra::dbi - A database-backed implementation of B::D
 
 =head1 VERSION
 
-$Revision: 453 $
+$Revision: 548 $
 
 =head1 AUTHOR
 
@@ -111,7 +139,16 @@ disclaimers of warranty.
   This routine caches results for $CACHE_TIMEOUT as show tables can be
   slow for a few thousand sources.
 
+=head2 last_modified : machine time of last data change
+
+  Gets the most recent update time for any of the hydra's tables.
+  Only knows how to do this for MySQL databases.
+
+  my $unixtime = $dbihydra->last_modified();
+
 =head1 DIAGNOSTICS
+
+Run ProServer with the -debug flag.
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
@@ -132,5 +169,7 @@ Bio::Das::ProServer::SourceHydra
 =head1 INCOMPATIBILITIES
 
 =head1 BUGS AND LIMITATIONS
+
+The last_modified method only works for MySQL databases.
 
 =cut

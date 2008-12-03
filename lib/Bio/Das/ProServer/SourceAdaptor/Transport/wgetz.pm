@@ -1,11 +1,11 @@
 #########
 # Author:        ak
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2004
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $
-# Id:            $Id: wgetz.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $
+# Id:            $Id: wgetz.pm 548 2008-12-03 23:14:25Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://zerojinx@proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/wgetz.pm $
+# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/wgetz.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::wgetz;
 use strict;
@@ -13,8 +13,10 @@ use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use LWP::UserAgent;
 use Carp;
+use Readonly;
 
-our $VERSION = do { my @r = (q$Revision: 453 $ =~ /\d+/mxg); sprintf '%d.'.'%03d' x $#r, @r };
+our $VERSION = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+Readonly::Scalar our $TIMEOUT => 30;
 
 sub _useragent {
   # Caching an LWP::UserAgent instance within the current
@@ -26,7 +28,7 @@ sub _useragent {
     $self->{_useragent} = LWP::UserAgent->new(
 					      env_proxy  => 1,
 					      keep_alive => 1,
-					      timeout    => 30
+					      timeout    => $TIMEOUT,
 					     );
   }
 
@@ -75,7 +77,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::wgetz - A ProServer transport mod
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 548 $
 
 =head1 SYNOPSIS
 
@@ -95,9 +97,23 @@ $LastChangedRevision: 453 $
 
 =head1 DEPENDENCIES
 
-Bio::Das::ProServer::SourceAdaptor::Transport::generic
-LWP::UserAgent
-Carp
+=over
+
+=item Bio::Das::ProServer::SourceAdaptor::Transport::generic
+
+=item LWP::UserAgent
+
+=item Carp
+
+=item Readonly
+
+=item strict
+
+=item warnings
+
+=item base
+
+=back
 
 =head1 INCOMPATIBILITIES
 
