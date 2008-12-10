@@ -1,6 +1,6 @@
 ---
 name: Bio-Das-ProServer
-version: 2.9
+version: 2.10
 author:
   - 'Roger M Pettett <rmp@sanger.ac.uk>'
 abstract: |-
@@ -52,7 +52,7 @@ recommends:
 provides:
   Bio::Das::ProServer:
     file: lib/Bio/Das/ProServer.pm
-    version: 549
+    version: 553
   Bio::Das::ProServer::Authenticator:
     file: lib/Bio/Das/ProServer/Authenticator.pm
     version: 549
@@ -67,7 +67,7 @@ provides:
     version: 548
   Bio::Das::ProServer::SourceAdaptor:
     file: lib/Bio/Das/ProServer/SourceAdaptor.pm
-    version: 549
+    version: 554
   Bio::Das::ProServer::SourceAdaptor::Transport::bed12:
     file: lib/Bio/Das/ProServer/SourceAdaptor/Transport/bed12.pm
     version: 548

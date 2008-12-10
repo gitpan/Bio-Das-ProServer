@@ -2,8 +2,8 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-05-20
-# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
-# Id:            $Id: SourceAdaptor.pm 549 2008-12-03 23:35:54Z zerojinx $
+# Last Modified: $Date: 2008-12-10 10:42:17 +0000 (Wed, 10 Dec 2008) $ $Author: zerojinx $
+# Id:            $Id: SourceAdaptor.pm 554 2008-12-10 10:42:17Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor.pm,v $
 # $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor.pm $
 #
@@ -18,7 +18,7 @@ use English qw(-no_match_vars);
 use Carp;
 use File::Spec;
 
-our $VERSION  = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 554 $ =~ /\d+/mxg); $v; };
 
 sub new {
   my ($class, $defs) = @_;
@@ -1636,6 +1636,7 @@ sub cleanup {
         eval {
           $transport->disconnect();
           $debug and print {*STDERR} qq(${self}::cleanup performed forced transport disconnect\n);
+	  1;
         } or do {
 	};
 
@@ -1646,6 +1647,7 @@ sub cleanup {
             $transport->disconnect();
             $transport->init_time($now);
             $debug and print {*STDERR} qq(${self}::cleanup performed timed transport disconnect\n);
+	    1;
           } or do {
 	  };
         }
@@ -1665,7 +1667,7 @@ Bio::Das::ProServer::SourceAdaptor - base class for sources
 
 =head1 VERSION
 
-$Revision: 549 $
+$Revision: 554 $
 
 =head1 SYNOPSIS
 

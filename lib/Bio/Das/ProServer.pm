@@ -3,7 +3,7 @@
 # Author:        rmp
 # Maintainer:    $Author: zerojinx $
 # Created:       2003-05-22
-# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $
+# Last Modified: $Date: 2008-12-10 10:40:57 +0000 (Wed, 10 Dec 2008) $
 # Source:        $Source $
 # Id:            $Id $
 #
@@ -35,7 +35,7 @@ use Carp;
 use Readonly;
 
 our $DEBUG          = 0;
-our $VERSION        = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
+our $VERSION        = do { my ($v) = (q$Revision: 553 $ =~ /\d+/mxg); $v; };
 Readonly::Scalar our $GZIP_THRESHOLD => 10_000;
 $ENV{'PATH'}        = '/bin:/usr/bin:/usr/local/bin';
 our $COORDINATES    = undef;
@@ -462,6 +462,7 @@ sub server_got_connection {
 			   my @args = @_;
 			   eval {
 			     client_start(@args);
+			     1;
 			   } or do {
 			     carp $EVAL_ERROR;
 			   };
@@ -471,6 +472,7 @@ sub server_got_connection {
 			   my @args = @_;
 			   eval {
 			     client_got_request(@args);
+			     1;
 			   } or do {
 			     carp $EVAL_ERROR;
 			   };
@@ -587,39 +589,39 @@ sub response_general {
       defined $response && return;
     }
 
-  $response = HTTP::Response->new(200);
-  my $method   = "das_$call";
-  if(substr($call, -3, 3) eq 'xsl') {
-    $method = 'das_xsl';
-    $response->content_type('text/xsl');
-  } elsif($call eq 'homepage') {
-    $response->content_type('text/html');
-  } else {
-    $response->content_type('text/xml');
-  }
+    $response = HTTP::Response->new(200);
+    my $method   = "das_$call";
+    if(substr($call, -3, 3) eq 'xsl') {
+      $method = 'das_xsl';
+      $response->content_type('text/xsl');
+    } elsif($call eq 'homepage') {
+      $response->content_type('text/html');
+    } else {
+      $response->content_type('text/xml');
+    }
 
-  my $query   = {
-		 # Features command / shared:
-		 'segments'    => [$cgi->param('segment')],
-		 'features'    => [$cgi->param('feature_id')],
-		 'groups'      => [$cgi->param('group_id')],
-		 'maxbins'     => $cgi->param('maxbins') || undef,
-		 'types'       => [$cgi->param('type')],
-		 'call'        => $call,
-		 # Alignment command:
-		 'query'       => $cgi->param('query') || undef,
-		 'subjects'    => [$cgi->param('subject')],
-		 'rows'        => $cgi->param('rows') || undef,
-		 'subcoos'     => $cgi->param('subjectcoordsys') || undef,
-		 # Structure command:
-		 'chains'      => [$cgi->param('chain')],
-		 'ranges'      => [$cgi->param('range')], # Note: not supported!
-		 'model'       => [$cgi->param('model')],
-		 # Interaction command:
-		 'interactors' => [$cgi->param('interactor')],
-		 'details'     => [$cgi->param('detail')],
-		 'operation'   => $cgi->param('operation') || undef,
-		};
+    my $query   = {
+		   # Features command / shared:
+		   'segments'    => [$cgi->param('segment')],
+		   'features'    => [$cgi->param('feature_id')],
+		   'groups'      => [$cgi->param('group_id')],
+		   'maxbins'     => $cgi->param('maxbins') || undef,
+		   'types'       => [$cgi->param('type')],
+		   'call'        => $call,
+		   # Alignment command:
+		   'query'       => $cgi->param('query') || undef,
+		   'subjects'    => [$cgi->param('subject')],
+		   'rows'        => $cgi->param('rows') || undef,
+		   'subcoos'     => $cgi->param('subjectcoordsys') || undef,
+		   # Structure command:
+		   'chains'      => [$cgi->param('chain')],
+		   'ranges'      => [$cgi->param('range')], # Note: not supported!
+		   'model'       => [$cgi->param('model')],
+		   # Interaction command:
+		   'interactors' => [$cgi->param('interactor')],
+		   'details'     => [$cgi->param('detail')],
+		   'operation'   => $cgi->param('operation') || undef,
+		  };
 
     if($adaptor->implements($call) ||
        $call   eq 'homepage'       ||
@@ -639,8 +641,11 @@ sub response_general {
         }
       }
 
-      my $head    = $WRAPPERS->{$call}->{'open'}  || q();
-      my $foot    = $WRAPPERS->{$call}->{'close'} || q();
+      my ($head, $foot) = (q[], q[]);
+      if(exists $WRAPPERS->{$call}) {
+	$head = $WRAPPERS->{$call}->{open};
+      	$foot = $WRAPPERS->{$call}->{close};
+      }
       my $body    = $adaptor->$method($query);
       $head = _substitute($heap, $head, $dsn);
       if ($method eq 'das_xsl' || $call eq 'homepage') {
@@ -682,6 +687,8 @@ sub response_general {
       $response->header('X-DAS-Status' => 501);
       $response->content(qq(Unimplemented command for $dsn: @{[$call||q()]}));
     }
+
+    1;
 
   } or do {
     carp $EVAL_ERROR;
@@ -888,6 +895,7 @@ sub build_das_response {
     eval {
       $response->header('X-DAS-Capabilities' => $adaptor->das_capabilities()||q());
       $adaptor->cleanup();
+      1;
     } or do {
       carp $EVAL_ERROR;
     };
@@ -1001,7 +1009,7 @@ Bio::Das::ProServer
 
 =head1 VERSION
 
-$LastChangedRevision: 549 $
+$LastChangedRevision: 553 $
 
 =head1 SYNOPSIS
 
