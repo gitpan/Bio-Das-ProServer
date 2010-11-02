@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-20
-# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
-# Id:            $Id: http.pm 549 2008-12-03 23:35:54Z zerojinx $
+# Last Modified: $Date: 2008-12-10 12:23:01 +0000 (Wed, 10 Dec 2008) $ $Author: andyjenkinson $
+# Id:            $Id: http.pm 558 2008-12-10 12:23:01Z andyjenkinson $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator/http.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/Authenticator/http.pm $
 #
 # Authenticator implementation using a remote authority to control access.
 #
@@ -17,10 +17,12 @@ use warnings;
 use Carp;
 use LWP::UserAgent;
 use Cache::FileCache;
+use English qw(-no_match_vars);
 use Bio::Das::ProServer::Config;
 use base qw(Bio::Das::ProServer::Authenticator);
+use English qw(-no_match_vars);
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 549 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 558 $ =~ /\d+/mxg); $v; };
 
 sub parse_token {
   my ($self, $params) = @_;
@@ -73,16 +75,17 @@ sub authenticate {
 
     if ($auth_response->code() != 500) {
       eval {
-	$self->_cache()->set($token, $auth_response);
+        delete $auth_response->{'handlers'};
+        $self->_cache()->set($token, $auth_response);
+        1;
       } or do {
-	carp qq[Failed to cache $token response];
+        carp qq[Failed to cache $token response: $EVAL_ERROR];
       };
     }
   }
 
   if ($auth_response->code() == 200) {
     return $self->allow($params);
-
   }
 
   $self->{'debug'} && carp q(Authenticator denied request);
@@ -131,7 +134,7 @@ requests to a remote authority
 
 =head1 VERSION
 
-$LastChangedRevision: 549 $
+$LastChangedRevision: 558 $
 
 =head1 SYNOPSIS
 

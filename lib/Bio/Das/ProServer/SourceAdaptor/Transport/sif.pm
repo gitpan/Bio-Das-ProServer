@@ -4,7 +4,7 @@
 # Last Modified: $Date: 2008-12-03 21:06:41 +0000 (Wed, 03 Dec 2008) $ $xuthor$
 # Id:            $Id: sif.pm 544 2008-12-03 21:06:41Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/sif.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/sif.pm $
 #
 # Transport implementation for Simple Interaction Format files.
 #

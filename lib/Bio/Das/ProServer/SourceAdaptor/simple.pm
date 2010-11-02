@@ -4,7 +4,7 @@
 # Created:       2003-10-28
 # Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
 # $Id: simple.pm 549 2008-12-03 23:35:54Z zerojinx $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/simple.pm $
 #
 ## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
 #

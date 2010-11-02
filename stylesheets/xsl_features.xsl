@@ -52,6 +52,11 @@ function hideColumn(c){var t=document.getElementById('data');var trs=t.getElemen
     <xsl:if test="position()!=last()"><br/></xsl:if>
   </xsl:template>
   <xsl:template match="LINK">
-    [<a><xsl:attribute name="href"><xsl:value-of select="@href"/></xsl:attribute><xsl:value-of select="."/></a>]
+    [<a><xsl:attribute name="href"><xsl:value-of select="@href"/></xsl:attribute>
+      <xsl:choose>
+        <xsl:when test="text()"><xsl:value-of select="text()" /></xsl:when>
+        <xsl:otherwise><xsl:value-of select="@href" /></xsl:otherwise>
+      </xsl:choose>
+    </a>]
   </xsl:template>
 </xsl:stylesheet>

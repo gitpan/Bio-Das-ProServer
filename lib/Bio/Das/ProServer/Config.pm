@@ -3,9 +3,9 @@
 # Maintainer:    rmp
 # Created:       2003-06-03
 # Last Modified: 2005-11-22
-# Id:            $Id: Config.pm 548 2008-12-03 23:14:25Z zerojinx $
+# Id:            $Id: Config.pm 672 2010-08-25 14:30:33Z andyjenkinson $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/Config.pm,v $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Config.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/Config.pm $
 #
 # ProServer source/parser configuration
 #
@@ -23,7 +23,7 @@ use POSIX qw(strftime);
 use File::Spec;
 use Readonly;
 
-our $VERSION = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 672 $ =~ /\d+/mxg); $v; };
 
 Readonly::Scalar our $DEFAULT_MAXCLIENTS => 10;
 Readonly::Scalar our $DEFAULT_PORT => 9000;
@@ -69,6 +69,14 @@ sub new {
       $self->log(sprintf q(%-20s => %s), $f, ($self->{$f}||q()));
     }
 
+    $self->{'serverroot'} ||= File::Spec->curdir();
+    for my $f (qw(coordshome styleshome)) {
+      $self->{$f} && $self->{$f} =~ s/%serverroot/$self->{serverroot}/;
+    }
+
+    $self->{'coordshome'} ||= File::Spec->catdir($self->{'serverroot'}, 'coordinates');
+    $self->{'styleshome'} ||= File::Spec->catdir($self->{'serverroot'}, 'stylesheets');
+
     #########
     # build the adaptors substructure
     #
@@ -88,14 +96,15 @@ sub new {
   $self->{'maxclients'} ||= $DEFAULT_MAXCLIENTS;
   $self->{'port'}       ||= $DEFAULT_PORT;
   $self->{'hostname'}   ||= hostname();
-  $self->{'coordshome'} ||= ($self->{'serverroot'}?File::Spec->catdir($self->{'serverroot'}, 'coordinates'):'coordinates');
-  $self->{'styleshome'} ||= ($self->{'serverroot'}?File::Spec->catdir($self->{'serverroot'}, 'stylesheets'):'stylesheets');
+  $self->{'serverroot'} ||= File::Spec->curdir();
+  $self->{'coordshome'} ||= File::Spec->catdir($self->{'serverroot'}, 'coordinates');
+  $self->{'styleshome'} ||= File::Spec->catdir($self->{'serverroot'}, 'stylesheets');
 
   #########
   # set inherited paramaters if unset
   #
   for my $adaptor_conf (values %{ $self->{'adaptors'} }) {
-    for my $key (qw(maintainer styleshome strict_boundaries)) {
+    for my $key (qw(maintainer styleshome strict_boundaries http_proxy)) {
       $adaptor_conf->{$key} ||= $self->{$key};
     }
   }
@@ -117,10 +126,12 @@ sub _build_adaptor_config {
   }
 
   for my $p ($conf->Parameters($s)) {
-  	$p eq 'parent' && next;
-	my $v = $conf->val($s, $p);
-	$v    =~ s/\%serverroot/$self->{'serverroot'}/smgx;
-	$self->{'adaptors'}->{$s}->{$p} = $v;
+    $p eq 'parent' && next;
+    my $v = $conf->val($s, $p);
+    for my $k (qw(serverroot styleshome coordshome)) {
+      $v && $v =~ s/\%$k/$self->{$k}/smgx;
+    }
+    $self->{'adaptors'}->{$s}->{$p} = $v;
   }
 
   # Configure parent last (allow chained inheritance and prevent infinite recursion)
@@ -464,7 +475,7 @@ Bio::Das::ProServer::Config - configuration parsing and hooks
 
 =head1 VERSION
 
-$Revision: 548 $
+$Revision: 672 $
 
 =head1 SYNOPSIS
 

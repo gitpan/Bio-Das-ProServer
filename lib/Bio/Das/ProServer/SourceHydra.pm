@@ -5,7 +5,7 @@
 # Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
 # Id:            $Id: SourceHydra.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra.pm,v $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceHydra.pm $
 #
 # Dynamic SourceAdaptor broker
 #

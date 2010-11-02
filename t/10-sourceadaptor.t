@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 23;
+use Test::More tests => 22;
 use Bio::Das::ProServer::Config;
 use_ok('Bio::Das::ProServer::SourceAdaptor');
 
@@ -27,6 +27,5 @@ my $cfg = {
 $sa->config($cfg);
 is($sa->config(),           $cfg,          'config get/set ok');
 isa_ok($sa->transport(),    'Bio::Das::ProServer::SourceAdaptor::Transport::file', 'file transport created ok');   
-is($sa->implements('dsn'),  1,             'implements dsn ok');
 is($sa->implements(),       undef,         'implements without arg gives undef');
-is($sa->das_capabilities(), 'dsn/1.0',     'das_capabilities gives a basic dsn/1.0');
+is($sa->das_capabilities(), '',     'das_capabilities is empty by default');

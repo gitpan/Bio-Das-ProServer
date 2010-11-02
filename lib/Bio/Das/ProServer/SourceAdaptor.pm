@@ -2,23 +2,23 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-05-20
-# Last Modified: $Date: 2008-12-10 10:42:17 +0000 (Wed, 10 Dec 2008) $ $Author: zerojinx $
-# Id:            $Id: SourceAdaptor.pm 554 2008-12-10 10:42:17Z zerojinx $
+# Last Modified: $Date: 2010-02-02 17:51:25 +0000 (Tue, 02 Feb 2010) $ $Author: andyjenkinson $
+# Id:            $Id: SourceAdaptor.pm 637 2010-02-02 17:51:25Z andyjenkinson $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor.pm,v $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor.pm $
 #
 # Generic SourceAdaptor. Generates XML and manages callouts for DAS functions
 #
 package Bio::Das::ProServer::SourceAdaptor;
 use strict;
 use warnings;
-use HTML::Entities;
+use HTML::Entities qw(encode_entities_numeric);
 use HTTP::Date qw(str2time time2isoz);
 use English qw(-no_match_vars);
 use Carp;
 use File::Spec;
 
-our $VERSION  = do { my ($v) = (q$Revision: 554 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 637 $ =~ /\d+/mxg); $v; };
 
 sub new {
   my ($class, $defs) = @_;
@@ -33,30 +33,27 @@ sub new {
               '_data'             => {},
               '_sequence'         => {},
               '_features'         => {},
-              'capabilities'      => {},
-              'properties'        => {},
              };
 
   bless $self, $class;
   $self->init($defs);
 
-  if(!exists($self->{'capabilities'}->{'stylesheet'}) &&
+  if(!exists($self->capabilities->{'stylesheet'}) &&
      ($self->{'config'}->{'stylesheet'} ||
       $self->{'config'}->{'stylesheetfile'})) {
-    $self->{'capabilities'}->{'stylesheet'} = '1.0';
+    $self->capabilities->{'stylesheet'} = '1.0';
   }
-  $self->{'capabilities'}->{'dsn'} = '1.0';
 
   # If not specified, we can check to see if a DAS source will support unknown segment errors
-  if ( !(exists $self->{'capabilities'}->{'error-segment'} ||
-         exists $self->{'capabilities'}->{'unknown-segment'}) &&
+  if ( !(exists $self->capabilities->{'error-segment'} ||
+         exists $self->capabilities->{'unknown-segment'}) &&
         ($self->known_segments()) ) {
 
     if ($self->implements('dna') || $self->implements('sequence')) {
-      $self->{'capabilities'}->{'error-segment'} = '1.0';
+      $self->capabilities->{'error-segment'} = '1.0';
 
     } else {
-      $self->{'capabilities'}->{'unknown-segment'} = '1.0';
+      $self->capabilities->{'unknown-segment'} = '1.0';
     }
   }
 
@@ -142,13 +139,22 @@ sub dsncreated {
   return $datetime || 0; # epoch
 }
 
+sub _parse_config_hash {
+    my $str  = shift;
+    if ( defined $str ) {
+        my @pairs = split qr(\s*[;\|]\s*)mx, $str;
+        if ( @pairs ) {
+            return { map { split qr(\s*[=-]>\s*)mx, $_, 2 } @pairs}; ## no critic
+        }
+    }
+    return {};
+}
+
 sub coordinates {
   my $self = shift;
 
   if (!exists $self->{'coordinates'}) {
-    my @pairs = (split /\s*[;\|]\s*/mx, $self->config->{'coordinates'} || q());
-    my $hash = {map { split (/\s*[=-]>\s*/mx, $_, 2) } @pairs}; ## no critic
-    $self->{'coordinates'} = $hash;
+    $self->{'coordinates'} = _parse_config_hash( $self->config->{'coordinates'} );
   }
 
   return $self->{'coordinates'};
@@ -160,7 +166,7 @@ sub coordinates_full {
   while (my ($key, $test_range) = each %{ $self->coordinates() }) {
     my $coord = $Bio::Das::ProServer::COORDINATES->{lc $key};
     if (!$coord) {
-      print {*STDERR} $self->dsn . " has unknown coordinate system: $key" or croak $ERRNO;
+      print {*STDERR} $self->dsn . " has unknown coordinate system: $key\n" or croak $ERRNO;
       next;
     }
     my %coord = %{ $coord };
@@ -175,9 +181,7 @@ sub capabilities {
   my $self = shift;
 
   if (!exists $self->{'capabilities'}) {
-    my @pairs = (split /\s*[;\|]\s*/mx, $self->config->{'capabilities'} || q());
-    my $hash = {map { split (/\s*[=-]>\s*/mx, $_, 2) } @pairs}; ## no critic
-    $self->{'capabilities'} = $hash;
+    $self->{'capabilities'} = _parse_config_hash( $self->config->{'capabilities'} );
   }
 
   return $self->{'capabilities'};
@@ -187,12 +191,10 @@ sub properties {
   my $self = shift;
 
   if (!exists $self->{'properties'}) {
-    my @pairs = (split /\s*[;\|]\s*/mx, $self->config->{'properties'} || q());
-    my $hash = {map { split (/\s*[=-]>\s*/mx, $_, 2) } @pairs}; ## no critic
-    $self->{'properties'} = $hash;
+    $self->{'properties'} = _parse_config_hash( $self->config->{'properties'} );
   }
 
-  return $self->{'properties'} || {};
+  return $self->{'properties'};
 }
 
 sub start { return 1; }
@@ -246,8 +248,7 @@ sub transport {
      defined $config->{'transport'}) {
     my $transport = 'Bio::Das::ProServer::SourceAdaptor::Transport::'.$config->{'transport'};
 
-    eval "require $transport" or do { }; ## no critic(TestingAndDebugging::ProhibitNoStrict BuiltinFunctions::ProhibitStringyEval)
-    my $require_error = $EVAL_ERROR;
+    eval "require $transport" or carp $EVAL_ERROR; ## no critic(TestingAndDebugging::ProhibitNoStrict BuiltinFunctions::ProhibitStringyEval)
     eval {
       $self->{_transport}->{$transport_name} = $transport->new({
 								dsn    => $self->{dsn}, # for debug purposes
@@ -257,11 +258,6 @@ sub transport {
     } or do {
       carp $EVAL_ERROR;
     };
-
-    # Require doesn't necessarily have to succeed, but if there was a problem loading the transport it should be reported.
-    if($require_error && !$self->{_transport}->{$transport_name}) {
-      carp $require_error;
-    }
   }
   return $self->{'_transport'}->{$transport_name};
 }
@@ -271,7 +267,7 @@ sub config {
   if(defined $config) {
     $self->{config} = $config;
   }
-  return $self->{config};
+  return $self->{config} || {};
 }
 
 sub implements {
@@ -381,21 +377,25 @@ sub _gen_link_das_response {
   if(ref $link eq 'ARRAY') {
     while(my $k = shift @{$link}) {
       my $v;
-      if(ref $linktxt eq 'ARRAY') {
-	$v = shift @{$linktxt};
+      if (ref $linktxt eq 'ARRAY') {
+        $v = shift @{$linktxt};
+      } elsif ($linktxt) {
+        $v = $linktxt;
       }
 
-      $v       ||= $linktxt;
-      $response .= qq(<LINK href="$k">$v</LINK>);
+      $response .= $v ? qq(<LINK href="$k">$v</LINK>)
+                      : qq(<LINK href="$k" />);
     }
 
   } elsif(ref $link eq 'HASH') {
     for my $k (sort { $link->{$a} cmp $link->{$b} } keys %{$link}) {
-      $response .= qq(<LINK href="$k">$link->{$k}</LINK>);
+      $response .= $link->{$k} ? qq(<LINK href="$k">$link->{$k}</LINK>)
+                               : qq(<LINK href="$k" />);
     }
 
   } elsif($link) {
-    $response .= qq(<LINK href="$link">$linktxt</LINK>);
+    $response .= $linktxt ? qq(<LINK href="$link">$linktxt</LINK>)
+                          : qq(<LINK href="$link" />);
   }
   return $response;
 }
@@ -413,23 +413,23 @@ sub _encode {
     my $encoded = {};
     while(my ($k, $v) = each %{$datum}) {
       if(defined $k) {
-        encode_entities($k);
+        encode_entities_numeric($k);
       }
       if(ref $v) {
 	$self->_encode($v);
       } elsif(defined $v) {
-	encode_entities($v);
+	encode_entities_numeric($v);
       }
       $encoded->{$k} = $v;
     }
     %{$datum} = %{$encoded};
 
   } elsif(ref $datum eq 'ARRAY') {
-    @{$datum} = map { (ref $_)?$self->_encode($_):defined$_?encode_entities($_):$_; } @{$datum};
+    @{$datum} = map { (ref $_)?$self->_encode($_):defined$_?encode_entities_numeric($_):$_; } @{$datum};
 
   } elsif(ref $datum eq 'SCALAR') {
     if(defined ${$datum}) {
-      ${$datum} = encode_entities(${$datum});
+      ${$datum} = encode_entities_numeric(${$datum});
     }
   }
 
@@ -463,12 +463,12 @@ sub _gen_feature_das_response {
   my $ori       = $feature->{'ori'};
   my $phase     = $feature->{'phase'};
   my $link      = $feature->{'link'}         || q();
-  my $linktxt   = $feature->{'linktxt'}      || $link;
+  my $linktxt   = $feature->{'linktxt'}      || q();
   my $target    = $feature->{'target'};
-  my $cat       = (defined $feature->{'typecategory'})?qq( category="$feature->{'typecategory'}"):(defined $feature->{'type_category'})?qq( category="$feature->{'type_category'}"):q();
-  my $subparts  = defined $feature->{'typesubparts'} ? qq( subparts="$feature->{'typesubparts'}") : q();
-  my $supparts  = defined $feature->{'typessuperparts'} ? qq( superparts="$feature->{'typessuperparts'}") : q();
-  my $ref       = defined $feature->{'typesreference'} ? qq( reference="$feature->{'typesreference'}") : q();
+  my $cat       = defined $feature->{'typecategory'}   ? qq( category="$feature->{'typecategory'}")     : defined $feature->{'type_category'}   ? qq( category="$feature->{'type_category'}")     : q();
+  my $subparts  = defined $feature->{'typesubparts'}   ? qq( subparts="$feature->{'typesubparts'}")     : defined $feature->{'typessubparts'}   ? qq( subparts="$feature->{'typessubparts'}")     : q();
+  my $supparts  = defined $feature->{'typesuperparts'} ? qq( superparts="$feature->{'typesuperparts'}") : defined $feature->{'typessuperparts'} ? qq( superparts="$feature->{'typessuperparts'}") : q();
+  my $ref       = defined $feature->{'typereference'}  ? qq( reference="$feature->{'typereference'}")   : defined $feature->{'typesreference'}  ? qq( superparts="$feature->{'typesreference'}")  : q();
   $response    .= qq(<FEATURE id="$id" label="$label">);
   $response    .= qq(<TYPE id="$type"$cat$ref$subparts$supparts>$typetxt</TYPE>);
   $response    .= qq(<START>$start</START>);
@@ -553,7 +553,7 @@ sub _gen_feature_das_response {
         $response .= q(/>);
 
       } else {
-        my $glinktxti = $groupinfo->{'grouplinktxt'} || $glinki;
+        my $glinktxti = $groupinfo->{'grouplinktxt'} || q();
         $response    .= q(>);
 
 	# Allow the 'note' tag to point to an array of notes.
@@ -607,7 +607,7 @@ sub das_features {
     # If the requested segment is known to be not available it is an unknown or error segment.
     #
     my @known_segments = $self->known_segments();
-    if(@known_segments && !scalar grep { /$seg/mx } @known_segments) {
+    if(@known_segments && !scalar grep { /^$seg$/mx } @known_segments) {
       $response .= $self->unknown_segment($seg);
       next;
     }
@@ -734,7 +734,7 @@ sub das_dna {
     # If the requested segment is known to be not available it is an unknown or error segment.
     #
     my @known_segments = $self->known_segments();
-    if(@known_segments && !scalar grep { /$seg/mx } @known_segments) {
+    if(@known_segments && !scalar grep { /^$seg$/mx } @known_segments) {
       $response .= $self->unknown_segment($seg);
       next;
     }
@@ -787,7 +787,7 @@ sub das_sequence {
     # If the requested segment is known to be not available it is an unknown or error segment.
     #
     my @known_segments = $self->known_segments();
-    if(@known_segments && !scalar grep { /$seg/mx } @known_segments) {
+    if(@known_segments && !scalar grep { /^$seg$/mx } @known_segments) {
       $response .= $self->unknown_segment($seg);
       next;
     }
@@ -844,7 +844,7 @@ sub das_types {
       # If the requested segment is known to be not available it is an unknown or error segment.
       #
       my @known_segments = $self->known_segments();
-      if(@known_segments && !scalar grep { /$seg/mx } @known_segments) {
+      if(@known_segments && !scalar grep { /^$seg$/mx } @known_segments) {
         $response .= $self->unknown_segment($seg);
         next;
       }
@@ -888,10 +888,11 @@ sub das_types {
 
     for my $type (@{$data->{$key}}) {
       $self->_encode($type);
+      my $cat = $type->{category} || $type->{typecategory} || $type->{type_category};
       $response .= sprintf q(<TYPE id="%s"%s%s%s%s%s%s>%s</TYPE>),
 			   $type->{type}       || q(),
 			   $type->{method}      ?qq( method="$type->{method}")           : q(),
-			   $type->{category}    ?qq( category="$type->{category}")       : q(),
+			   $cat                 ?qq( category="$cat")                    : q(),
 			   $type->{c_ontology}  ?qq( c_ontology="$type->{c_ontology}")   : q(),
 			   $type->{evidence}    ?qq( evidence="$type->{evidence}")       : q(),
 			   $type->{e_ontology}  ?qq( e_ontology="$type->{e_ontology}")   : q(),
@@ -902,6 +903,23 @@ sub das_types {
   }
 
   return $response;
+}
+
+sub build_types {
+  my ($self, $args) = @_;
+  my $types = ();
+  for my $feat ( $self->build_features($args) ) {
+    my $cat = $feat->{'typecategory'} || $feat->{'type_category'};
+    my $key = join '/', $feat->{'type'}, $cat, $feat->{'method'};
+    $types->{$key} ||= {
+      'type'     => $feat->{'type'},
+      'category' => $cat,
+      'method'   => $feat->{'method'},
+      'count'    => 0,
+    };
+    $types->{$key}{'count'}++,
+  }
+  return values %{ $types };
 }
 
 sub das_entry_points {
@@ -935,12 +953,14 @@ sub das_entry_points {
 
 sub build_entry_points {
   my $self = shift;
-  return map { { 'segment' => $_, 'length' => $self->length($_) } } $self->known_segments();
+  return map { { 'segment' => $_, 'length' => $self->length($_), 'subparts' => 'no' } } $self->known_segments();
 }
 
 sub das_stylesheet {
   my $self = shift;
-  return $self->_plain_response('stylesheet') || q(<?xml version="1.0" standalone="yes"?><!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd"><DASSTYLE><STYLESHEET version="1.0"><CATEGORY id="default"><TYPE id="default"><GLYPH><BOX><FGCOLOR>black</FGCOLOR><FONT>sanserif</FONT><BUMP>0</BUMP><BGCOLOR>black</BGCOLOR></BOX></GLYPH></TYPE></CATEGORY></STYLESHEET></DASSTYLE>);
+  my $defaultfile = File::Spec->catfile( $self->config->{'styleshome'},
+                                         $self->config->{'stylesheetfile'} );
+  return $self->_plain_response('stylesheet', $defaultfile) || q(<?xml version="1.0" standalone="yes"?><!DOCTYPE DASSTYLE SYSTEM "http://www.biodas.org/dtd/dasstyle.dtd"><DASSTYLE><STYLESHEET version="1.0"><CATEGORY id="default"><TYPE id="default"><GLYPH><BOX><FGCOLOR>red</FGCOLOR><FONT>sanserif</FONT><BGCOLOR>black</BGCOLOR></BOX></GLYPH></TYPE></CATEGORY></STYLESHEET></DASSTYLE>);
 }
 
 sub das_homepage {
@@ -975,7 +995,7 @@ a{color:#a00;}a:hover{color:#aaa}
    <dd>@{[map { my ($c) = $_ =~ m|(\w+)|;
                 if($seg && $c eq 'features') { $c = "$c?segment=$seg"; }
                    qq(<a href="$dsn/$c">$_</a>);
-                } split /;/mx, $self->das_capabilities()]}
+                } split /;/mx, $self->das_capabilities()]}</dd>
   </dl>
  </body>
 </html>\n);
@@ -1010,7 +1030,7 @@ sub das_sourcedata {
 
   # Supported commands
   # Capabilities are of form 'features' => '1.0'
-  my $caps = $self->capabilities();
+  my $caps = $self->capabilities() || {};
   while (my ($cap, $ver) = each %{$caps}) {
     my $type      = 'das'.(int $ver);
     my $query_uri = (exists $Bio::Das::ProServer::WRAPPERS->{$cap})? (sprintf q[ query_uri="%s/%s"], $self->source_url, $cap): q();
@@ -1018,7 +1038,7 @@ sub das_sourcedata {
   }
 
   # Custom properties
-  my $props = $self->properties();
+  my $props = $self->properties() || {};
   while (my ($name, $value) = each %{$props}) {
     my @values = (ref $value && ref $value eq 'ARRAY')? @{$value} : ($value);
     for my $detail (@values) {
@@ -1074,26 +1094,37 @@ sub _plain_response {
 
   if($self->config->{$cfghead}) {
     #########
-    # Inline homepage
+    # Inline static
     #
     return $self->config->{$cfghead};
 
-  } elsif(my $filename = $self->config->{"${cfghead}file"} || $default) {
-    #########
-    # import homepage file
-    #
+  } else {
     my $filedata = $self->{"${cfghead}file"};
-    if(!$filedata && -e $filename) {
-      my ($fn) = $filename =~ m{([a-z\d_\./\-]+)}mix;
-      eval {
-        open my $fh, q(<), $fn or croak "opening $filename '$fn': $ERRNO";
-        local $RS = undef;
-        $filedata = <$fh>;
-        close $fh or croak $ERRNO;
-
-      } or do {
-	carp $EVAL_ERROR;
-      };
+    for my $filename ($self->config->{"${cfghead}file"}, $default) {
+      #########
+      # import static file
+      #
+      last if $filedata;
+      if ($filename) {
+        
+        if ($self->{'debug'}) {
+          carp "Trying to read file: $filename";
+        }
+        if (-e $filename) {
+          my ($fn) = $filename =~ m{([a-z\d_\./\-]+)}mix;
+          eval {
+            open my $fh, q(<), $fn or croak "Opening $filename '$fn': $ERRNO";
+            local $RS = undef;
+            $filedata = <$fh>;
+            close $fh or croak $ERRNO;
+            1;
+          } or do {
+            carp $EVAL_ERROR;
+          };
+        } elsif ($self->{'debug'}) {
+          carp "File does not exist: $filename";
+        }
+      }
     }
 
     #########
@@ -1122,7 +1153,7 @@ sub das_alignment {
   #
   my @known_segments = $self->known_segments();
   if(scalar @known_segments &&
-     !scalar grep { /$query/mx } @known_segments) {
+     !scalar grep { /^$query$/mx } @known_segments) {
     return $self->unknown_segment($query);
   }
 
@@ -1288,7 +1319,7 @@ sub das_structure {
   # If the requested segment is known to be not available it is an unknown or error segment.
   #
   my @known_segments = $self->known_segments();
-  if(@known_segments && !scalar grep { /$query/mx } @known_segments) {
+  if(@known_segments && !scalar grep { /^$query$/mx } @known_segments) {
     return $self->unknown_segment($query);
   }
 
@@ -1582,7 +1613,7 @@ sub das_volmap {
   # If the requested segment is known to be not available it is an unknown or error segment.
   #
   my @known_segments = $self->known_segments();
-  if ( !$segment || (@known_segments && !scalar grep { /$segment/mx } @known_segments) ) {
+  if ( !$segment || (@known_segments && !scalar grep { /^$segment$/mx } @known_segments) ) {
     return $self->unknown_segment($segment);
   }
 
@@ -1667,7 +1698,7 @@ Bio::Das::ProServer::SourceAdaptor - base class for sources
 
 =head1 VERSION
 
-$Revision: 554 $
+$Revision: 637 $
 
 =head1 SYNOPSIS
 
@@ -1772,8 +1803,8 @@ This call is made by das_features(). It is passed one of:
 
  { 'group_id'   => $, 'types' => [$,$,...], 'maxbins' => $ }
 
- and is expected to return a reference to an array of hash references, i.e.
- [{},{}...{}]
+ and is expected to return an array of hash references, i.e.
+ ( {},{}...{} )
 
 Each hash returned represents a single feature and should contain a
 subset of the following keys and types. For scalar types (i.e. numbers
@@ -1865,28 +1896,28 @@ client, it is passed no arguments. Otherwise it is passed:
 
  { 'segment'    => $, 'start' => $, 'end' => $ }
 
-It is expected to return a reference to an array of hash references, i.e.
- [{},{}...{}]
+It is expected to return an array of hash references, i.e.
+ ( {},{}...{} )
 
 Each hash returned represents a single type and should contain a
 subset of the following keys and values. For scalar types (i.e. numbers
 and strings) refer to the specification on biodas.org.
 
- type        => $
- method      => $
- category    => $
- c_ontology  => $
- evidence    => $
- e_ontology  => $
- description => $
- count       => $
+ type                                  => $ # required
+ count                                 => $ # required
+ category|typecategory|type_category   => $
+ method                                => $
+ c_ontology                            => $
+ evidence                              => $
+ e_ontology                            => $
+ description                           => $
 
 =head2 build_entry_points - (Subclasses only) fetch entry_points data
 
 This call is made by das_entry_points(). It is not passed any args
 
-and is expected to return a reference to an array of hash references, i.e.
- [{},{}...{}]
+and is expected to return an array of hash references, i.e.
+ ( {},{}...{} )
 
 Each hash returned represents a single entry_point and should contain a
 subset of the following keys and values. For scalar types (i.e. numbers
@@ -1910,9 +1941,9 @@ This call is made by das_alignment(). It is passed these arguments:
   $         # subject coordinate system
  )
 
-It is expected to return an array reference of alignment hash references:
+It is expected to return an array of alignment hash references:
 
- [
+ (
   {
    name     => $,
    type     => $,
@@ -1972,6 +2003,8 @@ It is expected to return an array reference of alignment hash references:
                            ],
                 },
                ],
+  }
+ )
 
 =head2 build_interaction - (Subclasses only) fetch interaction data
 
@@ -2168,7 +2201,7 @@ It is expected to return a hash reference for a single volume map:
   Hash contains a key-value pair for each command, the key being the command
   name, and the value being the implementation version.
   
-  By default returns: { 'dsn' => '1.0' }
+  By default returns an empty hash.
 
 =head2 properties - Returns custom properties for this sourceadaptor
 
@@ -2300,13 +2333,27 @@ It is expected to return a hash reference for a single volume map:
 
   my $sXMLResponse = $sa->das_stylesheet();
 
+  By default will use (in order of preference):
+    the "stylesheet" INI property (inline XML)
+    the "stylesheetfile" INI property (XML file location)
+    the "stylesheetfile" INI property, prepended with the "styleshome" property
+    a default stylesheet
+
 =head2 das_sourcedata - DAS-response for 'sources' request
 
   my $sXMLResponse = $sa->das_sourcedata();
 
+  Provides information about the DAS source for use in the sources command,
+  such as title, description, coordinates and capabilities.
+
 =head2 das_homepage - DAS-response (non-standard) for 'homepage' or blank request
 
   my $sHTMLResponse = $sa->das_homepage();
+
+  By default will use (in order of preference):
+    the "homepage" INI property (inline HTML)
+    the "homepagefile" INI property (HTML file location)
+    a default homepage
 
 =head2 das_dsn - DAS-response (non-standard) for 'dsn' request
 

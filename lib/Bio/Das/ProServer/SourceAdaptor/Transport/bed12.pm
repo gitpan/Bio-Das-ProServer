@@ -4,7 +4,7 @@
 # Created:       2008-09-19
 # Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $
 # $Id: bed12.pm 548 2008-12-03 23:14:25Z zerojinx $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bed12.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bed12.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::bed12;
 

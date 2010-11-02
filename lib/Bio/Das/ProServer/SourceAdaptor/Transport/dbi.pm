@@ -2,9 +2,9 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-05-20
-# Last Modified: $Date: 2008-12-03 21:14:05 +0000 (Wed, 03 Dec 2008) $
-# Id:            $Id: dbi.pm 546 2008-12-03 21:14:05Z zerojinx $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/dbi.pm $
+# Last Modified: $Date: 2008-12-10 12:30:40 +0000 (Wed, 10 Dec 2008) $
+# Id:            $Id: dbi.pm 559 2008-12-10 12:30:40Z andyjenkinson $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/dbi.pm $
 #
 # Transport layer for DBI
 #
@@ -17,7 +17,7 @@ use Carp;
 use English qw(-no_match_vars);
 use Readonly;
 
-our $VERSION = do { my ($v) = (q$Revision: 546 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 559 $ =~ /\d+/mxg); $v; };
 Readonly::Scalar our $CACHE_TIMEOUT => 30;
 Readonly::Scalar our $QUERY_TIMEOUT => 30;
 
@@ -36,10 +36,10 @@ sub dbh {
   # DBI connect_cached is slightly smarter than us just caching here
   #
   eval {
-    if(!$self->{dbh} ||
-       !$self->{dbh}->ping()) {
+    if (!$self->{dbh} || !$self->{dbh}->ping()) {
       $self->{dbh} = DBI->connect_cached($dsn, $username, $password, {RaiseError => 1});
     }
+    1;
 
   } or do {
     croak "$dsn = $self->{dsn}\n$EVAL_ERROR";
@@ -75,6 +75,7 @@ sub query {
     $debug and carp "Finishing...\n";
     $sth->finish();
     alarm 0;
+    1;
 
   } or do {
     alarm 0;
@@ -143,7 +144,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::dbi - A DBI transport layer (actu
 
 =head1 VERSION
 
-$Revision: 546 $
+$Revision: 559 $
 
 =head1 SYNOPSIS
 

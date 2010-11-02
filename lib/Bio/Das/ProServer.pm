@@ -1,9 +1,9 @@
 #########
 # ProServer DAS Server
 # Author:        rmp
-# Maintainer:    $Author: zerojinx $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       2003-05-22
-# Last Modified: $Date: 2008-12-10 10:40:57 +0000 (Wed, 10 Dec 2008) $
+# Last Modified: $Date: 2010-03-26 11:30:22 +0000 (Fri, 26 Mar 2010) $
 # Source:        $Source $
 # Id:            $Id $
 #
@@ -35,9 +35,9 @@ use Carp;
 use Readonly;
 
 our $DEBUG          = 0;
-our $VERSION        = do { my ($v) = (q$Revision: 553 $ =~ /\d+/mxg); $v; };
+our $VERSION        = do { my ($v) = (q$Revision: 651 $ =~ /\d+/smxg); $v; };
 Readonly::Scalar our $GZIP_THRESHOLD => 10_000;
-$ENV{'PATH'}        = '/bin:/usr/bin:/usr/local/bin';
+local $ENV{PATH}    = join q[:], qw(/bin /usr/bin /usr/local/bin);
 our $COORDINATES    = undef;
 Readonly::Scalar our $WRAPPERS => {
 		       'sources'      => {
@@ -77,7 +77,7 @@ Readonly::Scalar our $WRAPPERS => {
                                           'close' => qq(</dasstructure>\n),
 					 },
 		       'interaction'  => {
-					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<DASINT>\n),
+					  'open'  => qq(<?xml version="1.0" standalone="no"?>\n<DASINT xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://dasmi.de/" xsi:schemaLocation="http://dasmi.de/ http://dasmi.de/dasint.xsd">\n),
                                           'close' => qq(</DASINT>\n),
 					 },
 		       'volmap'       => {
@@ -85,8 +85,8 @@ Readonly::Scalar our $WRAPPERS => {
 					  'close' => qq(</DASVOLMAP>\n),
 					 },
 		       'stylesheet'   => {
-					  'open'  => q(),
-					  'close' => q(),
+					  'open'  => q[],
+					  'close' => q[],
 					 },
 		      };
 
@@ -117,7 +117,7 @@ sub run {
   }
 
   my @msg = ($vstr,
-	     'http://www.sanger.ac.uk/proserver/', q(),
+	     'http://www.sanger.ac.uk/proserver/', q[],
 	     'Please cite:',
 	     ' ProServer: A simple, extensible Perl DAS server.',
 	     ' Finn RD, Stalker JW, Jackson DK, Kulesha E, Clements J, Pettett R.',
@@ -132,7 +132,7 @@ sub run {
   }
   print  q(#)x($maxmsg+6), "\n\n" or croak $OS_ERROR;
 
-  @ARGV = @saveargv; ## no critic
+  @ARGV = @saveargv; ## no critic (RequireLocalizedPunctuationVars)
 
   if($opts->{'help'}) {
     print <<'EOT' or croak $ERRNO;
@@ -179,24 +179,24 @@ EOT
     open my $fh_coord, q(<), $coordfile or croak "Unable to open coordinates file $coordfile";
     my @coordfull;
     while (my $blk = <$fh_coord>) {
-      $blk =~ s{^\s*(<\?xml.*?>)?(\s*</?DASCOORDINATESYSTEM>\s*)?}{}mix;
-      $blk =~ s/\s*$//mx;
+      $blk =~ s{^\s*(<\?xml.*?>)?(\s*</?DASCOORDINATESYSTEM>\s*)?}{}smix;
+      $blk =~ s/\s*$//smx;
       push @coordfull, grep { $_ }
-                       split m{</COORDINATES>}mx, $blk;
+                       split m{</COORDINATES>}smx, $blk;
     }
     close $fh_coord or croak "Unable to close coordinates file $coordfile";
 
     my %coords;
     for (@coordfull) {
-      my ($uri) = m/uri\s*=\s*"(.*?)"/mx;
-      my ($des) = m/>(.*)$/mx;
+      my ($uri) = m/uri\s*=\s*"(.*?)"/smx;
+      my ($des) = m/>(.*)$/smx;
       $coords{lc $des} = $coords{lc $uri} = {
         'uri'         => $uri,
         'description' => $des,
-        'source'      => my ($t)  = m/source\s*=\s*"(.*?)"/mx,
-        'authority'   => my ($au) = m/authority\s*=\s*"(.*?)"/mx,
-        'version'     => my ($v)  = m/version\s*=\s*"(.*?)"/mx,
-        'taxid'       => my ($s)  = m/taxid\s*=\s*"(.*?)"/mx,
+        'source'      => my ($t)  = m/source\s*=\s*"(.*?)"/smx,
+        'authority'   => my ($au) = m/authority\s*=\s*"(.*?)"/smx,
+        'version'     => my ($v)  = m/version\s*=\s*"(.*?)"/smx,
+        'taxid'       => my ($s)  = m/taxid\s*=\s*"(.*?)"/smx,
       };
     }
 
@@ -229,32 +229,32 @@ EOT
     $logfile = File::Spec->catpath($vol, $path, sprintf 'proserver.%s.log', hostname() );
   }
 
-  open STDIN, '<', File::Spec->devnull or croak "Can't open STDIN from the null device: [$!]"; ## no critic
+  open STDIN, q[<], File::Spec->devnull or croak "Can't open STDIN from the null device: [$ERRNO]";
   if(!$opts->{'X'}) {
     my $errlog = $logfile;
-    $errlog    =~ s/\.log$/.err/mx;
+    $errlog    =~ s/\.log$/.err/smx;
     $class->log(qq(Logging STDOUT to $logfile and STDERR to $errlog));
-    open STDOUT, '>>', $logfile or croak "Can't open STDOUT to $logfile: [$!]"; ## no critic
-    open STDERR, '>>', $errlog  or croak "Can't open STDERR to STDOUT: [$!]";   ## no critic
+    open STDOUT, '>>', $logfile or croak "Can't open STDOUT to $logfile: [$ERRNO]";
+    open STDERR, '>>', $errlog  or croak "Can't open STDERR to STDOUT: [$ERRNO]";
   }
 
   if(exists $config->{'ensemblhome'}) {
-    my ($eroot) = $config->{'ensemblhome'} =~ m{([a-zA-Z0-9_/\.\-]+)}mx;
-    $ENV{'ENS_ROOT'}     = $eroot;
+    my ($eroot) = $config->{'ensemblhome'} =~ m{([a-zA-Z0-9_/\.\-]+)}smx;
+    $ENV{ENS_ROOT}     = $eroot; ## no critic (RequireLocalizedPunctuationVars)
     unshift @INC, File::Spec->catdir($eroot, 'ensembl' , 'modules');
-    $class->log(qq(Set ENS_ROOT to $ENV{'ENS_ROOT'}));
+    $class->log(qq(Set ENS_ROOT to $ENV{ENS_ROOT}));
   }
 
   if(exists $config->{'oraclehome'}) {
-    $ENV{'ORACLE_HOME'}  = $config->{'oraclehome'};
-    $class->log(qq(Set ORACLE_HOME to $ENV{'ORACLE_HOME'}));
+    $ENV{ORACLE_HOME}  = $config->{'oraclehome'}; ## no critic (RequireLocalizedPunctuationVars)
+    $class->log(qq(Set ORACLE_HOME to $ENV{ORACLE_HOME}));
   }
 
   if(exists $config->{'bioperlhome'}) {
-    my ($broot) = $config->{'bioperlhome'} =~ m{([a-zA-Z0-9_/\.\-]+)}mx;
-    $ENV{'BIOPERL_HOME'} = $broot;
+    my ($broot) = $config->{'bioperlhome'} =~ m{([a-zA-Z0-9_/\.\-]+)}smx;
+    $ENV{BIOPERL_HOME} = $broot; ## no critic (RequireLocalizedPunctuationVars)
     unshift @INC, $broot;
-    $class->log(qq(Set BIOPERL_HOME to $ENV{'BIOPERL_HOME'}));
+    $class->log(qq(Set BIOPERL_HOME to $ENV{BIOPERL_HOME}));
   }
 
   $self->{'logformat'} = $config->logformat();
@@ -301,7 +301,7 @@ sub server_spawn {
 
 sub server_start {
   my @args = @_;
-  my ( $kernel, $heap ) = @args[ KERNEL, HEAP ]; ## no critic
+  my ( $kernel, $heap ) = @args[ KERNEL, HEAP ];
   my $config = $heap->{'self'}->{'config'};
 
   $heap->{server} = POE::Wheel::SocketFactory->new
@@ -383,7 +383,7 @@ sub server_do_fork {
 
     if(!defined $pid) {
       DEBUG and
-	carp( "Server $PID fork failed: $!\n",
+	carp( "Server $PID fork failed: $ERRNO\n",
 	      "Server $PID will retry fork shortly.\n",
 	    );
       $kernel->delay( do_fork => 1 );
@@ -457,36 +457,36 @@ sub server_got_connection {
   DEBUG and carp "Server $PID received a connection.\n";
 
   POE::Session->create(
-		       inline_states =>
-		       { _start      => sub {
-			   my @args = @_;
-			   eval {
-			     client_start(@args);
-			     1;
-			   } or do {
-			     carp $EVAL_ERROR;
-			   };
-			 },
-			 _stop       => \&client_stop,
-			 got_request => sub {
-			   my @args = @_;
-			   eval {
-			     client_got_request(@args);
-			     1;
-			   } or do {
-			     carp $EVAL_ERROR;
-			   };
-			 },
-			 got_flush   => \&client_flushed_request,
-			 got_error   => \&client_got_error,
-			 _parent     => sub { 0 },
-		       },
-		       heap =>
-		       { self      => $heap->{'self'},
-			 socket    => $socket,
-			 peer_addr => $peer_addr,
-			 peer_port => $peer_port,
-		       },
+		       inline_states => {
+					 _start      => sub {
+					   my @sargs = @_;
+					   eval {
+					     client_start(@sargs);
+					     1;
+					   } or do {
+					     carp $EVAL_ERROR;
+					   };
+					 },
+					 _stop       => \&client_stop,
+					 got_request => sub {
+					   my @sargs = @_;
+					   eval {
+					     client_got_request(@sargs);
+					     1;
+					   } or do {
+					     carp $EVAL_ERROR;
+					   };
+					 },
+					 got_flush   => \&client_flushed_request,
+					 got_error   => \&client_got_error,
+					 _parent     => sub { 0 },
+					},
+		       heap => {
+				self      => $heap->{'self'},
+				socket    => $socket,
+				peer_addr => $peer_addr,
+				peer_port => $peer_port,
+			       },
 		      );
 
   return;
@@ -564,7 +564,7 @@ sub response_general {
   # process the parameters
   #
   if ($http_method eq 'get') {
-    my ($query) = $request->uri() =~ /\?(.*)$/mx;
+    my ($query) = $request->uri() =~ /\?(.*)$/smx;
     $cgi = CGI->new($query);
 
   } elsif ($http_method eq 'post') {
@@ -632,8 +632,8 @@ sub response_general {
          $call   ne 'dsn'      &&
          $method ne 'das_xsl' ) {
 
-        my $enc = $request->header('Accept-Encoding') || q();
-        if($enc =~ /gzip/mix) {
+        my $enc = $request->header('Accept-Encoding') || q[];
+        if($enc =~ /gzip/smix) {
 	  if(DEBUG) {
 	    carp 'Client accepts compression';
 	  }
@@ -652,6 +652,7 @@ sub response_general {
 	$body = _substitute($heap, $body, $dsn);
       }
       $response->last_modified($adaptor->dsncreated_unix);
+      $response->expires(time() + 30); # limit cacheability to 30 seconds from now
       my $content = $head.$body.$foot;
 
       if($use_gzip && (length $content > $GZIP_THRESHOLD)) {
@@ -666,7 +667,7 @@ sub response_general {
 	  $response->content_encoding('gzip');
 
 	} else {
-	  carp "Content compression failed: $!\n";
+	  carp "Content compression failed: $ERRNO\n";
 	}
       }
 
@@ -685,7 +686,7 @@ sub response_general {
     } else {
       $response->content_type('text/plain');
       $response->header('X-DAS-Status' => 501);
-      $response->content(qq(Unimplemented command for $dsn: @{[$call||q()]}));
+      $response->content(qq(Unimplemented command for $dsn: @{[$call||q[]]}));
     }
 
     1;
@@ -693,10 +694,11 @@ sub response_general {
   } or do {
     carp $EVAL_ERROR;
 
+    chomp( my $err = $EVAL_ERROR );
     $response = HTTP::Response->new(500);
     $response->content_type('text/plain');
     $response->header('X-DAS-Status' => 500);
-    $response->content("Bad data source $dsn (error processing command: $call)");
+    $response->content("Bad data source $dsn (error processing command: '$call')\n\nThe error was: '$err'");
   };
 
   return $response;
@@ -785,8 +787,8 @@ Bioinformatics 2007; <a href="http://bioinformatics.oxfordjournals.org/cgi/conte
   } else {
     $content .= qq(<p>This server has no configured maintainer.</p>\n);
   }
-  
-  $content .= sprintf q(<p>Perform a <a href="%s://%s:%s%s/das/dsn">DSN</a> or <a href="%1$s://%2$s:%3$s%4$s/das/sources">SOURCES</a> request.</p>)."\n", ## no critic
+
+  $content .= sprintf q(<p>Perform a <a href="%s://%s:%s%s/das/dsn">DSN</a> or <a href="%1$s://%2$s:%3$s%4$s/das/sources">SOURCES</a> request.</p>)."\n", ## no critic (RequireInterpolationOfMetachars)
               $config->response_protocol(),
 	      $config->response_hostname(),
 	      $config->response_port(),
@@ -818,7 +820,7 @@ Bioinformatics 2007; <a href="http://bioinformatics.oxfordjournals.org/cgi/conte
 		  (map { 'Bio::Das::ProServer::SourceHydra::'.$_ }              sort keys %Bio::Das::ProServer::SourceHydra::),
 		 ) {
 
-    if($module !~ /::$/mx) {
+    if($module !~ /::$/smx) {
       next;
     }
 
@@ -849,14 +851,14 @@ sub build_das_response {
   #
   my $response;
   my $uri          = $request->uri();
-  my ($dsn, $call) = $uri =~ m{/das1?(?:/([^/\?\#]+))(?:/([^/\?\#]+))?}mx;
-  $dsn           ||= q();
+  my ($dsn, $call) = $uri =~ m{/das1?(?:/([^/\?\#]+))(?:/([^/\?\#]+))?}smx;
+  $dsn           ||= q[];
 
   if($dsn && !$call) {
     $call = 'homepage';
   }
 
-  if($dsn eq 'dsn.xsl') { ## no critic
+  if($dsn eq 'dsn.xsl') { ## no critic (ProhibitCascadingIfElse)
     $response = response_xsl($heap, $request, 'dsn.xsl');
 
   } elsif($dsn eq 'sources.xsl' || $call eq 'sources.xsl') {
@@ -878,7 +880,7 @@ sub build_das_response {
     $response = HTTP::Response->new(200);
     $response->content_type('text/plain');
     $response->header('X-DAS-Status' => 401);
-    $response->content("Bad data source (data source unknown: $dsn)\nuri=@{[$uri||q()]}, dsn=@{[$dsn||q()]}, call=@{[$call||q()]}");
+    $response->content("Bad data source (data source unknown: $dsn)\nuri=@{[$uri||q[]]}, dsn=@{[$dsn||q[]]}, call=@{[$call||q[]]}");
   }
 
   $response->content_length(length $response->content);
@@ -893,7 +895,7 @@ sub build_das_response {
 
   if($dsn && $config->knows($dsn) && (my $adaptor = $config->adaptor($dsn))) {
     eval {
-      $response->header('X-DAS-Capabilities' => $adaptor->das_capabilities()||q());
+      $response->header('X-DAS-Capabilities' => $adaptor->das_capabilities()||q[]);
       $adaptor->cleanup();
       1;
     } or do {
@@ -907,15 +909,18 @@ sub build_das_response {
   # Finished handling das responses
   #########
 
+  # Add Access Control headers (for cross site requests):
+  $response->header('Access-Control-Allow-Origin' => q[*]);
+
   #########
   # Generate access log
   #
   my $logline = $heap->{'self'}->{'logformat'};
-  $logline    =~ s/%i/inet_ntoa($heap->{peer_addr})/emx;                              # remote ip
-  $logline    =~ s/%h/gethostbyaddr($heap->{peer_addr}, AF_INET);/emx;                # remote hostname
-  $logline    =~ s/%t/strftime '%Y-%m-%dT%H:%M:%S', localtime/emx;                    # datetime yyyy-mm-ddThh:mm:ss
-  $logline    =~ s/%r/$uri/mx;                                                        # request uri
-  $logline    =~ s/%>?s/@{[$response->code(), $response->header('X-DAS-Status')]}/mx; # status
+  $logline    =~ s/%i/inet_ntoa($heap->{peer_addr})/esmx;                              # remote ip
+  $logline    =~ s/%h/gethostbyaddr($heap->{peer_addr}, AF_INET);/esmx;                # remote hostname
+  $logline    =~ s/%t/strftime '%Y-%m-%dT%H:%M:%S', localtime/esmx;                    # datetime yyyy-mm-ddThh:mm:ss
+  $logline    =~ s/%r/$uri/smx;                                                        # request uri
+  $logline    =~ s/%>?s/@{[$response->code(), $response->header('X-DAS-Status')]}/smx; # status
 
   if($heap->{'method'} &&
      $heap->{'method'} eq 'cgi') {
@@ -928,18 +933,20 @@ sub build_das_response {
   return $response;
 }
 
+#########
 # Does keyword substitution for response URLs
+#
 sub _substitute {
   my ($heap, $text, $dsn) = @_;
-  
-  my $config  = $heap->{'self'}->{'config'};
+
+  my $config  = $heap->{self}->{config};
   my $subst   = {
-     'host'     => $config->response_hostname(),
-     'port'     => $config->response_port()     || q(),
-     'protocol' => $config->response_protocol() || 'http',
-     'baseuri'  => $config->response_baseuri()  || q(),
-     'dsn'      => $dsn || q(),
-    };
+		 host     => $config->response_hostname(),
+		 port     => $config->response_port()     || q[],
+		 protocol => $config->response_protocol() || 'http',
+		 baseuri  => $config->response_baseuri()  || q[],
+		 dsn      => $dsn || q[],
+		};
   $text =~ s/\%([a-z]+)/$subst->{$1}/smgxi;
   return $text;
 }
@@ -976,7 +983,7 @@ sub client_flushed_request {
 
 sub make_pidfile {
   my ($self, $pidfile) = @_;
-  my ($spidfile)       = $pidfile =~ /([a-zA-Z0-9\.\/_\-]+)/mx;
+  my ($spidfile)       = $pidfile =~ /([a-zA-Z0-9\.\/_\-]+)/smx;
   __PACKAGE__->log(qq(Writing pidfile $spidfile));
   $self->{'pidfile'} = $pidfile;
   open my $fh, '>', $spidfile or croak "Cannot create pid file: $ERRNO\n";
@@ -995,12 +1002,13 @@ sub remove_pidfile {
   return;
 }
 
-sub log { ## no critic
+sub log { ## no critic (Homonym)
   my ($self, @args) = @_;
   print {*STDERR} (strftime '[%Y-%m-%d %H:%M:%S] ', localtime), @args, "\n" or croak $OS_ERROR;
   return;
 }
 
+1;
 __END__
 
 =head1 NAME
@@ -1009,7 +1017,7 @@ Bio::Das::ProServer
 
 =head1 VERSION
 
-$LastChangedRevision: 553 $
+$LastChangedRevision: 651 $
 
 =head1 SYNOPSIS
 

@@ -3,7 +3,7 @@
 # Last Modified: $Date: 2008-09-21 19:34:09 +0100 (Sun, 21 Sep 2008) $ $Author: andyjenkinson $
 # Id:            $Id: critic.t 526 2008-09-21 18:34:09Z andyjenkinson $
 # Source:        $Source: /cvsroot/Bio-DasLite/Bio-DasLite/t/00-critic.t,v $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/t/critic.t $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/t/critic.t $
 #
 package critic;
 use strict;

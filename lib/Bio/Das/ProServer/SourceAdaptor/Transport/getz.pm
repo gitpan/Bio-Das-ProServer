@@ -4,7 +4,7 @@
 # Created:       2003-06-13
 # Last Modified: $Date: 2008-09-21 20:05:54 +0100 (Sun, 21 Sep 2008) $ $Author: andyjenkinson $
 # $Id: getz.pm 528 2008-09-21 19:05:54Z andyjenkinson $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/getz.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/getz.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::getz;
 use strict;

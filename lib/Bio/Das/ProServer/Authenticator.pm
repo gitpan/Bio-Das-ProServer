@@ -4,7 +4,7 @@
 # Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
 # Id:            $Id: Authenticator.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/Authenticator.pm $
 #
 # Stub Authenticator for controlling access.
 #

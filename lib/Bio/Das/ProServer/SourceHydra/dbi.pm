@@ -2,10 +2,10 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
-# Id:            $Id: dbi.pm 548 2008-12-03 23:14:25Z zerojinx $
+# Last Modified: $Date: 2008-12-10 12:30:40 +0000 (Wed, 10 Dec 2008) $ $Author: andyjenkinson $
+# Id:            $Id: dbi.pm 559 2008-12-10 12:30:40Z andyjenkinson $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceHydra/dbi.pm,v $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra/dbi.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceHydra/dbi.pm $
 #
 # DBI-driven sourceadaptor broker
 #
@@ -17,7 +17,7 @@ use Carp;
 use base qw(Bio::Das::ProServer::SourceHydra);
 use Readonly;
 
-our $VERSION = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 559 $ =~ /\d+/mxg); $v; };
 Readonly::Scalar our $CACHE_TIMEOUT => 30;
 
 #########
@@ -57,6 +57,7 @@ sub sources {
 
       $sth->finish();
       $self->{'debug'} and carp qq(@{[scalar @{$self->{'_tables'}}]} tables found);
+      1;
 
     } or do {
       carp "Error scanning tables: $EVAL_ERROR";
@@ -104,7 +105,7 @@ Bio::Das::ProServer::SourceHydra::dbi - A database-backed implementation of B::D
 
 =head1 VERSION
 
-$Revision: 548 $
+$Revision: 559 $
 
 =head1 AUTHOR
 

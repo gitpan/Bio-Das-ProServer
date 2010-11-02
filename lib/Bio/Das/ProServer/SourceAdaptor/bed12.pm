@@ -4,7 +4,7 @@
 # Created:       2008-09-19
 # Last Modified: $Date: $
 # $Id: bed12.pm 549 2008-12-03 23:35:54Z zerojinx $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/bed12.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/bed12.pm $
 #
 ## no critic (ValuesAndExpressions::ProhibitImplicitNewlines)
 #

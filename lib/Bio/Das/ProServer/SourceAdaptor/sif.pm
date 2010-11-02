@@ -4,7 +4,7 @@
 # Last Modified: $Date: 2008-10-30 22:02:35 +0000 (Thu, 30 Oct 2008) $ $Author: andyjenkinson $
 # Id:            $Id: sif.pm 537 2008-10-30 22:02:35Z andyjenkinson $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/sif.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/sif.pm $
 #
 # SourceAdaptor implementation for Simple Interaction Format files.
 #

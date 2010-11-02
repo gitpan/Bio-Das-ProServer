@@ -4,7 +4,7 @@
 # Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
 # Id:            $Id: ip.pm 453 2008-03-12 14:50:11Z andyjenkinson $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator/ip.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/Authenticator/ip.pm $
 #
 # Authenticator implementation using IP information to control access.
 #

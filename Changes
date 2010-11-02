@@ -1,5 +1,9 @@
 Revision history for Bio::Das::ProServer.
 
+2.11	Probably the last release on the DAS 1.53 spec
+
+2.10	Various perlcritic bugfixes. Lots of patches from Andy wrt. authenticated requests
+
 2.8
 
 	Migrated to proserver.svn.sf.net Removed non-core modules

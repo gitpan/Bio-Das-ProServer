@@ -5,7 +5,7 @@
 # Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $
 # Id:            $Id: simple_interaction.pm 549 2008-12-03 23:35:54Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple_interaction.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/simple_interaction.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::simple_interaction;
 use strict;

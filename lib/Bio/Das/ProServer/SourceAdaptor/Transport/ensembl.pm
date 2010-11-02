@@ -2,10 +2,10 @@
 # Author:        aj
 # Maintainer:    $Author: andyjenkinson $
 # Created:       2006
-# Last Modified: $Date: 2008-10-17 16:51:57 +0100 (Fri, 17 Oct 2008) $
-# Id:            $Id: ensembl.pm 535 2008-10-17 15:51:57Z andyjenkinson $
+# Last Modified: $Date: 2009-02-18 13:47:33 +0000 (Wed, 18 Feb 2009) $
+# Id:            $Id: ensembl.pm 569 2009-02-18 13:47:33Z andyjenkinson $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/ensembl.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/ensembl.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::ensembl;
 use strict;
@@ -14,7 +14,7 @@ use Carp;
 use Bio::EnsEMBL::Registry;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 
-our $VERSION  = do { my ($v) = (q$Revision: 535 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 569 $ =~ /\d+/mxg); $v; };
 
 sub init {
   my ($self) = @_;
@@ -81,7 +81,8 @@ sub _apply_override {
 
     my $adaptorclass = $group2adaptor{ $self->{'_group'} } || croak 'Unknown database group: '.$self->{'_group'};
     # Creating a new connection will add it to the registry.
-    require $adaptorclass;
+    eval "require $adaptorclass";
+    $@ && die $@;
     $adaptorclass->new(
       -host    => $self->config->{'host'}     || 'localhost',
       -port    => $self->config->{'port'}     || '3306',
@@ -171,7 +172,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::ensembl
 
 =head1 VERSION
 
-$LastChangedRevision: 535 $
+$LastChangedRevision: 569 $
 
 =head1 SYNOPSIS
 

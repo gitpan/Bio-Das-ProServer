@@ -5,7 +5,7 @@
 # Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $
 # Id:            $Id: wgetz.pm 548 2008-12-03 23:14:25Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/wgetz.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/wgetz.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::wgetz;
 use strict;

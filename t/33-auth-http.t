@@ -9,7 +9,7 @@ eval {
 if ($@) {
   plan skip_all => 'HTTP authentication requires LWP::UserAgent and Cache::FileCache';
 } else {
-  plan tests => 12;
+  plan tests => 20;
 }
 
 # Initial basic tests
@@ -61,15 +61,16 @@ if ($port) {
 							  });
 
     for my $token (qw(allow deny)) {
-      my $req = HTTP::Request->new('get',
-				   "http://my.example.com?key=$token",
-				   ['Cookie', "key=$token",
-				    'key', $token,
-				    'Authorization', $token]);
-
-      my ($uri) = $req->uri() =~ m/\?(.*)/smx;
-      my $resp = $auth->authenticate( {'request' => $req, 'cgi' => CGI->new($uri)} );
-      ok( $token eq 'allow' ? !$resp : defined $resp && $resp->isa('HTTP::Response'), "$token $type authentication") || diag($resp);
+      for my $attempt (qw(first cached)) {
+        my $req = HTTP::Request->new('get',
+                                     "http://my.example.com?key=$token",
+                                     ['Cookie', "key=$token",
+                                     'key', $token,
+                                     'Authorization', $token]);
+        my ($uri) = $req->uri() =~ m/\?(.*)/smx;
+        my $resp = $auth->authenticate( {'request' => $req, 'cgi' => CGI->new($uri)} );
+        ok( $token eq 'allow' ? !$resp : defined $resp && $resp->isa('HTTP::Response'), "$attempt $token $type authentication") || diag($resp);
+      }
     }
   }
 } else {

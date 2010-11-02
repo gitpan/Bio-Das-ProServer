@@ -2,7 +2,7 @@
 # Author: $andyjenkinson$
 # Last Modified: $Date: 2008-09-21 19:23:26 +0100 (Sun, 21 Sep 2008) $
 # $Id: simple_volmap.pm 524 2008-09-21 18:23:26Z andyjenkinson $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple_volmap.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/simple_volmap.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::simple_volmap;
 use strict;

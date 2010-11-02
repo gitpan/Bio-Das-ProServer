@@ -1,11 +1,11 @@
 #########
 # Author:        Andy Jenkinson
-# Maintainer:    $Author: zerojinx $
+# Maintainer:    $Author: andyjenkinson $
 # Created:       2008-05-03
 # Last Modified: $Date: 2008-08-11 17:04:18 +0100 (Mon, 11 Aug 2008) $
-# Id:            $Id: sql.pm 548 2008-12-03 23:14:25Z zerojinx $
+# Id:            $Id: sql.pm 559 2008-12-10 12:30:40Z andyjenkinson $
 # Source:        $Source: $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra/sql.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceHydra/sql.pm $
 #
 # DBI-driven sourceadaptor broker
 #
@@ -46,6 +46,7 @@ sub sources {
       $self->{'debug'} and carp qq(Fetching sources using query: $sql);
       $self->{'_sources'} = [map { $_->[0] } @{$self->transport()->dbh()->selectall_arrayref($sql)}];
       $self->{'debug'} and carp qq(@{[scalar @{$self->{'_sources'}}]} sources found);
+      1;
 
     } or do {
       carp "Error scanning database: $EVAL_ERROR";

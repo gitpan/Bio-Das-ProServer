@@ -5,7 +5,7 @@
 # Last Modified: $Date: 2008-09-21 20:05:54 +0100 (Sun, 21 Sep 2008) $
 # Source:        $Source $
 # Id:            $Id $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/generic.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/generic.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::generic;
 use strict;

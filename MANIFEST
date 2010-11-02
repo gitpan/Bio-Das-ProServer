@@ -2,6 +2,7 @@ Build.PL
 Changes
 coordinates/registry_coordinates.xml
 doc/CHANGES_2.7.txt
+doc/CHANGES_2.9.txt
 doc/pod2html
 doc/proserver_guide.html
 doc/proserver_tutorial.html
@@ -19,6 +20,7 @@ lib/Bio/Das/ProServer.pm
 lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm
 lib/Bio/Das/ProServer/SourceAdaptor/bed12.pm
 lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm
+lib/Bio/Das/ProServer/SourceAdaptor/file.pm
 lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm
 lib/Bio/Das/ProServer/SourceAdaptor.pm
 lib/Bio/Das/ProServer/SourceAdaptor/proxy.pm
@@ -76,3 +78,4 @@ t/dummy/Cache/FileCache.pm
 t/dummy/Net/IP.pm
 Makefile.PL
 META.yml
+SIGNATURE    Added here by Module::Build

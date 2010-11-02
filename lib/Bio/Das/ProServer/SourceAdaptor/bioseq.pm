@@ -5,7 +5,7 @@
 # Last Modified: $Date: 2008-09-21 19:23:26 +0100 (Sun, 21 Sep 2008) $
 # Id:            $Id: bioseq.pm 524 2008-09-21 18:23:26Z andyjenkinson $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm,v $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/bioseq.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::bioseq;
 use strict;

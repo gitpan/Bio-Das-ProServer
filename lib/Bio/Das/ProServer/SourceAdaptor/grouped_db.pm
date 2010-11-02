@@ -2,10 +2,10 @@
 # Author:        jws
 # Maintainer:    jws, dj3
 # Created:       2005-04-19
-# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
-# Id:            $Id: grouped_db.pm 548 2008-12-03 23:14:25Z zerojinx $
+# Last Modified: $Date: 2009-07-24 01:12:44 +0100 (Fri, 24 Jul 2009) $ $Author: andyjenkinson $
+# Id:            $Id: grouped_db.pm 585 2009-07-24 00:12:44Z andyjenkinson $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm,v $
-# $HeadURL: https://proserver.svn.sf.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/grouped_db.pm $
 # Builds DAS features from ProServer mysql database
 # schema at eof
 #
@@ -17,7 +17,7 @@ use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 use Readonly;
 
-our $VERSION  = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 585 $ =~ /\d+/mxg); $v; };
 
 Readonly::Scalar our $SHORT_SEG_LEN => 4;
 
@@ -168,11 +168,11 @@ sub segment_version {
 #		
 #	fgroup
 #		group_id	varchar(30)
-#		label		varchar(30)
-#		type		varchar(30)
-#		note		text
-#		link_url	varchar(255)
-#		link_text	varchar(30)
+#		group_label	varchar(30)
+#		group_type	varchar(30)
+#		group_note	text
+#		group_link_url	varchar(255)
+#		group_link_text	varchar(30)
 #	
 #	Note that spec allows multiple groups, targets, and links per feature,
 #	but these aren't implemented here.
@@ -186,7 +186,7 @@ Bio::Das::ProServer::SourceAdaptor::grouped_db
 
 =head1 VERSION
 
-$LastChangedRevision: 548 $
+$LastChangedRevision: 585 $
 
 =head1 SYNOPSIS
 
