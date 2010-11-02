@@ -18,14 +18,18 @@
         <div id="header"><h4>ProServer: Sequence</h4></div>
         <div id="mainbody">
           <p>Format:
-            <input type="radio" name="seqformat" onclick="document.getElementById('numbered').style.display='block';document.getElementById('fasta').style.display='none';" value="Numbered" checked="checked"/>Numbered
-            <input type="radio" name="seqformat" onclick="document.getElementById('fasta').style.display='block';document.getElementById('numbered').style.display='none';" value="Fasta"/>Fasta
+            <input type="radio" name="format" onclick="document.getElementById('numbered').style.display='block';document.getElementById('fasta').style.display='none';document.getElementById('xml').style.display='none';" value="Numbered" checked="checked"/>Numbered
+            <input type="radio" name="format" onclick="document.getElementById('fasta').style.display='block';document.getElementById('numbered').style.display='none';document.getElementById('xml').style.display='none';" value="Fasta"/>Fasta
+            <input type="radio" name="format" onclick="document.getElementById('xml').style.display='block';document.getElementById('numbered').style.display='none';document.getElementById('fasta').style.display='none';" value="XML"/>XML
           </p>
           <div id="numbered" style="font-family:courier;display:block;">
             <xsl:apply-templates select="*/SEQUENCE" mode="numbered"/>
           </div>
           <div id="fasta" style="font-family:courier;display:none;">
             <xsl:apply-templates select="*/SEQUENCE" mode="fasta"/>
+          </div>
+          <div id="xml" style="font-family:courier;display:none;">
+            <xsl:apply-templates select="*" mode="xml-main"/>
           </div>
         </div>
       </body>
@@ -97,4 +101,29 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  
+  <xsl:template match="@*" mode="xml-att">
+    <span style="color:purple"><xsl:text>&#160;</xsl:text><xsl:value-of select="name()"/>=&quot;</span><span style="color:red"><xsl:value-of select="."/></span><span style="color:purple">&quot;</span>
+  </xsl:template>
+  
+  <xsl:template match="*" mode="xml-main">
+    <xsl:choose>
+      <xsl:when test="*">
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue">&gt;</span>
+        <div style="margin-left: 1em"><xsl:apply-templates select="*" mode="xml-main"/></div>
+        <span style="color:blue">&lt;/<xsl:value-of select="name()"/>&gt;</span><br/>
+      </xsl:when>
+      <xsl:when test="text()">
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue">&gt;</span><xsl:apply-templates select="text()" mode="xml-text"/><span style="color:blue">&lt;/<xsl:value-of select="name()"/>&gt;</span><br/>
+      </xsl:when>
+      <xsl:otherwise>
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue"> /&gt;</span><br/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
+  <xsl:template match="text()" mode="xml-text">
+    <div style="margin-left: 1em; color:black"><xsl:value-of select="."/></div>
+  </xsl:template>
+  
 </xsl:stylesheet>

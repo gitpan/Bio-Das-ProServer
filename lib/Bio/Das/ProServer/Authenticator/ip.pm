@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-20
-# Last Modified: $Date: 2008-03-12 14:50:11 +0000 (Wed, 12 Mar 2008) $ $Author: andyjenkinson $
-# Id:            $Id: ip.pm 453 2008-03-12 14:50:11Z andyjenkinson $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $ $Author: zerojinx $
+# Id:            $Id: ip.pm 688 2010-11-02 11:57:52Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/Authenticator/ip.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator/ip.pm $
 #
 # Authenticator implementation using IP information to control access.
 #
@@ -17,7 +17,7 @@ use Socket;
 use Carp;
 use base qw(Bio::Das::ProServer::Authenticator);
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 453 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub authenticate {
   my ($self, $params) = @_;
@@ -27,7 +27,7 @@ sub authenticate {
   # IP addresses checked:
   # 1. All IPs from the X-Forwarded-For header
   # 2. The socket address
-  my @query_ips = $params->{'request'} ? split /\s*,\s*/mx, $params->{'request'}->header('X-Forwarded-For') : ();
+  my @query_ips = $params->{'request'} ? split /\s*,\s*/mxs, $params->{'request'}->header('X-Forwarded-For') : ();
   if ($params->{'peer_addr'}) {
     push @query_ips, inet_ntoa( $params->{'peer_addr'} );
   }
@@ -54,7 +54,7 @@ sub init {
   my $self = shift;
   $self->{'allow_ip'} = [ map {
     Net::IP->new($_) || croak 'Unable to parse whitelist IP range: '.Net::IP::Error
-  } split /\s*[,;]+\s*/mx, $self->{'config'}->{'authallow'}||q() ];
+  } split /\s*[,;]+\s*/mxs, $self->{'config'}->{'authallow'}||q() ];
   return;
 }
 
@@ -72,7 +72,7 @@ Bio::Das::ProServer::Authenticator::ip - authenticates DAS requests by IP addres
 
 =head1 VERSION
 
-$LastChangedRevision: 453 $
+$LastChangedRevision: 688 $
 
 =head1 SYNOPSIS
 
@@ -156,13 +156,13 @@ separators are comma and semicolon.
 
 =over
 
-=item L<Carp>
+=item L<Carp|Carp>
 
-=item L<Net::IP>
+=item L<Net::IP|Net::IP>
 
-=item L<Socket>
+=item L<Socket|Socket>
 
-=item L<Bio::Das::ProServer::Authenticator>
+=item L<Bio::Das::ProServer::Authenticator|Bio::Das::ProServer::Authenticator>
 
 =back
 

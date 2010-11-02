@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-20
-# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $ $Author: zerojinx $
-# Id:            $Id: Authenticator.pm 549 2008-12-03 23:35:54Z zerojinx $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $ $Author: zerojinx $
+# Id:            $Id: Authenticator.pm 688 2010-11-02 11:57:52Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/Authenticator.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator.pm $
 #
 # Stub Authenticator for controlling access.
 #
@@ -15,7 +15,7 @@ use warnings;
 use Carp;
 use HTTP::Response;
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 549 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub new {
   my ($class, $self) = @_;
@@ -59,7 +59,7 @@ Bio::Das::ProServer::Authenticator - authenticates DAS requests
 
 =head1 VERSION
 
-$LastChangedRevision: 549 $
+$LastChangedRevision: 688 $
 
 =head1 SYNOPSIS
 
@@ -156,9 +156,9 @@ None reported.
 
 =over
 
-=item L<Carp>
+=item L<Carp|Carp>
 
-=item L<HTTP::Response>
+=item L<HTTP::Response|HTTP::Response>
 
 =back
 

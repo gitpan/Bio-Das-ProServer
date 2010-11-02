@@ -1,15 +1,15 @@
 #########
 # Author: $andyjenkinson$
-# Last Modified: $Date: 2008-09-21 19:23:26 +0100 (Sun, 21 Sep 2008) $
-# $Id: simple_volmap.pm 524 2008-09-21 18:23:26Z andyjenkinson $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/simple_volmap.pm $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $
+# $Id: simple_volmap.pm 688 2010-11-02 11:57:52Z zerojinx $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple_volmap.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::simple_volmap;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my ($v) = (q$Revision: 524 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub init {
   my $self = shift;
@@ -49,7 +49,7 @@ __END__
 
 =head1 VERSION
 
-$Revision: 524 $
+$Revision: 688 $
 
 =head1 AUTHOR
 
@@ -93,7 +93,7 @@ $Revision: 524 $
 
 =over
 
-=item L<Bio::Das::ProServer::SourceAdaptor>
+=item L<Bio::Das::ProServer::SourceAdaptor|Bio::Das::ProServer::SourceAdaptor>
 
 =back
 

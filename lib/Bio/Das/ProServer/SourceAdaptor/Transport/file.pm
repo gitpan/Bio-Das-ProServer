@@ -3,9 +3,9 @@
 # Maintainer:    rmp
 # Created:       2003-05-20
 # Last Modified: 2003-05-27
-# $Id: file.pm 567 2009-01-12 16:10:48Z andyjenkinson $
+# $Id: file.pm 688 2010-11-02 11:57:52Z zerojinx $
 # $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/file.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/file.pm $
 #
 # Transport layer for file-based storage (slow)
 #
@@ -19,7 +19,7 @@ use English qw(-no_match_vars);
 use Carp;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 
-our $VERSION  = do { my ($v) = (q$Revision: 567 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub _fh {
   my $self = shift;
@@ -36,19 +36,21 @@ sub query {
 
   $self->{'debug'} and carp "Transport::file::query was $query\n";
   my @queries = ();
-  for (split /\s(?:AND|&&)\s/i, $query) {
-    my ($field, $cmp, $value) = split /\s/mx, $_;
-    $field   =~ s/^field//mx;
-    $value   =~ s/^[\"\'](.*?)[\"\']$/$1/mx;
-    $value   =~ s/%/.*?/mxg;
+  for (split /\s(?:AND|&&)\s/mxsi, $query) {
+    my ($field, $cmp, $value) = split /\s/mxs, $_;
+    $field   =~ s/^field//mxs;
+    $value   =~ s/^[\"\'](.*?)[\"\']$/$1/mxs;
+    $value   =~ s/%/.*?/mxsg;
     $cmp     = lc $cmp;
 
-    if ($cmp eq '=') {
+    ## no critic (ControlStructures::ProhibitCascadingIfElse)
+
+    if ($cmp eq q(=) || $cmp eq q(==) || $cmp eq q(eq)) {
       push @queries, sub { $_[$field] eq $value };
     } elsif ($cmp eq 'lceq') {
       push @queries, sub { lc $_[$field] eq lc $value };
     } elsif ($cmp eq 'like') {
-      push @queries, sub { $_[$field] =~ /^$value$/mxi };
+      push @queries, sub { $_[$field] =~ /^$value$/mxsi };
     } elsif ($cmp eq '>=') {
       push @queries, sub { return $_[$field] >= $value ? 1 : 0 };
     } elsif ($cmp eq '>') {
@@ -62,6 +64,8 @@ sub query {
     }
   }
 
+  @queries || return wantarray ? () : [];
+
   return $self->config->{'cache'} && $self->config->{'cache'} ne 'no' ?
     $self->_query_mem(@queries) :
     $self->_query_fh(@queries);
@@ -69,45 +73,61 @@ sub query {
 
 sub _query_mem {
   my ( $self, @predicates ) = @_;
-  $self->{'debug'} && carp "Querying against memory cache";
+  $self->{'debug'} && carp 'Querying against memory cache';
+
   my $ref = [];
+  my $line_numbers = [];
+  my $i = 0;
+
   LINE: for my $parts (@{ $self->_contents() }) {
+    $i++;
     for my $predicate (@predicates) {
-      &$predicate( @{ $parts } ) || next LINE;
+      &{ $predicate }( @{ $parts } ) || next LINE;
     }
 
     push @{$ref}, $parts;
+    push @{$line_numbers}, $i;
     if($self->config->{'unique'}) {
       last;
     }
   }
-  return $ref;
+
+  return wantarray ? ($ref, $line_numbers) : $ref;
 }
 
 sub _query_fh {
   my ( $self, @predicates ) = @_;
 
-  $self->{'debug'} && carp "Querying against file";
+  $self->{'debug'} && carp 'Querying against file';
   local $RS = "\n";
   my $fh    = $self->_fh();
   seek $fh, 0, 0;
 
   my $ref = [];
+  my $line_numbers = [];
+  my $i = 0;
+  my $sep = $self->config->{'separator'} || '\t'; ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
+  my $comment = $self->config->{'comment'};
+
   LINE: while(my $line = <$fh>) {
     chomp $line;
     $line || next;
-    my @parts = split /\t/mx, $line;
+    $comment && $line =~ m/$comment/mxs && next;
+    $i++;
+    my @parts = split /$sep/mxs, $line;
 
     for my $predicate (@predicates) {
-      &$predicate( @parts ) || next LINE;
+      &{ $predicate }( @parts ) || next LINE;
     }
 
     push @{$ref}, \@parts;
+    push @{$line_numbers}, $i;
     if($self->config->{'unique'}) {
       last;
     }
   }
-  return $ref;
+
+  return wantarray ? ($ref, $line_numbers) : $ref;
 }
 
 sub _contents {
@@ -119,10 +139,13 @@ sub _contents {
     seek $fh, 0, 0;
 
     my $ref = [];
+    my $sep = $self->config->{'separator'} || '\t'; ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
+    my $comment = $self->config->{'comment'};
     while(my $line = <$fh>) {
       chomp $line;
       $line || next;
-      my @parts = split /\t/mx, $line;
+      $comment && $line =~ m/$comment/mxs && next;
+      my @parts = split /$sep/mxs, $line;
       push @{$ref}, \@parts;
     }
     $self->{'_contents'} = $ref;
@@ -159,14 +182,15 @@ Bio::Das::ProServer::SourceAdaptor::Transport::file
 
 =head1 VERSION
 
-$Revision: 567 $
+$Revision: 688 $
 
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
 
 A simple data transport for tab-separated files. Access is via the 'query' method.
-Expects a tab-separated file with no header line.
+Expects a file with no header line. By default, fields are expected to be
+separated with tab characters.
 
 Can optionally cache the file contents upon first usage. This may improve
 subsequence response speed at the expense of memory footprint.
@@ -177,7 +201,7 @@ subsequence response speed at the expense of memory footprint.
 
  Queries are of the form:
 
- $filetransport->query(qq(field1 = 'value'));
+ $filetransport->query(qq(field1 = 'value')); # =, == and eq operators all do the same thing
  $filetransport->query(qq(field1 lceq 'value'));
  $filetransport->query(qq(field3 like '%value%'));
  $filetransport->query(qq(field0 = 'value' && field1 = 'value'));
@@ -208,16 +232,31 @@ Configured as part of each source's ProServer 2 INI file:
   ... source configuration ...
   transport = file
   filename  = /data/features.tsv
-  unique    = 1 # optional
-  cache     = 1 # optional
+  ; optional values:
+  unique    = 1
+  cache     = 1
+  comment   = ^#
+  separator = \t
+
+  If specified, query results can be treated as unique, preventing a full file
+  parse when the first match is found. The default is to find all matches.
+
+  If specified, file contents may be pre-cached in memory. The default is to
+  re-read the file for every query.
+
+  The field separator may be specified as a regular expression. The default is
+  /\t/.
+
+  Comments can be detected and ignored by providing a regular expression. There
+  is no default.
 
 =head1 DEPENDENCIES
 
 =over
 
-=item L<File::stat>
+=item L<File::stat|File::stat>
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::generic>
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::generic|Bio::Das::ProServer::SourceAdaptor::Transport::generic>
 
 =back
 

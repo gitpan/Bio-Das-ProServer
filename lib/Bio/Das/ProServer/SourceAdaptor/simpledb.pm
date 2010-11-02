@@ -2,21 +2,21 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-12-12
-# Last Modified: $Date: 2008-09-21 19:23:26 +0100 (Sun, 21 Sep 2008) $
-# $Id: simpledb.pm 524 2008-09-21 18:23:26Z andyjenkinson $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/simpledb.pm $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
+# $Id: simpledb.pm 687 2010-11-02 11:37:11Z zerojinx $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simpledb.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::simpledb;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my ($v) = (q$Revision: 524 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 
 sub capabilities {
   return {
-	  features => '1.0',
-	 };
+    features => '1.0',
+  };
 }
 
 sub build_features {
@@ -34,7 +34,7 @@ sub build_features {
 
   if($hydraname) {
     my $basename = $self->config->{basename} || q();
-    $dbtable     =~ s/$hydraname/$basename/mx;
+    $dbtable     =~ s/$hydraname/$basename/mxs;
   }
 
   my @bound      = ($segment);
@@ -49,18 +49,18 @@ sub build_features {
   my @features;
 
   for my $row (@{$ref}) {
-    my ($start, $end) = ($row->{start}, $row->{end});
-    if($start > $end) {
-      ($start, $end) = ($end, $start);
+    my ($f_start, $f_end) = ($row->{start}, $row->{end});
+    if($f_start > $f_end) {
+      ($f_start, $f_end) = ($f_end, $f_start);
     }
     push @features, {
                      id     => $row->{featureid},
                      type   => $row->{type} || $dbtable,
                      method => $row->{type} || $dbtable,
-                     start  => $start,
-                     end    => $end,
-		     note   => $row->{note},
-		     link   => $row->{link},
+                     start  => $f_start,
+                     end    => $f_end,
+                     note   => $row->{note},
+                     link   => $row->{link},
                     };
   }
   return @features;
@@ -75,7 +75,7 @@ Bio::Das::ProServer::SourceAdaptor::simpledb - Builds simple DAS features from a
 
 =head1 VERSION
 
-$LastChangedRevision: 524 $
+$LastChangedRevision: 687 $
 
 =head1 SYNOPSIS
 

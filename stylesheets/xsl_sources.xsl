@@ -14,14 +14,23 @@ function hideColumn(c){var t=document.getElementById('data');var trs=t.getElemen
       <body>
         <div id="header"><h4>ProServer: Source Information</h4></div>
         <div id="mainbody">
-          <table class="z" id="data">
-            <thead><tr><th style="white-space:nowrap;">Version URI</th><th>Title</th><th>Description</th><th>Contact</th><th>Coordinates</th><th>Capabilities</th><th>Created</th></tr></thead>
+          <p>Format:
+            <input type="radio" name="format" onclick="document.getElementById('data').style.display='block';document.getElementById('xml').style.display='none';" value="Table" checked="checked"/>Table
+            <input type="radio" name="format" onclick="document.getElementById('xml').style.display='block';document.getElementById('data').style.display='none';" value="XML"/>XML
+          </p>
+          <table class="z" id="data" style="display:block;">
+            <thead>
+              <tr><th>URI</th><th>Title</th><th>Description</th><th>Contact</th><th>Coordinates</th><th>Capabilities</th><th>Created</th></tr>
+            </thead>
             <tbody>
               <xsl:apply-templates select="SOURCES/SOURCE">
                 <xsl:sort select="@title"/>
               </xsl:apply-templates>
             </tbody>
           </table>
+          <div id="xml" style="font-family:courier;display:none;">
+            <xsl:apply-templates select="*" mode="xml-main"/>
+          </div>
         </div>
       </body>
     </html>
@@ -50,7 +59,7 @@ function hideColumn(c){var t=document.getElementById('data');var trs=t.getElemen
       <xsl:when test="not(@query_uri)">
         [<xsl:value-of select="@type"/>]
       </xsl:when>
-      <xsl:when test="($command='dsn' or $command='entry_points' or $command='stylesheet')">
+      <xsl:when test="($command='dsn' or $command='entry_points' or $command='stylesheet' or $command='sources')">
         [<a><xsl:attribute name="href"><xsl:value-of select="@query_uri"/></xsl:attribute><xsl:value-of select="@type"/></a>]
       </xsl:when>
       <xsl:when test="($command='alignment')">
@@ -67,4 +76,29 @@ function hideColumn(c){var t=document.getElementById('data');var trs=t.getElemen
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  
+  <xsl:template match="@*" mode="xml-att">
+    <span style="color:purple"><xsl:text>&#160;</xsl:text><xsl:value-of select="name()"/>=&quot;</span><span style="color:red"><xsl:value-of select="."/></span><span style="color:purple">&quot;</span>
+  </xsl:template>
+  
+  <xsl:template match="*" mode="xml-main">
+    <xsl:choose>
+      <xsl:when test="*">
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue">&gt;</span>
+        <div style="margin-left: 1em"><xsl:apply-templates select="*" mode="xml-main"/></div>
+        <span style="color:blue">&lt;/<xsl:value-of select="name()"/>&gt;</span><br/>
+      </xsl:when>
+      <xsl:when test="text()">
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue">&gt;</span><xsl:apply-templates select="text()" mode="xml-text"/><span style="color:blue">&lt;/<xsl:value-of select="name()"/>&gt;</span><br/>
+      </xsl:when>
+      <xsl:otherwise>
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue"> /&gt;</span><br/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
+  <xsl:template match="text()" mode="xml-text">
+    <div style="margin-left: 1em; color:black"><xsl:value-of select="."/></div>
+  </xsl:template>
+  
 </xsl:stylesheet>

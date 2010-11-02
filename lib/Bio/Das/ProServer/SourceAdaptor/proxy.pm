@@ -1,9 +1,9 @@
 #########
 # Author:        dj3
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2005-10-21
-# Last Modified: $Date: 2008-09-21 19:23:26 +0100 (Sun, 21 Sep 2008) $
-# Id:            $Id: proxy.pm 524 2008-09-21 18:23:26Z andyjenkinson $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
+# Id:            $Id: proxy.pm 687 2010-11-02 11:37:11Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/proxy.pm,v $
 #
 package Bio::Das::ProServer::SourceAdaptor::proxy;
@@ -14,7 +14,7 @@ use LWP::UserAgent;
 use Bio::Das::Lite;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my ($v) = (q$Revision: 524 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 
 sub capabilities {
   return {
@@ -54,7 +54,7 @@ Bio::Das::ProServer::SourceAdaptor::proxy
 
 =head1 VERSION
 
-$LastChangedRevision: 524 $
+$LastChangedRevision: 687 $
 
 =head1 SYNOPSIS
 

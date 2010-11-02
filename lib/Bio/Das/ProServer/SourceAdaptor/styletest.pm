@@ -2,9 +2,9 @@
 # Author:        jws
 # Maintainer:    jws
 # Created:       2005-04-20
-# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $
-# $Id: styletest.pm 548 2008-12-03 23:14:25Z zerojinx $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/styletest.pm $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
+# $Id: styletest.pm 687 2010-11-02 11:37:11Z zerojinx $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/styletest.pm $
 #
 # lots of magic numbers in this package:
 ## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
@@ -14,7 +14,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION  = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 
 sub capabilities {
   return {
@@ -50,12 +50,12 @@ sub build_features {
   #
   my @types;
 
-  for my $ss (split /\n/mx, $stylesheet) {
-    if($ss !~ /<\s*TYPE/mix) {
+  for my $ss (split /\n/mxs, $stylesheet) {
+    if($ss !~ /<\s*TYPE/mxsi) {
       next;
     }
 
-    my ($trap) = $ss =~ /id\s*=\s*["']{1}([^"']*)["']{1}/mix;
+    my ($trap) = $ss =~ /id\s*=\s*["']{1}([^"']*)["']{1}/mxsi;
     if($trap) {
       push @types, $1;
     }
@@ -66,7 +66,7 @@ sub build_features {
     # workaround for annoying Bio::Das method forcing type to method:type
     #
     my $method = $type;
-    $method    =~ s/:.*//mx; # throw away everything after :
+    $method    =~ s/:.*//mxs; # throw away everything after :
 
     #########
     # create a number of features for each type, on each strand:
@@ -189,7 +189,7 @@ Bio::Das::ProServer::SourceAdaptor::styletest
 
 =head1 VERSION
 
-$LastChangedRevision: 548 $
+$LastChangedRevision: 687 $
 
 =head1 SYNOPSIS
 

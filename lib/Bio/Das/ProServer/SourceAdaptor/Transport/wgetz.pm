@@ -2,10 +2,10 @@
 # Author:        ak
 # Maintainer:    $Author: zerojinx $
 # Created:       2004
-# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $
-# Id:            $Id: wgetz.pm 548 2008-12-03 23:14:25Z zerojinx $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
+# Id:            $Id: wgetz.pm 687 2010-11-02 11:37:11Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/wgetz.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/wgetz.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::wgetz;
 use strict;
@@ -15,7 +15,7 @@ use LWP::UserAgent;
 use Carp;
 use Readonly;
 
-our $VERSION = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 Readonly::Scalar our $TIMEOUT => 30;
 
 sub _useragent {
@@ -48,12 +48,12 @@ sub query {
   #########
   # Remove characters not allowed in transport.
   #
-  $swgetz =~ s/[^\w.\/:-]//mx;
+  $swgetz =~ s/[^\w.\/:-]//mxs;
 
   #########
   # Remove characters not allowed in query.
   #
-  $squery =~ s/[^\w[\](){}.><:'"\ |+-]//mx;
+  $squery =~ s/[^\w[\](){}.><:'"\ |+-]//mxs;
 
   if ($squery ne $query) {
     carp "Detainted '$squery' != '$query'";
@@ -77,7 +77,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::wgetz - A ProServer transport mod
 
 =head1 VERSION
 
-$LastChangedRevision: 548 $
+$LastChangedRevision: 687 $
 
 =head1 SYNOPSIS
 

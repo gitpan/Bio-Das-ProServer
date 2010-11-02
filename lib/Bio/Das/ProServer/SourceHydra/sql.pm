@@ -1,11 +1,11 @@
 #########
 # Author:        Andy Jenkinson
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2008-05-03
-# Last Modified: $Date: 2008-08-11 17:04:18 +0100 (Mon, 11 Aug 2008) $
-# Id:            $Id: sql.pm 559 2008-12-10 12:30:40Z andyjenkinson $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
+# Id:            $Id: sql.pm 687 2010-11-02 11:37:11Z zerojinx $
 # Source:        $Source: $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceHydra/sql.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceHydra/sql.pm $
 #
 # DBI-driven sourceadaptor broker
 #
@@ -17,7 +17,7 @@ use Carp;
 use base qw(Bio::Das::ProServer::SourceHydra::dbi);
 use Readonly;
 
-our $VERSION       = do { my ($v) = (q$Revision: 506 $ =~ /\d+/mxg); $v; };
+our $VERSION       = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 Readonly::Scalar our $CACHE_TIMEOUT => 30;
 
 #########
@@ -66,7 +66,7 @@ Bio::Das::ProServer::SourceHydra::sql - A database-backed implementation of B::D
 
 =head1 VERSION
 
-$Revision: 506 $
+$Revision: 687 $
 
 =head1 AUTHOR
 

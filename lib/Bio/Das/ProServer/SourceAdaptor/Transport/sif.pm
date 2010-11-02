@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-01
-# Last Modified: $Date: 2008-12-03 21:06:41 +0000 (Wed, 03 Dec 2008) $ $xuthor$
-# Id:            $Id: sif.pm 544 2008-12-03 21:06:41Z zerojinx $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $ $xuthor$
+# Id:            $Id: sif.pm 688 2010-11-02 11:57:52Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/sif.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/sif.pm $
 #
 # Transport implementation for Simple Interaction Format files.
 #
@@ -15,7 +15,7 @@ use warnings;
 use Carp;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::file);
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 544 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 688 $ =~ /\d+/mxsg); $v; };
 
 # Access to the transport is via this method (see POD)
 sub query {
@@ -78,17 +78,17 @@ sub _search_all {
   $q3 && return {}; # SIF has only binary interactions
   my $fh    = $self->_fh();
   my $start = tell $fh;
-  
+
   my $interactions = {};
 
   my $sep;
   while(<$fh>) {
     chomp;
     # if the file contains tabs, tab is separator
-    $sep ||= /\t/mx ? '\t' : '\s';  ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
+    $sep ||= /\t/mxs ? '\t' : '\s';  ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
 
     # If looking for 2 interactors, one -has- to be the source node
-    if (/^$q1$sep+([^$sep]+$sep+)+$q2($sep|\Z)/mx || /^$q2$sep+([^$sep]+$sep+)+$q1($sep|\Z)/mx) {
+    if (/^$q1$sep+([^$sep]+$sep+)+$q2($sep|\Z)/mxs || /^$q2$sep+([^$sep]+$sep+)+$q1($sep|\Z)/mxs) {
       $self->_add_interaction($q1, $q2, $interactions);
       last;
     }
@@ -110,10 +110,10 @@ sub _search_any {
   while(<$fh>) {
     chomp;
     # if the file contains tabs, tab is separator
-    $sep ||= /\t/mx ? '\t' : '\s';  ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
+    $sep ||= /\t/mxs ? '\t' : '\s';  ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
 
     # Different result depending on whether the 'hit' is the first node
-    my ($source, undef, @targets) = split /$sep+/mx;
+    my ($source, undef, @targets) = split /$sep+/mxs;
 
     if (scalar grep {$source eq $_} @queries ) {
       for my $t (@targets) {
@@ -162,7 +162,7 @@ sub _add_interaction_attributes {
       my $start = tell $fh;
       while (<$fh>) {
         chomp;
-        my ($x, $y, $value) = /^([^$sep]+)$sep+[^$sep]+$sep+([^$sep]+)\s*=\s*(.+)/mx;
+        my ($x, $y, $value) = /^([^$sep]+)$sep+[^$sep]+$sep+([^$sep]+)\s*=\s*(.+)/mxs;
         if (($x cmp $y) > 0) {
           ($x, $y) = ($y, $x);
         }
@@ -193,7 +193,7 @@ sub _add_interactor_attributes {
       my $start = tell $fh;
       while (<$fh>) {
         chomp;
-        my ($id, $value) = split /\s*=\s*/mx;
+        my ($id, $value) = split /\s*=\s*/mxs;
         if ($id eq $interactor->{'id'}) {
           $self->{'debug'} && carp "SIF transport found $file->{property} property for interactor $id";
           push @{ $interactor->{'details'} }, {
@@ -215,15 +215,15 @@ sub _att_fh {
 
   if (!exists $self->{'fh_att'}) {
     $self->{'fh_att'} = [];
-    for my $fn (split /\s*[;,]\s*/mx, $self->config->{'attributes'}||q()) {
+    for my $fn (split /\s*[;,]\s*/mxs, $self->config->{'attributes'}||q()) {
       my $fh;
       open $fh, '<', $fn or croak qq(Could not open $fn); ## no critic (Perl::Critic::Policy::InputOutput::RequireBriefOpen)
       my $property = <$fh>;
       chomp $property;
       my $start = tell $fh;
       my $line = <$fh>;
-      my $sep = $line =~ m/\t/mx ? '\t' : '\s'; ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
-      my $type = $line =~ /^[^$sep]+$sep+[^$sep]+$sep+[^$sep]+\s*=/mx ? 'interaction' : 'interactor';
+      my $sep = $line =~ m/\t/mxs ? '\t' : '\s'; ## no critic (Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars)
+      my $type = $line =~ /^[^$sep]+$sep+[^$sep]+$sep+[^$sep]+\s*=/mxs ? 'interaction' : 'interactor';
       seek $fh, $start, 0;
       push @{ $self->{'fh_att'} }, {'fh'=>$fh,'type'=>$type,'property'=>$property,'sep'=>$sep};
     }
@@ -268,7 +268,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::sif
 
 =head1 VERSION
 
-$LastChangedRevision: 544 $
+$LastChangedRevision: 688 $
 
 =head1 SYNOPSIS
 
@@ -340,9 +340,9 @@ Run ProServer with the -debug flag.
 
 =over
 
-=item L<http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats> Cytoscape - SIF
+=item L<Cytoscape - SIF|http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats>
 
-=item L<http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Attributes> Cytoscape - Attributes
+=item L<Cytoscape - Attributes|http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Attributes>
 
 =back
 
@@ -350,9 +350,9 @@ Run ProServer with the -debug flag.
 
 =over
 
-=item L<Carp>
+=item L<Carp|Carp>
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::file>
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::file|Bio::Das::ProServer::SourceAdaptor::Transport::file>
 
 =back
 

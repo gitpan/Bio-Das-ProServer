@@ -2,10 +2,10 @@
 # Author:        jws, dj3
 # Maintainer:    $Author: zerojinx $
 # Created:       2005-04-19
-# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $
-# Id:            $Id: all_in_group.pm 549 2008-12-03 23:35:54Z zerojinx $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
+# Id:            $Id: all_in_group.pm 687 2010-11-02 11:37:11Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm,v $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/all_in_group.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::all_in_group;
 use strict;
@@ -13,7 +13,7 @@ use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 use Readonly;
 
-our $VERSION = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 Readonly::Scalar our $SHORT_SEG_LEN => 4;
 
 sub capabilities {
@@ -153,7 +153,7 @@ Bio::Das::ProServer::SourceAdaptor::all_in_group
 
 =head1 VERSION
 
-$LastChangedRevision: 549 $
+$LastChangedRevision: 687 $
 
 =head1 SYNOPSIS
 

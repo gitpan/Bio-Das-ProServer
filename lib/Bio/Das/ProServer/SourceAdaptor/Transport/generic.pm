@@ -1,24 +1,24 @@
 #########
 # Author:        rmp
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2003-05-22
-# Last Modified: $Date: 2008-09-21 20:05:54 +0100 (Sun, 21 Sep 2008) $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
 # Source:        $Source $
 # Id:            $Id $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/generic.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/generic.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::generic;
 use strict;
 use warnings;
 
-our $VERSION  = do { my ($v) = (q$Revision: 528 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 
 sub new {
   my ($class, $defs) = @_;
   my $self = {
-	      'dsn'       => $defs->{'dsn'}    || 'unknown',
+              'dsn'       => $defs->{'dsn'}    || 'unknown',
               'config'    => $defs->{'config'} || {},
-	      'debug'     => $defs->{'debug'},
+              'debug'     => $defs->{'debug'},
              };
   bless $self, $class;
 
@@ -54,7 +54,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::generic - A generic transport lay
 
 =head1 VERSION
 
-$Revision: 528 $
+$Revision: 687 $
 
 =head1 SYNOPSIS
 

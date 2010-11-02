@@ -2,9 +2,9 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-06-13
-# Last Modified: $Date: 2008-09-21 20:05:54 +0100 (Sun, 21 Sep 2008) $ $Author: andyjenkinson $
-# $Id: getz.pm 528 2008-09-21 19:05:54Z andyjenkinson $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/getz.pm $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $ $Author: zerojinx $
+# $Id: getz.pm 687 2010-11-02 11:37:11Z zerojinx $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/getz.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::getz;
 use strict;
@@ -13,13 +13,13 @@ use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 use Carp;
 use English qw(-no_match_vars);
 
-our $VERSION = do { my ($v) = (q$Revision: 528 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 
 sub query {
   my ($self, @args) = @_;
-  my ($sgetz)  = ($self->config->{getz} || '/usr/local/bin/getz') =~ /([a-z\d\-\_\.\/]+)/mix;
+  my ($sgetz)  = ($self->config->{getz} || '/usr/local/bin/getz') =~ /([a-z\d\-\_\.\/]+)/mxsi;
   my $query    = join q( ), @args;
-  my ($squery) = $query =~ /([a-z\d\[\]\(\)\{\}\.\-_\>\<\:\'\" \|]+)/mix;
+  my ($squery) = $query =~ /([a-z\d\[\]\(\)\{\}\.\-_\>\<\:\'\" \|]+)/mxsi;
 
   if($squery ne $query) {
     carp qq(Detainted '$squery' != '$query');
@@ -41,7 +41,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::getz - Pulls features over comman
 
 =head1 VERSION
 
-$LastChangedRevision: 528 $
+$LastChangedRevision: 687 $
 
 =head1 SYNOPSIS
 

@@ -3,49 +3,76 @@
   <xsl:output method="html" indent="yes"/>
   <xsl:template match="/">
     <html xmlns="http://www.w3.org/1999/xhtml">
-      <head><style type="text/css">html,body{background:#ffc;font-family:helvetica,arial,sans-serif;font-size:0.8em}thead{background:#700;color:#fff}thead th{margin:0;padding:2px}a{color:#a00}a:hover{color:#aaa}.tr1{background:#ffd}.tr2{background:#ffb}tr{vertical-align:top}</style>
-<script type="text/javascript"><![CDATA[
-addEvent(window,"load",zi);
-function zi(){if(!document.getElementsByTagName)return;var ts=document.getElementsByTagName("table");for(var i=0;i!=ts.length;i++){t=ts[i];if(t){if(((' '+t.className+' ').indexOf("z")!=-1))z(t);}}}
-function z(t){var tr=1;for(var i=0;i!=t.rows.length;i++){var r=t.rows[i];var p=r.parentNode.tagName.toLowerCase();if(p!='thead'){if(p!='tfoot'){r.className='tr'+tr;tr=1+!(tr-1);}}}}
-function addEvent(e,t,f,c){/*Scott Andrew*/if(e.addEventListener){e.addEventListener(t,f,c);return true;}else if(e.attachEvent){var r=e.attachEvent("on"+t,f);return r;}}
-function hideColumn(c){var t=document.getElementById('data');var trs=t.getElementsByTagName('tr');for(var i=0;i!=trs.length;i++){var tds=trs[i].getElementsByTagName('td');if(tds.length!=0)tds[c].style.display="none";var ths=trs[i].getElementsByTagName('th');if(ths.length!=0)ths[c].style.display="none";}}
-]]></script><title>ProServer: Features for <xsl:value-of select="/DASGFF/GFF/@href"/></title></head>
+      <head>
+        <style type="text/css">html,body{background:#ffc;font-family:helvetica,arial,sans-serif;font-size:0.8em}caption,thead{background:#700;color:#fff}caption,thead th{margin:0;padding:2px}a{color:#a00}a:hover{color:#aaa}.tr1{background:#ffd}.tr2{background:#ffb}tr{vertical-align:top}</style>
+        <title>ProServer: Features for <xsl:value-of select="/DASGFF/GFF/@href"/></title></head>
       <body>
         <div id="header"><h4>ProServer: Features for <xsl:value-of select="/DASGFF/GFF/@href"/></h4></div>
         <div id="mainbody">
-          <table class="z" id="data">
-            <thead><tr>
-              <th onclick="hideColumn(0);">Label</th>
-              <th onclick="hideColumn(1);">Segment</th>
-              <th onclick="hideColumn(2);">Start</th>
-              <th onclick="hideColumn(3);">End</th>
-              <th onclick="hideColumn(4);">Orientation</th>
-              <th onclick="hideColumn(5);">Type</th>
-              <th onclick="hideColumn(6);">Notes</th>
-              <th onclick="hideColumn(7);">Link</th>
-            </tr></thead><tbody>
-            <xsl:apply-templates select="/DASGFF/GFF/SEGMENT"/>
-            </tbody>
-          </table>
+          <p>Format:
+            <input type="radio" name="format" onclick="document.getElementById('table').style.display='block';document.getElementById('xml').style.display='none';" value="Table" checked="checked"/>Table
+            <input type="radio" name="format" onclick="document.getElementById('xml').style.display='block';document.getElementById('table').style.display='none';" value="XML"/>XML
+          </p>
+          <div id="table" style="display:block;">
+            <xsl:apply-templates select="/DASGFF/GFF/SEGMENT" mode="table"/>
+          </div>
+          <div id="xml" style="font-family:courier;display:none;">
+            <xsl:apply-templates select="*" mode="xml-main"/>
+          </div>
         </div>
       </body>
     </html>
   </xsl:template>
-  <xsl:template match="SEGMENT">
+  <xsl:template match="SEGMENT" mode="table">
+    <table class="z">
+      <xsl:attribute name="id">data_<xsl:value-of select="@id"/></xsl:attribute>
+      <caption>
+        Features for segment 
+        <xsl:choose>
+          <xsl:when test="@start and @end">
+            <xsl:value-of select="@id"/>:<xsl:value-of select="@start"/>,<xsl:value-of select="@end"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="@id"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </caption>
+      <thead>
+        <tr>
+          <th>Label</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Orientation</th>
+          <th>Type</th>
+          <th>Method</th>
+          <th>Notes</th>
+          <th>Links</th>
+          <th>Parts</th>
+        </tr>
+      </thead>
+      <tbody>
     <xsl:for-each select="FEATURE">
       <xsl:sort select="@id"/>
       <tr>
-        <td><xsl:value-of select="@label"/></td>
-        <td><xsl:value-of select="../@id"/></td>
+        <td><xsl:choose><xsl:when test="@label != ''"><xsl:value-of select="@label"/></xsl:when><xsl:otherwise><xsl:value-of select="@id"/></xsl:otherwise></xsl:choose></td>
         <td><xsl:value-of select="START"/></td>
         <td><xsl:value-of select="END"/></td>
         <td><xsl:value-of select="ORIENTATION"/></td>
-        <td><xsl:value-of select="TYPE"/></td>
+        <td><xsl:choose><xsl:when test="TYPE != ''"><xsl:value-of select="TYPE"/></xsl:when><xsl:otherwise><xsl:value-of select="TYPE/@id"/></xsl:otherwise></xsl:choose></td>
+        <td><xsl:choose><xsl:when test="METHOD != ''"><xsl:value-of select="METHOD"/></xsl:when><xsl:otherwise><xsl:value-of select="METHOD/@id"/></xsl:otherwise></xsl:choose></td>
         <td><xsl:apply-templates select="NOTE"/></td>
         <td><xsl:if test="LINK"><xsl:apply-templates select="LINK"/></xsl:if></td>
+        <td><xsl:apply-templates select="PART"/></td>
       </tr>
     </xsl:for-each>
+    </tbody>
+    </table>
+  </xsl:template>
+  <xsl:template match="PART">
+    <xsl:variable name="part_id" select="@id" />
+    <xsl:variable name="part_el" select="../../FEATURE[@id=$part_id]" />
+    <xsl:choose><xsl:when test="$part_el/@label != ''"><xsl:value-of select="$part_el/@label"/></xsl:when><xsl:otherwise><xsl:value-of select="$part_el/@id"/></xsl:otherwise></xsl:choose>
+    <xsl:if test="position()!=last()"><br/></xsl:if>
   </xsl:template>
   <xsl:template match="NOTE">
     <xsl:value-of select="."/>
@@ -59,4 +86,29 @@ function hideColumn(c){var t=document.getElementById('data');var trs=t.getElemen
       </xsl:choose>
     </a>]
   </xsl:template>
+  
+  <xsl:template match="@*" mode="xml-att">
+    <span style="color:purple"><xsl:text>&#160;</xsl:text><xsl:value-of select="name()"/>=&quot;</span><span style="color:red"><xsl:value-of select="."/></span><span style="color:purple">&quot;</span>
+  </xsl:template>
+  
+  <xsl:template match="*" mode="xml-main">
+    <xsl:choose>
+      <xsl:when test="*">
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue">&gt;</span>
+        <div style="margin-left: 1em"><xsl:apply-templates select="*" mode="xml-main"/></div>
+        <span style="color:blue">&lt;/<xsl:value-of select="name()"/>&gt;</span><br/>
+      </xsl:when>
+      <xsl:when test="text()">
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue">&gt;</span><xsl:apply-templates select="text()" mode="xml-text"/><span style="color:blue">&lt;/<xsl:value-of select="name()"/>&gt;</span><br/>
+      </xsl:when>
+      <xsl:otherwise>
+        <span style="color:blue">&lt;<xsl:value-of select="name()"/></span><xsl:apply-templates select="@*" mode="xml-att"/><span style="color:blue"> /&gt;</span><br/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
+  <xsl:template match="text()" mode="xml-text">
+    <div style="margin-left: 1em; color:black"><xsl:value-of select="."/></div>
+  </xsl:template>
+  
 </xsl:stylesheet>

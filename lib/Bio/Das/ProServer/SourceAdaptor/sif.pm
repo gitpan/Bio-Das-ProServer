@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-01
-# Last Modified: $Date: 2008-10-30 22:02:35 +0000 (Thu, 30 Oct 2008) $ $Author: andyjenkinson $
-# Id:            $Id: sif.pm 537 2008-10-30 22:02:35Z andyjenkinson $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $ $Author: zerojinx $
+# Id:            $Id: sif.pm 688 2010-11-02 11:57:52Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/sif.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/sif.pm $
 #
 # SourceAdaptor implementation for Simple Interaction Format files.
 #
@@ -14,7 +14,7 @@ use warnings;
 use Carp;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 537 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub capabilities {
   return { 'interaction' => '1.0' };
@@ -29,7 +29,7 @@ sub build_interaction {
 
   my @interactions = @{ $struct->{'interactions'} };
   my @interactors  = @{ $struct->{'interactors'}  };
-  
+
   $self->{debug} && carp sprintf q(Found %d interactions with %d interactors),
                     scalar @interactions,
                     scalar @interactors;
@@ -56,7 +56,7 @@ Bio::Das::ProServer::SourceAdaptor::sif
 
 =head1 VERSION
 
-$LastChangedRevision: 537 $
+$LastChangedRevision: 688 $
 
 =head1 SYNOPSIS
 
@@ -69,7 +69,7 @@ $LastChangedRevision: 537 $
 =head1 DESCRIPTION
 
 Serves up interaction DAS responses from 'Simple Interaction Format' (SIF) files.
-See L<http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats>
+See L<http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats|http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats>
 http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats
 for details of the file format.
 
@@ -111,11 +111,11 @@ This adaptor supports the 'interaction' command only.
 
 =over
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::sif>
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::sif|Bio::Das::ProServer::SourceAdaptor::Transport::sif>
 
-=item L<http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats> Cytoscape - SIF
+=item L<http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats|http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Network_Formats> Cytoscape - SIF
 
-=item L<http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Attributes> Cytoscape - Attributes
+=item L<http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Attributes|http://www.cytoscape.org/cgi-bin/moin.cgi/Cytoscape_User_Manual/Attributes> Cytoscape - Attributes
 
 =back
 
@@ -123,11 +123,11 @@ This adaptor supports the 'interaction' command only.
 
 =over
 
-=item L<Carp> 
+=item L<Carp|Carp> 
 
-=item L<Bio::Das::ProServer::SourceAdaptor> 
+=item L<Bio::Das::ProServer::SourceAdaptor|Bio::Das::ProServer::SourceAdaptor> 
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::sif>
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::sif|Bio::Das::ProServer::SourceAdaptor::Transport::sif>
 
 =back
 

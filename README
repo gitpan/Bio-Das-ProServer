@@ -27,12 +27,19 @@ To install this module type the following:
 You may receive warnings about missing dependencies, note that only
 some of these are required (see DEPENDENCIES section).
 
+
 RUNNING
 
   There is a command-line executable in the eg directory:
   eg/proserver --help
 
   To start the server, type:
+  eg/proserver -x
+
+
+RUNNING AS A DAEMON
+
+  To start the server in daemon mode, type:
   eg/proserver
 
   To stop:
@@ -42,9 +49,9 @@ RUNNING
   kill -USR1 `cat eg/proserver.myhostname.pid`
 
 
-DEPENDENCIES
+REQUIRED DEPENDENCIES
 
-Any missing dependencies will be reported during the build proces. All are
+Any missing dependencies will be reported during the build process. All are
 available from CPAN (http://www.cpan.org).
 
 CGI
@@ -63,6 +70,22 @@ POE::Wheel::SocketFactory
 POSIX
 Socket
 Sys::Hostname
+
+
+OPTIONAL DEPENDENCIES
+
+Missing optional dependencies will also be reported in the build process. They
+are only required for specific functionality or plugins.
+
+DBI               For all database-backed SourceAdaptor plugins
+LWP::UserAgent    For SourceAdaptor::proxy
+                      Authenticator::http
+                      Transport::wgetz
+Cache::Cache      For Authenticator::http
+Net::IP           For Authenticator::ip
+Bio::Das::Lite    For SourceAdaptor::proxy
+BioPerl           For Transport::bioseqio
+EnsEMBL core API  For SourceAdaptor::ensembl
 
 
 SECURITY

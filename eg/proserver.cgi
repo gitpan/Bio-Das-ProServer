@@ -1,9 +1,9 @@
 #!/usr/local/bin/perl
 #########
 # Author:        rmp
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2003-05-22
-# Last Modified: $Date: 2008-09-21 20:05:54 +0100 (Sun, 21 Sep 2008) $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
 # Source:        $Source $
 # Id:            $Id $
 #
@@ -19,7 +19,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = do { my ($v) = (q$Revision: 528 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxg); $v; };
 
 main();
 0;

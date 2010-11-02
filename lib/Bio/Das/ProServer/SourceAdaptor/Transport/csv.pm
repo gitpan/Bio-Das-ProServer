@@ -1,9 +1,9 @@
 #########
 # Author:        jc3
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2005-11-21
-# Last Modified: $Date: 2008-09-21 21:24:12 +0100 (Sun, 21 Sep 2008) $
-# Id:            $Id: csv.pm 531 2008-09-21 20:24:12Z andyjenkinson $
+# Last Modified: $Date: 2010-11-02 11:37:11 +0000 (Tue, 02 Nov 2010) $
+# Id:            $Id: csv.pm 687 2010-11-02 11:37:11Z zerojinx $
 # Source:        $Source$
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::csv;
@@ -14,7 +14,7 @@ use File::Spec;
 use File::stat;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::dbi);
 
-our $VERSION = do { my ($v) = (q$Revision: 531 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 
 sub dbh {
   my $self    = shift;
@@ -29,7 +29,7 @@ sub dbh {
 
   my %cfg = ();
   if($self->config->{col_names}) {
-    my $cols = [split /:/mx, $self->config->{col_names}];
+    my $cols = [split /:/mxs, $self->config->{col_names}];
     if ( scalar @{ $cols } ) {
       $cfg{col_names} = $cols;
     }
@@ -37,7 +37,7 @@ sub dbh {
   if (my $skip_rows = $self->config->{skip_rows}) {
     $cfg{skip_rows} = $skip_rows;
   }
-  
+
   if ( scalar %cfg ) {
     $self->{dbh}->{csv_tables}->{$table} = \%cfg;
   }
@@ -74,7 +74,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::csv - Comma-separated-values tran
 
 =head1 VERSION
 
-$Revision: 531 $
+$Revision: 687 $
 
 =head1 SYNOPSIS
 

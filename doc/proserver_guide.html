@@ -27,6 +27,12 @@ div.code {
 
 <h1 style="text-align: center;">ProServer Guide</h1>
 
+<p>
+  This document serves as a reference document and developers' guide to
+  implementing a custom DAS data source. It is provided in conjunction with a
+  series of tutorials [<a href="proserver_tutorial_1/proserver_tutorial_1.html">1</a>] [<a href="proserver_tutorial_2/proserver_tutorial_2.html">2</a>] [<a href="proserver_tutorial_3/proserver_tutorial_3.html">3</a>], which are intended to get you up and running quicker.
+</p>
+
 <h2>Contents</h2>
 <ol>
   <li>
@@ -158,7 +164,7 @@ svn checkout https://proserver.svn.sourceforge.net/svnroot/proserver/trunk Bio-D
 
 <h3><a name="install_build">Building</a></h3>
 
-<p>ProServer is designed to be automatically built using the <em>make</em> utility:</p>
+<p>ProServer is designed to be automatically built using the <em>Module::Build</em> package:</p>
 
 <div class="code">
 <pre>
@@ -174,7 +180,7 @@ perl Build.PL
 <p>You may optionally install the ProServer modules into your Perl distribution:</p>
 <div class="code">
 <pre>
-make install
+./Build install
 </pre>
 </div>
 
@@ -199,11 +205,11 @@ eg/proserver --help
 
 <h2><a name="designing">Designing a DAS Source</a></h2>
 
-<p>The first step in exposing your data using DAS is determining how your data is to be offered. Consider some of these points when designing your DAS source to maximise its accessibility and usefulness.
+<p>The first step in exposing your data using DAS is determining how your data is to be offered. Consider some of these points when designing your DAS source to maximise its accessibility and usefulness.</p>
 
 <h3><a name="designing_coords">Co-ordinate Systems</a></h3>
 
-<p>Is your data based on genomic co-ordinates, Ensembl Gene ID's, or perhaps proprietary identifiers? Are your reference sequences from the latest assembly?</p>
+<p>Is your data based on genomic co-ordinates, Ensembl Gene IDs, or perhaps proprietary identifiers? Are your reference sequences from the latest assembly?</p>
 
 <p>If possible, it is best to expose your data on the most recent version of an assembly/database. However, if you have conducted some form of sequence analysis on an old or modified version of a sequence, you may need to define your own co-ordinate system.</p>
 

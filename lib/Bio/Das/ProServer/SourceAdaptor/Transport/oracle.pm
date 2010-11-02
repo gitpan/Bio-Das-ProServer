@@ -3,7 +3,7 @@
 # Maintainer:    rmp
 # Created:       2003-05-20
 # Last Modified: 2003-05-27
-# Id:            $Id: oracle.pm 528 2008-09-21 19:05:54Z andyjenkinson $
+# Id:            $Id: oracle.pm 687 2010-11-02 11:37:11Z zerojinx $
 # Source:        $Source$
 #
 # Transport layer for DBI
@@ -13,7 +13,7 @@ use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::dbi);
 
-our $VERSION = do { my ($v) = (q$Revision: 528 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 
 sub dbh {
   my $self     = shift;
@@ -52,7 +52,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::oracle - Oracle/DBI transport lay
 
 =head1 VERSION
 
-$Revision: 528 $
+$Revision: 687 $
 
 =head1 SYNOPSIS
 

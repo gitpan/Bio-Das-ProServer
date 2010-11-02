@@ -2,9 +2,9 @@
 # Author:        Andy Jenkinson
 # Maintainer:    $Author: zerojinx $
 # Created:       2008-09-19
-# Last Modified: $Date: 2008-12-03 23:14:25 +0000 (Wed, 03 Dec 2008) $
-# $Id: bed12.pm 548 2008-12-03 23:14:25Z zerojinx $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bed12.pm $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $
+# $Id: bed12.pm 688 2010-11-02 11:57:52Z zerojinx $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/bed12.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::bed12;
 
@@ -13,7 +13,7 @@ use warnings;
 use Carp;
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::csv);
 
-our $VERSION = do { my ($v) = (q$Revision: 548 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub init {
   my $self = shift;
@@ -26,7 +26,7 @@ sub init {
   # Now work out how many header lines are in the file (we need to skip these)
   my ($fh, $headerlines);
   open $fh, q[<], $self->filename or croak 'Unable to open '.$self->filename;
-  while ( <$fh> =~ m/^(\#|browser|track)/mx ) {
+  while ( <$fh> =~ m/^(\#|browser|track)/mxs ) {
     $headerlines++;
   }
   close $fh or carp 'Unable to close '.$self->filename;
@@ -46,7 +46,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::bed12 - DBI-like access to a BED 
 
 =head1 VERSION
 
-$Revision: 548 $
+$Revision: 688 $
 
 =head1 SYNOPSIS
 
@@ -84,11 +84,11 @@ Run ProServer with the -debug flag.
 
 =over
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::csv>
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::csv|Bio::Das::ProServer::SourceAdaptor::Transport::csv>
 
-=item L<DBI>
+=item L<DBI|DBI>
 
-=item L<Carp>
+=item L<Carp|Carp>
 
 =back
 
@@ -126,9 +126,9 @@ BED is mapped to DAS in the following manner:
 
 =over
 
-=item L<Bio::Das::ProServer::SourceAdaptor::bed12>
+=item L<Bio::Das::ProServer::SourceAdaptor::bed12|Bio::Das::ProServer::SourceAdaptor::bed12>
 
-=item L<http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED> BED format
+=item L<http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED|http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED> BED format
 
 =back
 

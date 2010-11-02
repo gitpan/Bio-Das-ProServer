@@ -1,10 +1,10 @@
 #########
 # Author:        Andy Jenkinson
 # Created:       2008-02-20
-# Last Modified: $Date: 2008-12-10 12:23:01 +0000 (Wed, 10 Dec 2008) $ $Author: andyjenkinson $
-# Id:            $Id: http.pm 558 2008-12-10 12:23:01Z andyjenkinson $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $ $Author: zerojinx $
+# Id:            $Id: http.pm 688 2010-11-02 11:57:52Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/Authenticator/http.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Authenticator/http.pm $
 #
 # Authenticator implementation using a remote authority to control access.
 #
@@ -22,7 +22,7 @@ use Bio::Das::ProServer::Config;
 use base qw(Bio::Das::ProServer::Authenticator);
 use English qw(-no_match_vars);
 
-our $VERSION = do { my ($v) = (q$LastChangedRevision: 558 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$LastChangedRevision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub parse_token {
   my ($self, $params) = @_;
@@ -33,7 +33,7 @@ sub parse_token {
     # Look in a cookie
     #
     my $k = $self->{'config'}{'authcookie'};
-    ($token) = $params->{'request'}->header('cookie') =~ m/$k=([^;]*)/mx;
+    ($token) = $params->{'request'}->header('cookie') =~ m/$k=([^;]*)/mxs;
     $self->{'debug'} && carp "Authenticator parsed token in cookie: $token";
 
   } elsif (defined $self->{'config'}{'authparam'}) {
@@ -69,7 +69,7 @@ sub authenticate {
 
   } else {
     my $url = $self->{'config'}{'authurl'};
-    $url    =~ s/%token/$token/mxg;
+    $url    =~ s/%token/$token/mxsg;
     $self->{'debug'} && carp qq(Authenticator issuing remote authentication request to $url);
     $auth_response = $self->_agent()->get($url);
 
@@ -134,7 +134,7 @@ requests to a remote authority
 
 =head1 VERSION
 
-$LastChangedRevision: 558 $
+$LastChangedRevision: 688 $
 
 =head1 SYNOPSIS
 
@@ -242,11 +242,11 @@ An HTTP proxy may be specified in the shell environment.
 
 =over
 
-=item L<Carp>
+=item L<Carp|Carp>
 
-=item L<Bio::Das::ProServer::Authenticator>
+=item L<Bio::Das::ProServer::Authenticator|Bio::Das::ProServer::Authenticator>
 
-=item L<LWP::UserAgent>
+=item L<LWP::UserAgent|LWP::UserAgent>
 
 =back
 

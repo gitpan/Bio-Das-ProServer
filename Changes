@@ -1,5 +1,7 @@
 Revision history for Bio::Das::ProServer.
 
+2.20	First release supporting DAS 1.6 spec
+
 2.11	Probably the last release on the DAS 1.53 spec
 
 2.10	Various perlcritic bugfixes. Lots of patches from Andy wrt. authenticated requests

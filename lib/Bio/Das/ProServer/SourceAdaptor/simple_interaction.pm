@@ -2,17 +2,17 @@
 # Author:        aj
 # Maintainer:    aj
 # Created:       2007
-# Last Modified: $Date: 2008-12-03 23:35:54 +0000 (Wed, 03 Dec 2008) $
-# Id:            $Id: simple_interaction.pm 549 2008-12-03 23:35:54Z zerojinx $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $
+# Id:            $Id: simple_interaction.pm 688 2010-11-02 11:57:52Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/simple_interaction.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/simple_interaction.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::simple_interaction;
 use strict;
 use warnings;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION  = do { my ($v) = (q$Revision: 549 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub capabilities {
   return {
@@ -38,7 +38,7 @@ sub build_interaction {
 
   INTERACTION: for my $row (@{$rows}) {
 
-    my @participants = split /,/mx, shift @{$row};
+    my @participants = split /,/mxs, shift @{$row};
 
     my $interaction = $self->_build_interaction($row);
     my %details    = map { $_->{property} => $_->{value} } @{$interaction->{details}};
@@ -120,7 +120,7 @@ Bio::Das::ProServer::SourceAdaptor::simple_interaction
 
 =head1 VERSION
 
-$LastChangedRevision: 549 $
+$LastChangedRevision: 688 $
 
 =head1 SYNOPSIS
 
@@ -172,7 +172,7 @@ $LastChangedRevision: 549 $
 
 =over
 
-=item L<Bio::Das::ProServer::SourceAdaptor>
+=item L<Bio::Das::ProServer::SourceAdaptor|Bio::Das::ProServer::SourceAdaptor>
 
 =back
 

@@ -3,9 +3,9 @@
 # Maintainer:    rmp
 # Created:       2003-06-03
 # Last Modified: 2005-11-22
-# Id:            $Id: Config.pm 672 2010-08-25 14:30:33Z andyjenkinson $
+# Id:            $Id: Config.pm 687 2010-11-02 11:37:11Z zerojinx $
 # Source:        $Source: /nfs/team117/rmp/tmp/Bio-Das-ProServer/Bio-Das-ProServer/lib/Bio/Das/ProServer/Config.pm,v $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/Config.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/Config.pm $
 #
 # ProServer source/parser configuration
 #
@@ -23,7 +23,7 @@ use POSIX qw(strftime);
 use File::Spec;
 use Readonly;
 
-our $VERSION = do { my ($v) = (q$Revision: 672 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 687 $ =~ /\d+/mxsg); $v; };
 
 Readonly::Scalar our $DEFAULT_MAXCLIENTS => 10;
 Readonly::Scalar our $DEFAULT_PORT => 9000;
@@ -33,7 +33,7 @@ sub new {
   $self                 ||= {};
   bless $self,$class;
   my $inifile = $self->{'inifile'} || q();
-  ($inifile)  = $inifile =~ m{([a-z\d_/\.\-]+)}mix;
+  ($inifile)  = $inifile =~ m{([a-z\d_/\.\-]+)}mixs;
 
   if($inifile && -f $inifile) {
     my $conf = Config::IniFiles->new(
@@ -71,7 +71,7 @@ sub new {
 
     $self->{'serverroot'} ||= File::Spec->curdir();
     for my $f (qw(coordshome styleshome)) {
-      $self->{$f} && $self->{$f} =~ s/%serverroot/$self->{serverroot}/;
+      $self->{$f} && $self->{$f} =~ s/%serverroot/$self->{serverroot}/mxs;
     }
 
     $self->{'coordshome'} ||= File::Spec->catdir($self->{'serverroot'}, 'coordinates');
@@ -112,7 +112,7 @@ sub new {
   return $self;
 }
 
-sub log { ## no critic
+sub log { ## no critic (Subroutines::ProhibitBuiltinHomonyms)
   my ($self, @args) = @_;
   print {*STDERR} (strftime '[%Y-%m-%d %H:%M:%S] ', localtime), @args, "\n" or croak $OS_ERROR;
   return;
@@ -147,7 +147,7 @@ sub _build_adaptor_config {
 
 sub port {
   my $self = shift;
-  ($self->{'port'}) = $self->{'port'} =~ /(\d+)/mx;
+  ($self->{'port'}) = $self->{'port'} =~ /(\d+)/mxs;
   return $self->{'port'}||q();
 }
 
@@ -158,19 +158,19 @@ sub maxclients {
     $self->{'maxclients'} = $val;
   }
 
-  ($self->{'maxclients'}) = $self->{'maxclients'} =~ /(\d+)/mx;
+  ($self->{'maxclients'}) = $self->{'maxclients'} =~ /(\d+)/mxs;
   return $self->{'maxclients'};
 }
 
 sub pidfile {
   my $self = shift;
-  ($self->{'pidfile'}) = ($self->{'pidfile'}||q()) =~ m{([a-z\d/\-_\.]+)}mix;
+  ($self->{'pidfile'}) = ($self->{'pidfile'}||q()) =~ m{([a-z\d/\-_\.]+)}mixs;
   return $self->{'pidfile'};
 }
 
 sub logfile {
   my $self = shift;
-  ($self->{'logfile'}) = ($self->{'logfile'}||q()) =~ m{([a-z\d/\-_\.]+)}mix;
+  ($self->{'logfile'}) = ($self->{'logfile'}||q()) =~ m{([a-z\d/\-_\.]+)}mixs;
   return $self->{'logfile'};
 }
 
@@ -188,7 +188,7 @@ sub host {
     $h       = $self->{'hostname'};
   }
 
-  ($self->{'hostname'}) = $h =~ m{([a-z\d/\-_\.]+)}mix;
+  ($self->{'hostname'}) = $h =~ m{([a-z\d/\-_\.]+)}mixs;
   return $self->{'hostname'}||q();
 }
 
@@ -199,7 +199,12 @@ sub response_hostname {
 
 sub response_port {
   my $self = shift;
-  return $self->{'response_port'} || $self->port();
+  my $port = $self->{'response_port'} || $self->port();
+  my $prot = $self->response_protocol();
+  if ( ($prot eq 'http' && $port eq '80') || ($prot eq 'https' && $port eq '443') ) {
+    return q();
+  }
+  return $port;
 }
 
 sub response_protocol {
@@ -210,6 +215,18 @@ sub response_protocol {
 sub response_baseuri {
   my $self = shift;
   return $self->{'response_baseuri'} || q();
+}
+
+sub server_url {
+  my $self = shift;
+  my $host      = $self->response_hostname();
+  my $protocol  = $self->response_protocol();
+  my $port      = $self->response_port();
+  if ($port) {
+    $port = ":$port";
+  }
+  my $baseuri   = $self->response_baseuri();
+  return "$protocol://$host$port$baseuri";
 }
 
 sub interface {
@@ -268,11 +285,10 @@ sub adaptor {
     #
     if(!exists $self->{'adaptors'}->{$dsn}->{'obj'}) {
       my $adaptortype = q(Bio::Das::ProServer::SourceAdaptor::).$self->{'adaptors'}->{$dsn}->{'adaptor'};
-      eval "require $adaptortype"; ## no critic
-      if($EVAL_ERROR) {
+      eval "require $adaptortype" or do { ## no critic (BuiltinFunctions::ProhibitStringyEval)
         carp "Error requiring $adaptortype: $EVAL_ERROR";
         return;
-      }
+      };
 
       eval {
         $self->{'adaptors'}->{$dsn}->{'obj'} = $adaptortype->new({
@@ -285,7 +301,7 @@ sub adaptor {
                                                                   'debug'    => $self->{'debug'},
                                                                  });
       } or do {
-	carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
+        carp "Error building adaptor '$adaptortype' for '$dsn': $EVAL_ERROR";
         return;
       };
     }
@@ -295,7 +311,7 @@ sub adaptor {
   } elsif($dsn &&
 	  ($dsn =~ /^hydra/smx ||
 	   scalar grep {
-	     $dsn=~/^$_/mx &&
+	     $dsn=~/^$_/smx &&
 	     $self->{'adaptors'}->{$_}->{'hydra'}
 	   } keys %{$self->{'adaptors'}})) {
 
@@ -362,7 +378,7 @@ sub server_version {
 }
 
 sub das_version {
-  return q(DAS/1.53E);
+  return q(DAS/1.6E);
 }
 
 sub hydra_adaptor {
@@ -410,12 +426,10 @@ sub _hydra_adaptor {
   }
 
   my $adaptortype = q(Bio::Das::ProServer::SourceAdaptor::).$self->{'adaptors'}->{$hydraname}->{'adaptor'};
-  eval "require $adaptortype"; ## no critic
-
-  if($EVAL_ERROR) {
+  eval "require $adaptortype" or do { ## no critic (BuiltinFunctions::ProhibitStringyEval)
     carp "Error requiring $adaptortype: $EVAL_ERROR";
     return;
-  }
+  };
 
   #########
   # build a source adaptor using the dsn from the hydra-managed source and the config for the hydra
@@ -449,12 +463,10 @@ sub hydra {
      !$self->{'adaptors'}->{$hydraname}->{'_hydra'}) {
 
     my $hydraimpl = 'Bio::Das::ProServer::SourceHydra::'.$self->{'adaptors'}->{$hydraname}->{'hydra'};
-    eval "require $hydraimpl"; ## no critic
-
-    if($EVAL_ERROR) {
+    eval "require $hydraimpl" or do { ## no critic (BuiltinFunctions::ProhibitStringyEval)
       carp "Error requiring $hydraimpl: $EVAL_ERROR";
       return;
-    }
+    };
     $self->log(qq(Loaded $hydraimpl for $hydraname));
 
     $self->{'adaptors'}->{$hydraname}->{'_hydra'}  ||= $hydraimpl->new({
@@ -475,7 +487,7 @@ Bio::Das::ProServer::Config - configuration parsing and hooks
 
 =head1 VERSION
 
-$Revision: 672 $
+$Revision: 687 $
 
 =head1 SYNOPSIS
 
@@ -590,6 +602,12 @@ Configuration takes the following structure
   Useful for setting the baseuri (i.e. preceeding /das) in XML/HTML responses when behind a reverse-proxy.
 
   my $sResponse_Baseuri = $cfg->response_baseuri();
+
+=head2 server_url - helper method for constructing a fully-qualified URL for the server
+
+  Useful for setting the full server URL in XML/HTML responses when behind a reverse-proxy.
+
+  my $sServer_url = $cfg->server_url();
 
 =head2 interface - get accessor configured interface
 

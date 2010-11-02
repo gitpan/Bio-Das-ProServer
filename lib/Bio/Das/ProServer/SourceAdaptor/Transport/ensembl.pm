@@ -1,20 +1,24 @@
 #########
 # Author:        aj
-# Maintainer:    $Author: andyjenkinson $
+# Maintainer:    $Author: zerojinx $
 # Created:       2006
-# Last Modified: $Date: 2009-02-18 13:47:33 +0000 (Wed, 18 Feb 2009) $
-# Id:            $Id: ensembl.pm 569 2009-02-18 13:47:33Z andyjenkinson $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $
+# Id:            $Id: ensembl.pm 688 2010-11-02 11:57:52Z zerojinx $
 # Source:        $Source$
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/ensembl.pm $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/ensembl.pm $
 #
 package Bio::Das::ProServer::SourceAdaptor::Transport::ensembl;
+
 use strict;
 use warnings;
+
 use Carp;
+use English qw(-no_match_vars);
 use Bio::EnsEMBL::Registry;
+
 use base qw(Bio::Das::ProServer::SourceAdaptor::Transport::generic);
 
-our $VERSION  = do { my ($v) = (q$Revision: 569 $ =~ /\d+/mxg); $v; };
+our $VERSION  = do { my ($v) = (q$Revision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub init {
   my ($self) = @_;
@@ -43,7 +47,7 @@ sub _apply_override {
 
   if ($dbname) {
 
-    my ($species, $group) = $dbname =~ m/([a-z_]+)_([a-z]+)_\d+/mx;
+    my ($species, $group) = $dbname =~ m/([a-z_]+)_([a-z]+)_\d+/mxs;
     if ($species  eq 'ensembl') {
       $species = 'multi';
     }
@@ -81,8 +85,7 @@ sub _apply_override {
 
     my $adaptorclass = $group2adaptor{ $self->{'_group'} } || croak 'Unknown database group: '.$self->{'_group'};
     # Creating a new connection will add it to the registry.
-    eval "require $adaptorclass";
-    $@ && die $@;
+    eval "require $adaptorclass" || croak $EVAL_ERROR; ## no critic (BuiltinFunctions::ProhibitStringyEval)
     $adaptorclass->new(
       -host    => $self->config->{'host'}     || 'localhost',
       -port    => $self->config->{'port'}     || '3306',
@@ -172,7 +175,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::ensembl
 
 =head1 VERSION
 
-$LastChangedRevision: 569 $
+$LastChangedRevision: 688 $
 
 =head1 SYNOPSIS
 
@@ -204,7 +207,7 @@ access to the latest data available to the installed API.
     species        (optional, default configured in INI or 'human')
     database group (optional, default configured in INI or 'core')
   Returns:
-    L<Bio::EnsEMBL::DBSQL::DBAdaptor>
+    L<Bio::EnsEMBL::DBSQL::DBAdaptor|Bio::EnsEMBL::DBSQL::DBAdaptor>
 
 =head2 slice_adaptor - Gets an Ensembl slice adaptor.
   
@@ -215,7 +218,7 @@ access to the latest data available to the installed API.
     species        (optional, default configured in INI or 'human')
     database group (optional, default configured in INI or 'core')
   Returns:
-    L<Bio::EnsEMBL::DBSQL::SliceAdaptor>
+    L<Bio::EnsEMBL::DBSQL::SliceAdaptor|Bio::EnsEMBL::DBSQL::SliceAdaptor>
 
 =head2 gene_adaptor - Gets an Ensembl gene adaptor.
   
@@ -226,7 +229,7 @@ access to the latest data available to the installed API.
     species        (optional, default configured in INI or 'human')
     database group (optional, default configured in INI or 'core')
   Returns:
-    L<Bio::EnsEMBL::DBSQL::GeneAdaptor>
+    L<Bio::EnsEMBL::DBSQL::GeneAdaptor|Bio::EnsEMBL::DBSQL::GeneAdaptor>
 
 =head2 chromosome_by_region - Gets a chromosome slice.
 
@@ -241,7 +244,7 @@ access to the latest data available to the installed API.
     species        (optional, default configured in INI or 'human')
     database group (optional, default configured in INI or 'core')
   Returns:
-    L<Bio::EnsEMBL::Slice>
+    L<Bio::EnsEMBL::Slice|Bio::EnsEMBL::Slice>
 
 =head2 chromosomes - Gets all chromosomes.
 
@@ -252,7 +255,7 @@ access to the latest data available to the installed API.
     species        (optional, default configured in INI or 'human')
     database group (optional, default configured in INI or 'core')
   Returns:
-    listref of L<Bio::EnsEMBL::Slice> objects
+    listref of L<Bio::EnsEMBL::Slice|Bio::EnsEMBL::Slice> objects
 
 =head2 gene_by_id - Gets a gene.
 
@@ -264,7 +267,7 @@ access to the latest data available to the installed API.
     species        (optional, default configured in INI or 'human')
     database group (optional, default configured in INI or 'core')
   Returns:
-    L<Bio::EnsEMBL::Gene>
+    L<Bio::EnsEMBL::Gene|Bio::EnsEMBL::Gene>
 
 =head2 genes - Gets all genes.
 
@@ -275,7 +278,7 @@ access to the latest data available to the installed API.
     species        (optional, default configured in INI or 'human')
     database group (optional, default configured in INI or 'core')
   Returns:
-    listref of L<Bio::EnsEMBL::Gene> objects
+    listref of L<Bio::EnsEMBL::Gene|Bio::EnsEMBL::Gene> objects
 
 =head2 version - Gets the Ensembl API's release number.
 
@@ -317,9 +320,11 @@ Configured as part of each source's ProServer 2 INI file.
 
 =over
 
-=item L<Carp>
+=item L<Carp|Carp>
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::generic>
+=item L<English|English>
+
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::generic|Bio::Das::ProServer::SourceAdaptor::Transport::generic>
 
 =item Ensembl core API
 
@@ -339,7 +344,7 @@ None reported
 
 =over
 
-=item L<http://www.ensembl.org/info/software/Pdoc/ensembl/> Ensembl API
+=item L<http://www.ensembl.org/info/software/Pdoc/ensembl/|http://www.ensembl.org/info/software/Pdoc/ensembl/> Ensembl API
 
 =back
 

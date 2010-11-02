@@ -2,9 +2,9 @@
 # Author:        rmp
 # Maintainer:    rmp
 # Created:       2003-05-20
-# Last Modified: $Date: 2008-12-10 12:30:40 +0000 (Wed, 10 Dec 2008) $
-# Id:            $Id: dbi.pm 559 2008-12-10 12:30:40Z andyjenkinson $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/Transport/dbi.pm $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $
+# Id:            $Id: dbi.pm 688 2010-11-02 11:57:52Z zerojinx $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/Transport/dbi.pm $
 #
 # Transport layer for DBI
 #
@@ -17,7 +17,7 @@ use Carp;
 use English qw(-no_match_vars);
 use Readonly;
 
-our $VERSION = do { my ($v) = (q$Revision: 559 $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 688 $ =~ /\d+/mxsg); $v; };
 Readonly::Scalar our $CACHE_TIMEOUT => 30;
 Readonly::Scalar our $QUERY_TIMEOUT => 30;
 
@@ -57,12 +57,12 @@ sub query {
   my $fetchall_arg = {};
   (@args and ref $args[0]) and $fetchall_arg = shift @args;
 
-  $SIG{ALRM} = sub { croak 'timeout'; };
+  local $SIG{ALRM} = sub { croak 'timeout'; };
   alarm $QUERY_TIMEOUT;
   eval {
     $debug and carp "Preparing query...\n";
     my $sth;
-    if($query =~ /\?/mx) {
+    if($query =~ /\?/mxs) {
       $sth = $self->dbh->prepare_cached($query);
     } else {
       $sth = $self->dbh->prepare($query);
@@ -144,7 +144,7 @@ Bio::Das::ProServer::SourceAdaptor::Transport::dbi - A DBI transport layer (actu
 
 =head1 VERSION
 
-$Revision: 559 $
+$Revision: 688 $
 
 =head1 SYNOPSIS
 
@@ -198,9 +198,9 @@ Transport helper class for database access, acting as a wrapper for DBI.
 
 =over
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::generic>
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::generic|Bio::Das::ProServer::SourceAdaptor::Transport::generic>
 
-=item L<DBI>
+=item L<DBI|DBI>
 
 =back
 

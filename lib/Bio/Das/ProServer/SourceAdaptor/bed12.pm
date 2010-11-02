@@ -2,9 +2,9 @@
 # Author:        Andy Jenkinson
 # Maintainer:    $Author: zerojinx $
 # Created:       2008-09-19
-# Last Modified: $Date: $
-# $Id: bed12.pm 549 2008-12-03 23:35:54Z zerojinx $
-# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/tags/spec-1.53/lib/Bio/Das/ProServer/SourceAdaptor/bed12.pm $
+# Last Modified: $Date: 2010-11-02 11:57:52 +0000 (Tue, 02 Nov 2010) $
+# $Id: bed12.pm 688 2010-11-02 11:57:52Z zerojinx $
+# $HeadURL: https://proserver.svn.sourceforge.net/svnroot/proserver/trunk/lib/Bio/Das/ProServer/SourceAdaptor/bed12.pm $
 #
 ## no critic (ValuesAndExpressions::ProhibitImplicitNewlines)
 #
@@ -15,7 +15,7 @@ use warnings;
 use Carp;
 use base qw(Bio::Das::ProServer::SourceAdaptor);
 
-our $VERSION = do { my ($v) = (q$Revision: $ =~ /\d+/mxg); $v; };
+our $VERSION = do { my ($v) = (q$Revision: 688 $ =~ /\d+/mxsg); $v; };
 
 sub init {
   my $self = shift;
@@ -24,16 +24,17 @@ sub init {
 }
 
 sub capabilities {
-  return {
-	  features        => '1.0',
-	  'feature-by-id' => '1.0',
-	  'group-by-id'   => '1.0',
-	 };
+  my $caps = {
+    'features'      => '1.0',
+    'feature-by-id' => '1.0',
+    'group-by-id'   => '1.0'
+  };
+  return $caps;
 }
 
 sub build_features {
   my ( $self, $args ) = @_;
-  
+
   my $segmentid = $args->{'segment'};
   my $featureid = $args->{'feature_id'};
   my $groupid   = $args->{'group_id'};
@@ -46,7 +47,7 @@ sub build_features {
     # The 'name' field can either be the feature ID or the group ID, depending
     # on whether the BED line contains blocks. If the latter, the feature ID
     # is actually groupid:1 groupid:2 etc
-    $name =~ s/:\d+$//mx;
+    $name =~ s/:\d+$//mxs;
     my $query = sprintf
       'SELECT chrom, chromStart, chromEnd,
               name, score, strand,
@@ -108,12 +109,12 @@ sub _build_features_from_rows {
 
     defined $row->{'chromStart'} || next;
     my $segment = $row->{'chrom'};
-    $segment    =~ s/^chr//mx;
+    $segment    =~ s/^chr//mxs;
 
     # One feature line can represent several features
     if ( my $block_count = $row->{'blockCount'} ) {
-      my @block_sizes  = split m/,/mx, $row->{'blockSizes'} , $block_count;
-      my @block_starts = split m/,/mx, $row->{'blockStarts'}, $block_count;
+      my @block_sizes  = split m/,/mxs, $row->{'blockSizes'} , $block_count;
+      my @block_starts = split m/,/mxs, $row->{'blockStarts'}, $block_count;
 
       my $i = 0;
       while ($i<$block_count) {
@@ -158,7 +159,7 @@ Bio::Das::ProServer::SourceAdaptor::bed12
 
 =head1 VERSION
 
-$Revision: $
+$Revision: 688 $
 
 =head1 SYNOPSIS
 
@@ -174,7 +175,7 @@ $Revision: $
 =head1 DESCRIPTION
 
 Serves up features DAS responses from BED files.
-See L<http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED>
+See L<http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED|http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED>
 http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED
 for details of the file format.
 
@@ -216,9 +217,9 @@ Adds the 'bed12' transport to the source's configuration (if not already set).
 
 =over
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::bed12>
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::bed12|Bio::Das::ProServer::SourceAdaptor::Transport::bed12>
 
-=item L<http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED> BED format
+=item L<http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED|http://genome.ucsc.edu/goldenPath/help/customTrack.html#BED> BED format
 
 =back
 
@@ -226,11 +227,11 @@ Adds the 'bed12' transport to the source's configuration (if not already set).
 
 =over
 
-=item L<Bio::Das::ProServer::SourceAdaptor> 
+=item L<Bio::Das::ProServer::SourceAdaptor|Bio::Das::ProServer::SourceAdaptor> 
 
-=item L<Bio::Das::ProServer::SourceAdaptor::Transport::bed12>
+=item L<Bio::Das::ProServer::SourceAdaptor::Transport::bed12|Bio::Das::ProServer::SourceAdaptor::Transport::bed12>
 
-=item L<Carp>
+=item L<Carp|Carp>
 
 =back
 
